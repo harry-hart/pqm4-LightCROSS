@@ -1,13 +1,13 @@
 # These variables are retained and can't be changed without a clean
-PLATFORM := nucleo-l4r5zi
-LAST_PLATFORM := nucleo-l4r5zi
-DEBUG := 
-LAST_DEBUG := 
+PLATFORM := mps2-an386
+LAST_PLATFORM := mps2-an386
+DEBUG := 1
+LAST_DEBUG := 1
 OPT_SIZE := 
 LAST_OPT_SIZE := 
 LTO := 
 LAST_LTO := 
 AIO := 1
 LAST_AIO := 1
-MUPQ_ITERATIONS := 10
-LAST_MUPQ_ITERATIONS := 10
+MUPQ_ITERATIONS := 1
+LAST_MUPQ_ITERATIONS := 1
