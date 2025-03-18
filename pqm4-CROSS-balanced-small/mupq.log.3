@@ -1,179 +1,453 @@
-2024-11-17 20:44:52,768 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-5-balance - ref
-2024-11-17 20:44:52,768 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-5-balance - ref - stack
-2024-11-17 20:44:52,768 Implementation INFO: Building cross-sha3-r-sdpg-5-balance - ref - stack
-2024-11-17 20:45:00,482 Implementation DEBUG: make stdout output:
-GEN     obj/.config.mk
-make -C /home/suparna/Desktop/Codes/Puja_cross/new_update/new/pqm4-CROSS-24October24Main_Hash_reuse_recompute_merkle_countermeasure/libopencm3 lib/stm32/l4
-make[1]: Entering directory '/home/suparna/Desktop/Codes/Puja_cross/new_update/new/pqm4-CROSS-24October24Main_Hash_reuse_recompute_merkle_countermeasure/libopencm3'
-  GENHDR  stm32/f0
-  GENHDR  stm32/f1
-  GENHDR  stm32/f2
-  GENHDR  stm32/f3
-  GENHDR  stm32/f4
-  GENHDR  stm32/f7
-  GENHDR  stm32/l0
-  GENHDR  stm32/l1
-  GENHDR  stm32/l4
-  GENHDR  stm32/g0
-  GENHDR  stm32/g4
-  GENHDR  stm32/h7
-  GENHDR  gd32/f1x0
-  GENHDR  lpc13xx
-  GENHDR  lpc17xx
-  GENHDR  lpc43xx/m4
-  GENHDR  lpc43xx/m0
-  GENHDR  lm3s
-  GENHDR  msp432/e4
-  GENHDR  efm32/tg
-  GENHDR  efm32/g
-  GENHDR  efm32/lg
-  GENHDR  efm32/gg
-  GENHDR  efm32/hg
-  GENHDR  efm32/wg
-  GENHDR  efm32/ezr32wg
-  GENHDR  nrf/51
-  GENHDR  nrf/52
-  GENHDR  sam/3a
-  GENHDR  sam/3n
-  GENHDR  sam/3s
-  GENHDR  sam/3u
-  GENHDR  sam/3x
-  GENHDR  sam/4l
-  GENHDR  sam/d
-  GENHDR  vf6xx
-  GENHDR  swm050
-  GENHDR  pac55xx
-  BUILD   lib/stm32/l4
-  CC      adc.c
-  CC      adc_common_v2.c
-  CC      adc_common_v2_multi.c
-  CC      can.c
-  CC      crc_common_all.c
-  CC      crc_v2.c
-  CC      crs_common_all.c
-  CC      dac_common_all.c
-  CC      dac_common_v1.c
-  CC      dma_common_l1f013.c
-  CC      dma_common_csel.c
-  CC      exti_common_all.c
-  CC      flash.c
-  CC      flash_common_all.c
-  CC      flash_common_f.c
-  CC      flash_common_idcache.c
-  CC      gpio_common_all.c
-  CC      gpio_common_f0234.c
-  CC      i2c_common_v2.c
-  CC      iwdg_common_all.c
-  CC      lptimer_common_all.c
-  CC      pwr.c
-  CC      rcc.c
-  CC      rcc_common_all.c
-  CC      rng_common_v1.c
-  CC      rtc_common_l1f024.c
-  CC      spi_common_all.c
-  CC      spi_common_v2.c
-  CC      timer_common_all.c
-  CC      usart_common_all.c
-  CC      usart_common_v2.c
-  CC      quadspi_common_v1.c
-  CC      usb.c
-  CC      usb_control.c
-  CC      usb_standard.c
-  CC      usb_msc.c
-  CC      usb_hid.c
-  CC      usb_audio.c
-  CC      usb_cdc.c
-  CC      usb_midi.c
-  CC      st_usbfs_core.c
-  CC      st_usbfs_v2.c
-  CC      usb_dwc_common.c
-  CC      usb_f107.c
-  CC      vector.c
-  CC      systick.c
-  CC      scb.c
-  CC      nvic.c
-  CC      assert.c
-  CC      sync.c
-  CC      dwt.c
-  AR      libopencm3_stm32l4.a
-make[1]: Leaving directory '/home/suparna/Desktop/Codes/Puja_cross/new_update/new/pqm4-CROSS-24October24Main_Hash_reuse_recompute_merkle_countermeasure/libopencm3'
+2025-03-18 18:06:38,368 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-1-small - ref
+2025-03-18 18:06:38,368 BoardTestCase INFO: Runnning cross-sha3-r-sdp-1-small - ref - stack
+2025-03-18 18:06:38,368 Implementation INFO: Building cross-sha3-r-sdp-1-small - ref - stack
+2025-03-18 18:06:39,464 Implementation DEBUG: make stdout output:
+Variable MUPQ_ITERATIONS changed, forcing rebuild!
+  GEN     obj/.config.mk
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-small/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdp-1-small_ref.a
+  AS      obj/common/mps2/startup_MPS2.S.o
+  CC      obj/common/hal-mps2.c.o
+  CC      obj/common/randombytes.c.o
+  AR      obj/libpqm4hal.a
+  AR      obj/libpqm4hal-nornd.a
+  CC      obj/mupq/common/fips202.c.o
+  CC      obj/mupq/common/sp800-185.c.o
+  CC      obj/mupq/common/nistseedexpander.c.o
+  AS      obj/common/keccakf1600.S.o
+  CC      obj/common/aes.c.o
+  AS      obj/common/aes-encrypt.S.o
+  AS      obj/common/aes-keyschedule.S.o
+  CC      obj/common/aes-publicinputs.c.o
+  AS      obj/common/aes-publicinputs.S.o
+  CC      obj/mupq/common/sha2.c.o
+  AS      obj/common/crypto_hashblocks_sha512_inner32.s.o
+  CC      obj/common/crypto_hashblocks_sha512.c.o
+  AR      obj/libsymcrypto.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_stack.bin
+2025-03-18 18:06:39,464 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_stack.bin
+2025-03-18 18:06:39,736 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-3-balance - ref
+2025-03-18 18:06:39,736 BoardTestCase INFO: Runnning cross-sha3-r-sdp-3-balance - ref - stack
+2025-03-18 18:06:39,736 Implementation INFO: Building cross-sha3-r-sdp-3-balance - ref - stack
+2025-03-18 18:06:40,297 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-balance/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_stack.bin
+2025-03-18 18:06:40,297 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_stack.bin
+2025-03-18 18:06:40,528 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-5-small - ref
+2025-03-18 18:06:40,528 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-5-small - ref - stack
+2025-03-18 18:06:40,528 Implementation INFO: Building cross-sha3-r-sdpg-5-small - ref - stack
+2025-03-18 18:06:41,155 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-small/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_stack.bin
+2025-03-18 18:06:41,156 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_stack.bin
+2025-03-18 18:06:41,508 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-3-balance - ref
+2025-03-18 18:06:41,508 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-3-balance - ref - stack
+2025-03-18 18:06:41,508 Implementation INFO: Building cross-sha3-r-sdpg-3-balance - ref - stack
+2025-03-18 18:06:42,101 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-balance/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_stack.bin
+2025-03-18 18:06:42,101 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_stack.bin
+2025-03-18 18:06:42,229 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-3-small - ref
+2025-03-18 18:06:42,229 BoardTestCase INFO: Runnning cross-sha3-r-sdp-3-small - ref - stack
+2025-03-18 18:06:42,229 Implementation INFO: Building cross-sha3-r-sdp-3-small - ref - stack
+2025-03-18 18:06:42,775 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-3-small/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdp-3-small_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_stack.bin
+2025-03-18 18:06:42,775 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_stack.bin
+2025-03-18 18:06:43,166 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-5-small - ref
+2025-03-18 18:06:43,166 BoardTestCase INFO: Runnning cross-sha3-r-sdp-5-small - ref - stack
+2025-03-18 18:06:43,166 Implementation INFO: Building cross-sha3-r-sdp-5-small - ref - stack
+2025-03-18 18:06:43,681 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-small/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdp-5-small_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_stack.bin
+2025-03-18 18:06:43,682 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_stack.bin
+2025-03-18 18:06:44,485 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-small - ref
+2025-03-18 18:06:44,485 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-small - ref - stack
+2025-03-18 18:06:44,485 Implementation INFO: Building cross-sha3-r-sdpg-1-small - ref - stack
+2025-03-18 18:06:45,078 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-small/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_stack.bin
+2025-03-18 18:06:45,078 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_stack.bin
+2025-03-18 18:06:45,255 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-3-small - ref
+2025-03-18 18:06:45,255 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-3-small - ref - stack
+2025-03-18 18:06:45,255 Implementation INFO: Building cross-sha3-r-sdpg-3-small - ref - stack
+2025-03-18 18:06:45,849 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-3-small/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_stack.bin
+2025-03-18 18:06:45,850 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_stack.bin
+2025-03-18 18:06:46,110 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-1-balance - ref
+2025-03-18 18:06:46,110 BoardTestCase INFO: Runnning cross-sha3-r-sdp-1-balance - ref - stack
+2025-03-18 18:06:46,110 Implementation INFO: Building cross-sha3-r-sdp-1-balance - ref - stack
+2025-03-18 18:06:46,660 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-1-balance/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_stack.bin
+2025-03-18 18:06:46,661 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_stack.bin
+2025-03-18 18:06:46,783 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-5-balance - ref
+2025-03-18 18:06:46,783 BoardTestCase INFO: Runnning cross-sha3-r-sdp-5-balance - ref - stack
+2025-03-18 18:06:46,783 Implementation INFO: Building cross-sha3-r-sdp-5-balance - ref - stack
+2025-03-18 18:06:47,387 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdp-5-balance/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_stack.bin
+2025-03-18 18:06:47,388 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_stack.bin
+2025-03-18 18:06:47,929 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-balance - ref
+2025-03-18 18:06:47,929 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-balance - ref - stack
+2025-03-18 18:06:47,929 Implementation INFO: Building cross-sha3-r-sdpg-1-balance - ref - stack
+2025-03-18 18:06:48,507 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-1-balance/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_stack.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_stack.bin
+2025-03-18 18:06:48,508 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_stack.bin
+2025-03-18 18:06:48,610 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-5-balance - ref
+2025-03-18 18:06:48,610 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-5-balance - ref - stack
+2025-03-18 18:06:48,610 Implementation INFO: Building cross-sha3-r-sdpg-5-balance - ref - stack
+2025-03-18 18:06:49,213 Implementation DEBUG: make stdout output:
+CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/aes256.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/aes256_ctr_drbg.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/CROSS.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/csprng_hash.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/merkle.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/pack_unpack.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/seedtree.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/sha2.c.o
+  CC      obj/mupq/crypto_sign/cross-sha3-r-sdpg-5-balance/ref/sign.c.o
+  AR      obj/libmupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref.a
   CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_stack.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_stack.hex
-2024-11-17 20:45:03,305 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:45:05,123 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-3-balance - ref
-2024-11-17 20:45:05,124 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-3-balance - ref - stack
-2024-11-17 20:45:05,124 Implementation INFO: Building cross-sha3-r-sdpg-3-balance - ref - stack
-2024-11-17 20:45:08,847 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_stack.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_stack.hex
-2024-11-17 20:45:11,616 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:45:12,576 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-3-balance - ref
-2024-11-17 20:45:12,576 BoardTestCase INFO: Runnning cross-sha3-r-sdp-3-balance - ref - stack
-2024-11-17 20:45:12,576 Implementation INFO: Building cross-sha3-r-sdp-3-balance - ref - stack
-2024-11-17 20:45:16,086 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_stack.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_stack.hex
-2024-11-17 20:45:18,799 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:45:20,871 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-balance - ref
-2024-11-17 20:45:20,871 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-balance - ref - stack
-2024-11-17 20:45:20,871 Implementation INFO: Building cross-sha3-r-sdpg-1-balance - ref - stack
-2024-11-17 20:45:24,571 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_stack.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_stack.hex
-2024-11-17 20:45:27,355 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:45:28,107 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-1-balance - ref
-2024-11-17 20:45:28,107 BoardTestCase INFO: Runnning cross-sha3-r-sdp-1-balance - ref - stack
-2024-11-17 20:45:28,108 Implementation INFO: Building cross-sha3-r-sdp-1-balance - ref - stack
-2024-11-17 20:45:31,602 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_stack.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_stack.hex
-2024-11-17 20:45:34,281 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:45:35,280 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-small - ref
-2024-11-17 20:45:35,281 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-small - ref - stack
-2024-11-17 20:45:35,281 Implementation INFO: Building cross-sha3-r-sdpg-1-small - ref - stack
-2024-11-17 20:45:39,087 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_stack.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_stack.hex
-2024-11-17 20:45:41,866 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:45:44,327 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-5-balance - ref
-2024-11-17 20:45:44,327 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-5-balance - ref - speed
-2024-11-17 20:45:44,327 Implementation INFO: Building cross-sha3-r-sdpg-5-balance - ref - speed
-2024-11-17 20:45:48,097 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_speed.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_speed.hex
-2024-11-17 20:45:51,591 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:46:51,627 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-3-balance - ref
-2024-11-17 20:46:51,627 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-3-balance - ref - speed
-2024-11-17 20:46:51,627 Implementation INFO: Building cross-sha3-r-sdpg-3-balance - ref - speed
-2024-11-17 20:46:55,337 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_speed.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_speed.hex
-2024-11-17 20:46:58,834 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:47:28,395 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-3-balance - ref
-2024-11-17 20:47:28,395 BoardTestCase INFO: Runnning cross-sha3-r-sdp-3-balance - ref - speed
-2024-11-17 20:47:28,395 Implementation INFO: Building cross-sha3-r-sdp-3-balance - ref - speed
-2024-11-17 20:47:31,817 Implementation DEBUG: make stdout output:
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_stack.bin
+2025-03-18 18:06:49,213 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_stack.bin
+2025-03-18 18:06:49,387 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-1-small - ref
+2025-03-18 18:06:49,387 BoardTestCase INFO: Runnning cross-sha3-r-sdp-1-small - ref - speed
+2025-03-18 18:06:49,387 Implementation INFO: Building cross-sha3-r-sdp-1-small - ref - speed
+2025-03-18 18:06:49,451 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_speed.bin
+2025-03-18 18:06:49,452 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_speed.bin
+2025-03-18 18:06:52,041 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-3-balance - ref
+2025-03-18 18:06:52,042 BoardTestCase INFO: Runnning cross-sha3-r-sdp-3-balance - ref - speed
+2025-03-18 18:06:52,042 Implementation INFO: Building cross-sha3-r-sdp-3-balance - ref - speed
+2025-03-18 18:06:52,103 Implementation DEBUG: make stdout output:
 CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_speed.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_speed.hex
-2024-11-17 20:47:35,196 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:48:43,666 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-balance - ref
-2024-11-17 20:48:43,667 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-balance - ref - speed
-2024-11-17 20:48:43,667 Implementation INFO: Building cross-sha3-r-sdpg-1-balance - ref - speed
-2024-11-17 20:48:47,268 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_speed.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_speed.hex
-2024-11-17 20:48:50,757 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:49:11,079 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-1-balance - ref
-2024-11-17 20:49:11,079 BoardTestCase INFO: Runnning cross-sha3-r-sdp-1-balance - ref - speed
-2024-11-17 20:49:11,079 Implementation INFO: Building cross-sha3-r-sdp-1-balance - ref - speed
-2024-11-17 20:49:14,506 Implementation DEBUG: make stdout output:
-CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_speed.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_speed.hex
-2024-11-17 20:49:17,895 Platform DEBUG: Found start pattern: b'=========================\n'
-2024-11-17 20:49:46,844 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-small - ref
-2024-11-17 20:49:46,844 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-small - ref - speed
-2024-11-17 20:49:46,845 Implementation INFO: Building cross-sha3-r-sdpg-1-small - ref - speed
-2024-11-17 20:49:50,612 Implementation DEBUG: make stdout output:
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_speed.bin
+2025-03-18 18:06:52,103 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_speed.bin
+2025-03-18 18:06:53,719 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-5-small - ref
+2025-03-18 18:06:53,719 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-5-small - ref - speed
+2025-03-18 18:06:53,719 Implementation INFO: Building cross-sha3-r-sdpg-5-small - ref - speed
+2025-03-18 18:06:53,793 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_speed.bin
+2025-03-18 18:06:53,793 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_speed.bin
+2025-03-18 18:06:56,667 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-3-balance - ref
+2025-03-18 18:06:56,667 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-3-balance - ref - speed
+2025-03-18 18:06:56,667 Implementation INFO: Building cross-sha3-r-sdpg-3-balance - ref - speed
+2025-03-18 18:06:56,726 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_speed.bin
+2025-03-18 18:06:56,727 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_speed.bin
+2025-03-18 18:06:57,269 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-3-small - ref
+2025-03-18 18:06:57,269 BoardTestCase INFO: Runnning cross-sha3-r-sdp-3-small - ref - speed
+2025-03-18 18:06:57,269 Implementation INFO: Building cross-sha3-r-sdp-3-small - ref - speed
+2025-03-18 18:06:57,328 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_speed.bin
+2025-03-18 18:06:57,329 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_speed.bin
+2025-03-18 18:07:00,815 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-5-small - ref
+2025-03-18 18:07:00,815 BoardTestCase INFO: Runnning cross-sha3-r-sdp-5-small - ref - speed
+2025-03-18 18:07:00,815 Implementation INFO: Building cross-sha3-r-sdp-5-small - ref - speed
+2025-03-18 18:07:00,886 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_speed.bin
+2025-03-18 18:07:00,886 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_speed.bin
+2025-03-18 18:07:06,470 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-small - ref
+2025-03-18 18:07:06,470 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-small - ref - speed
+2025-03-18 18:07:06,470 Implementation INFO: Building cross-sha3-r-sdpg-1-small - ref - speed
+2025-03-18 18:07:06,541 Implementation DEBUG: make stdout output:
 CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_speed.elf
-  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_speed.hex
-2024-11-17 20:49:54,089 Platform DEBUG: Found start pattern: b'=========================\n'
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_speed.bin
+2025-03-18 18:07:06,541 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_speed.bin
+2025-03-18 18:07:07,769 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-3-small - ref
+2025-03-18 18:07:07,769 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-3-small - ref - speed
+2025-03-18 18:07:07,769 Implementation INFO: Building cross-sha3-r-sdpg-3-small - ref - speed
+2025-03-18 18:07:07,822 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_speed.bin
+2025-03-18 18:07:07,823 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_speed.bin
+2025-03-18 18:07:09,791 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-1-balance - ref
+2025-03-18 18:07:09,791 BoardTestCase INFO: Runnning cross-sha3-r-sdp-1-balance - ref - speed
+2025-03-18 18:07:09,791 Implementation INFO: Building cross-sha3-r-sdp-1-balance - ref - speed
+2025-03-18 18:07:09,851 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_speed.bin
+2025-03-18 18:07:09,852 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_speed.bin
+2025-03-18 18:07:10,725 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-5-balance - ref
+2025-03-18 18:07:10,725 BoardTestCase INFO: Runnning cross-sha3-r-sdp-5-balance - ref - speed
+2025-03-18 18:07:10,725 Implementation INFO: Building cross-sha3-r-sdp-5-balance - ref - speed
+2025-03-18 18:07:10,792 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_speed.bin
+2025-03-18 18:07:10,792 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_speed.bin
+2025-03-18 18:07:14,040 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-balance - ref
+2025-03-18 18:07:14,040 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-balance - ref - speed
+2025-03-18 18:07:14,040 Implementation INFO: Building cross-sha3-r-sdpg-1-balance - ref - speed
+2025-03-18 18:07:14,111 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_speed.bin
+2025-03-18 18:07:14,112 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_speed.bin
+2025-03-18 18:07:14,498 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-5-balance - ref
+2025-03-18 18:07:14,498 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-5-balance - ref - speed
+2025-03-18 18:07:14,498 Implementation INFO: Building cross-sha3-r-sdpg-5-balance - ref - speed
+2025-03-18 18:07:14,567 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_speed.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_speed.bin
+2025-03-18 18:07:14,567 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_speed.bin
+2025-03-18 18:07:15,818 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-1-small - ref
+2025-03-18 18:07:15,818 BoardTestCase INFO: Runnning cross-sha3-r-sdp-1-small - ref - hashing
+2025-03-18 18:07:15,819 Implementation INFO: Building cross-sha3-r-sdp-1-small - ref - hashing
+2025-03-18 18:07:16,316 Implementation DEBUG: make stdout output:
+CC      obj/hashprof/mupq/common/fips202.c.o
+  CC      obj/hashprof/mupq/common/sp800-185.c.o
+  CC      obj/hashprof/mupq/common/nistseedexpander.c.o
+  AS      obj/hashprof/common/keccakf1600.S.o
+  CC      obj/hashprof/common/aes.c.o
+  AS      obj/hashprof/common/aes-encrypt.S.o
+  AS      obj/hashprof/common/aes-keyschedule.S.o
+  CC      obj/hashprof/common/aes-publicinputs.c.o
+  AS      obj/hashprof/common/aes-publicinputs.S.o
+  CC      obj/hashprof/mupq/common/sha2.c.o
+  AS      obj/hashprof/common/crypto_hashblocks_sha512_inner32.s.o
+  CC      obj/hashprof/common/crypto_hashblocks_sha512.c.o
+  AR      obj/libsymcrypto-hashprof.a
+  CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_hashing.bin
+2025-03-18 18:07:16,316 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-1-small_ref_hashing.bin
+2025-03-18 18:07:19,240 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-3-balance - ref
+2025-03-18 18:07:19,240 BoardTestCase INFO: Runnning cross-sha3-r-sdp-3-balance - ref - hashing
+2025-03-18 18:07:19,240 Implementation INFO: Building cross-sha3-r-sdp-3-balance - ref - hashing
+2025-03-18 18:07:19,323 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_hashing.bin
+2025-03-18 18:07:19,324 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref_hashing.bin
+2025-03-18 18:07:21,119 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-5-small - ref
+2025-03-18 18:07:21,119 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-5-small - ref - hashing
+2025-03-18 18:07:21,119 Implementation INFO: Building cross-sha3-r-sdpg-5-small - ref - hashing
+2025-03-18 18:07:21,189 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_hashing.bin
+2025-03-18 18:07:21,189 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref_hashing.bin
+2025-03-18 18:07:24,915 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-3-balance - ref
+2025-03-18 18:07:24,916 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-3-balance - ref - hashing
+2025-03-18 18:07:24,916 Implementation INFO: Building cross-sha3-r-sdpg-3-balance - ref - hashing
+2025-03-18 18:07:25,010 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_hashing.bin
+2025-03-18 18:07:25,010 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref_hashing.bin
+2025-03-18 18:07:25,661 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-3-small - ref
+2025-03-18 18:07:25,661 BoardTestCase INFO: Runnning cross-sha3-r-sdp-3-small - ref - hashing
+2025-03-18 18:07:25,661 Implementation INFO: Building cross-sha3-r-sdp-3-small - ref - hashing
+2025-03-18 18:07:25,745 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_hashing.bin
+2025-03-18 18:07:25,745 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-3-small_ref_hashing.bin
+2025-03-18 18:07:29,704 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-5-small - ref
+2025-03-18 18:07:29,704 BoardTestCase INFO: Runnning cross-sha3-r-sdp-5-small - ref - hashing
+2025-03-18 18:07:29,704 Implementation INFO: Building cross-sha3-r-sdp-5-small - ref - hashing
+2025-03-18 18:07:29,784 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_hashing.bin
+2025-03-18 18:07:29,784 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-5-small_ref_hashing.bin
+2025-03-18 18:07:36,194 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-small - ref
+2025-03-18 18:07:36,194 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-small - ref - hashing
+2025-03-18 18:07:36,194 Implementation INFO: Building cross-sha3-r-sdpg-1-small - ref - hashing
+2025-03-18 18:07:36,263 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_hashing.bin
+2025-03-18 18:07:36,264 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref_hashing.bin
+2025-03-18 18:07:37,705 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-3-small - ref
+2025-03-18 18:07:37,705 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-3-small - ref - hashing
+2025-03-18 18:07:37,705 Implementation INFO: Building cross-sha3-r-sdpg-3-small - ref - hashing
+2025-03-18 18:07:37,789 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_hashing.bin
+2025-03-18 18:07:37,789 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref_hashing.bin
+2025-03-18 18:07:40,315 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-1-balance - ref
+2025-03-18 18:07:40,315 BoardTestCase INFO: Runnning cross-sha3-r-sdp-1-balance - ref - hashing
+2025-03-18 18:07:40,315 Implementation INFO: Building cross-sha3-r-sdp-1-balance - ref - hashing
+2025-03-18 18:07:40,411 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_hashing.bin
+2025-03-18 18:07:40,411 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref_hashing.bin
+2025-03-18 18:07:41,281 BoardTestCase INFO: Benchmarking cross-sha3-r-sdp-5-balance - ref
+2025-03-18 18:07:41,282 BoardTestCase INFO: Runnning cross-sha3-r-sdp-5-balance - ref - hashing
+2025-03-18 18:07:41,282 Implementation INFO: Building cross-sha3-r-sdp-5-balance - ref - hashing
+2025-03-18 18:07:41,357 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_hashing.bin
+2025-03-18 18:07:41,357 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref_hashing.bin
+2025-03-18 18:07:44,932 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-1-balance - ref
+2025-03-18 18:07:44,932 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-1-balance - ref - hashing
+2025-03-18 18:07:44,932 Implementation INFO: Building cross-sha3-r-sdpg-1-balance - ref - hashing
+2025-03-18 18:07:44,994 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_hashing.bin
+2025-03-18 18:07:44,994 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref_hashing.bin
+2025-03-18 18:07:45,426 BoardTestCase INFO: Benchmarking cross-sha3-r-sdpg-5-balance - ref
+2025-03-18 18:07:45,426 BoardTestCase INFO: Runnning cross-sha3-r-sdpg-5-balance - ref - hashing
+2025-03-18 18:07:45,426 Implementation INFO: Building cross-sha3-r-sdpg-5-balance - ref - hashing
+2025-03-18 18:07:45,501 Implementation DEBUG: make stdout output:
+CC      elf/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_hashing.elf
+  OBJCOPY bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_hashing.bin
+2025-03-18 18:07:45,501 Platform INFO: Running QEMU: qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel bin/mupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref_hashing.bin
+2025-03-18 18:07:46,762 BoardTestCase INFO: Measuring cross-sha3-r-sdp-1-small - ref
+2025-03-18 18:07:46,762 Implementation INFO: Building cross-sha3-r-sdp-1-small - ref library
+2025-03-18 18:07:46,771 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdp-1-small_ref.a' is up to date.
+2025-03-18 18:07:46,775 BoardTestCase INFO: Measuring cross-sha3-r-sdp-3-balance - ref
+2025-03-18 18:07:46,776 Implementation INFO: Building cross-sha3-r-sdp-3-balance - ref library
+2025-03-18 18:07:46,788 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdp-3-balance_ref.a' is up to date.
+2025-03-18 18:07:46,795 BoardTestCase INFO: Measuring cross-sha3-r-sdpg-5-small - ref
+2025-03-18 18:07:46,795 Implementation INFO: Building cross-sha3-r-sdpg-5-small - ref library
+2025-03-18 18:07:46,810 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdpg-5-small_ref.a' is up to date.
+2025-03-18 18:07:46,817 BoardTestCase INFO: Measuring cross-sha3-r-sdpg-3-balance - ref
+2025-03-18 18:07:46,818 Implementation INFO: Building cross-sha3-r-sdpg-3-balance - ref library
+2025-03-18 18:07:46,833 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdpg-3-balance_ref.a' is up to date.
+2025-03-18 18:07:46,841 BoardTestCase INFO: Measuring cross-sha3-r-sdp-3-small - ref
+2025-03-18 18:07:46,841 Implementation INFO: Building cross-sha3-r-sdp-3-small - ref library
+2025-03-18 18:07:46,856 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdp-3-small_ref.a' is up to date.
+2025-03-18 18:07:46,862 BoardTestCase INFO: Measuring cross-sha3-r-sdp-5-small - ref
+2025-03-18 18:07:46,863 Implementation INFO: Building cross-sha3-r-sdp-5-small - ref library
+2025-03-18 18:07:46,878 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdp-5-small_ref.a' is up to date.
+2025-03-18 18:07:46,885 BoardTestCase INFO: Measuring cross-sha3-r-sdpg-1-small - ref
+2025-03-18 18:07:46,885 Implementation INFO: Building cross-sha3-r-sdpg-1-small - ref library
+2025-03-18 18:07:46,900 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdpg-1-small_ref.a' is up to date.
+2025-03-18 18:07:46,907 BoardTestCase INFO: Measuring cross-sha3-r-sdpg-3-small - ref
+2025-03-18 18:07:46,907 Implementation INFO: Building cross-sha3-r-sdpg-3-small - ref library
+2025-03-18 18:07:46,925 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdpg-3-small_ref.a' is up to date.
+2025-03-18 18:07:46,939 BoardTestCase INFO: Measuring cross-sha3-r-sdp-1-balance - ref
+2025-03-18 18:07:46,939 Implementation INFO: Building cross-sha3-r-sdp-1-balance - ref library
+2025-03-18 18:07:46,974 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdp-1-balance_ref.a' is up to date.
+2025-03-18 18:07:46,977 BoardTestCase INFO: Measuring cross-sha3-r-sdp-5-balance - ref
+2025-03-18 18:07:46,978 Implementation INFO: Building cross-sha3-r-sdp-5-balance - ref library
+2025-03-18 18:07:46,989 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdp-5-balance_ref.a' is up to date.
+2025-03-18 18:07:46,993 BoardTestCase INFO: Measuring cross-sha3-r-sdpg-1-balance - ref
+2025-03-18 18:07:46,993 Implementation INFO: Building cross-sha3-r-sdpg-1-balance - ref library
+2025-03-18 18:07:47,000 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdpg-1-balance_ref.a' is up to date.
+2025-03-18 18:07:47,006 BoardTestCase INFO: Measuring cross-sha3-r-sdpg-5-balance - ref
+2025-03-18 18:07:47,007 Implementation INFO: Building cross-sha3-r-sdpg-5-balance - ref library
+2025-03-18 18:07:47,021 Implementation DEBUG: make stdout output:
+make: 'obj/libmupq_crypto_sign_cross-sha3-r-sdpg-5-balance_ref.a' is up to date.

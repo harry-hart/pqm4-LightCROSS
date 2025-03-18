@@ -156,7 +156,11 @@ class PlatformSettings(object):
         """Get the schemes"""
         try:
             for (parent, scheme_folder, namespace) in self.scheme_folders:
+                if not os.path.exists(scheme_folder):
+                    print(f"Skip {parent}/{scheme_folder}")
+                    continue
                 for scheme in os.listdir(scheme_folder):
+                    print(f"Try scheme {scheme}")
                     scheme_path = os.path.join(scheme_folder, scheme)
                     if not os.path.isdir(scheme_path):
                         continue

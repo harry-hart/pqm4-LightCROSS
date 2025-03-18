@@ -3,18 +3,18 @@ Key Encapsulation Schemes,,,,,,,,,,
 Scheme,Implementation,Key Generation [cycles] (mean),Key Generation [cycles] (min),Key Generation [cycles] (max),Encapsulation [cycles] (mean),Encapsulation [cycles] (min),Encapsulation [cycles] (max),Decapsulation [cycles] (mean),Decapsulation [cycles] (min),Decapsulation [cycles] (max)
 Signature Schemes,,,,,,,,,,
 Scheme,Implementation,Key Generation [cycles] (mean),Key Generation [cycles] (min),Key Generation [cycles] (max),Sign [cycles] (mean),Sign [cycles] (min),Sign [cycles] (max),Verify [cycles] (mean),Verify [cycles] (min),Verify [cycles] (max)
-cross-sha3-r-sdp-1-balance (12 executions),ref,29109,8547,111562,1625881,1401968,1952887,421972,382869,493239
-cross-sha3-r-sdp-1-small (12 executions),ref,29720,9521,112703,5311272,4559621,5962895,1015035,926917,1154676
-cross-sha3-r-sdp-3-balance (12 executions),ref,45175,20837,135292,3173805,3047143,3623774,814528,789590,994439
-cross-sha3-r-sdp-3-small (12 executions),ref,42120,20967,136223,7162442,6873535,8036391,1362520,1310619,1547035
-cross-sha3-r-sdp-5-balance (12 executions),ref,70028,41455,166295,6445471,6005593,7281883,1583173,1472195,1776870
-cross-sha3-r-sdp-5-small (12 executions),ref,58543,36089,163731,11853168,11408247,13188867,2003289,1925592,2208659
-cross-sha3-r-sdpg-1-balance (12 executions),ref,26880,3743,112282,548671,474691,691734,326700,293709,483523
-cross-sha3-r-sdpg-1-small (12 executions),ref,20777,3809,74844,1789743,1710983,2036604,1181406,1045573,1390306
-cross-sha3-r-sdpg-3-balance (12 executions),ref,25123,7063,83314,782253,728904,958123,498323,470792,623924
-cross-sha3-r-sdpg-3-small (12 executions),ref,37586,6840,154096,2925793,2573898,3717401,1956117,1677557,2640085
-cross-sha3-r-sdpg-5-balance (12 executions),ref,33493,14332,97451,1833966,1748169,1914802,1215890,1114356,1641642
-cross-sha3-r-sdpg-5-small (12 executions),ref,30557,11806,94421,4450293,4254085,5152804,2821570,2715119,3700994
+cross-sha3-r-sdp-1-balance (22 executions),ref,24339,8547,111562,1405125,1097833,1952887,400690,344519,519696
+cross-sha3-r-sdp-1-small (22 executions),ref,23929,9521,112703,4732690,3652971,5962895,1001477,891914,1154676
+cross-sha3-r-sdp-3-balance (22 executions),ref,38090,20837,135292,3019721,2773713,3623774,779675,726578,994439
+cross-sha3-r-sdp-3-small (22 executions),ref,37457,20967,136223,7168895,6605899,8036391,1352185,1235305,1547035
+cross-sha3-r-sdp-5-balance (22 executions),ref,66209,41455,166295,6671135,6005593,7599207,1650735,1472195,1934692
+cross-sha3-r-sdp-5-small (22 executions),ref,57312,36089,163731,12321214,11336046,13630797,2157885,1925592,3256071
+cross-sha3-r-sdpg-1-balance (22 executions),ref,23082,3743,147350,607139,474691,997341,372889,293709,483523
+cross-sha3-r-sdpg-1-small (22 executions),ref,17440,3351,102079,1868627,1710983,2179000,1234541,1045573,1390306
+cross-sha3-r-sdpg-3-balance (22 executions),ref,20282,6839,83314,838160,728904,1203260,553394,470792,676916
+cross-sha3-r-sdpg-3-small (22 executions),ref,27443,6840,154096,3134579,2573898,3717401,2138885,1677557,2640085
+cross-sha3-r-sdpg-5-balance (22 executions),ref,34487,14332,175054,2140663,1748169,2894957,1465225,1114356,2003765
+cross-sha3-r-sdpg-5-small (22 executions),ref,26193,11806,94421,4697802,4254085,5421877,3209632,2715119,4060523
 Memory Evaluation,,,,,,,,,,
 Key Encapsulation Schemes,,,,,,,,,,
 Scheme,Implementation,Key Generation [bytes],Encapsulation [bytes],Decapsulation [bytes],,,,,,
@@ -37,18 +37,18 @@ Key Encapsulation Schemes,,,,,,,,,,
 Scheme,Implementation,Key Generation [%],Encapsulation [%],Decapsulation [%],,,,,,
 Signature Schemes,,,,,,,,,,
 Scheme,Implementation,Key Generation [%],Sign [%],Verify [%],,,,,,
-cross-sha3-r-sdp-1-balance,ref,33.4,16.1,28.4,,,,,,
-cross-sha3-r-sdp-1-small,ref,33.8,15.8,44.9,,,,,,
-cross-sha3-r-sdp-3-balance,ref,34.3,11.8,23.1,,,,,,
-cross-sha3-r-sdp-3-small,ref,34.7,11.6,34.2,,,,,,
-cross-sha3-r-sdp-5-balance,ref,29.9,8.5,18.4,,,,,,
-cross-sha3-r-sdp-5-small,ref,31.8,8.0,27.7,,,,,,
-cross-sha3-r-sdpg-1-balance,ref,41.4,33.8,28.2,,,,,,
-cross-sha3-r-sdpg-1-small,ref,41.3,35.6,33.0,,,,,,
-cross-sha3-r-sdpg-3-balance,ref,43.2,24.4,15.6,,,,,,
-cross-sha3-r-sdpg-3-small,ref,43.1,21.0,21.0,,,,,,
-cross-sha3-r-sdpg-5-balance,ref,40.7,19.7,13.6,,,,,,
-cross-sha3-r-sdpg-5-small,ref,38.3,16.7,17.9,,,,,,
+cross-sha3-r-sdp-1-balance,ref,31.5,19.2,33.0,,,,,,
+cross-sha3-r-sdp-1-small,ref,31.7,18.8,47.9,,,,,,
+cross-sha3-r-sdp-3-balance,ref,32.7,13.6,27.0,,,,,,
+cross-sha3-r-sdp-3-small,ref,32.3,13.3,38.9,,,,,,
+cross-sha3-r-sdp-5-balance,ref,28.5,9.8,21.8,,,,,,
+cross-sha3-r-sdp-5-small,ref,29.5,9.3,32.4,,,,,,
+cross-sha3-r-sdpg-1-balance,ref,40.3,34.5,28.8,,,,,,
+cross-sha3-r-sdpg-1-small,ref,40.0,36.2,33.0,,,,,,
+cross-sha3-r-sdpg-3-balance,ref,41.7,25.1,16.8,,,,,,
+cross-sha3-r-sdpg-3-small,ref,41.1,22.8,21.8,,,,,,
+cross-sha3-r-sdpg-5-balance,ref,37.8,21.4,14.8,,,,,,
+cross-sha3-r-sdpg-5-small,ref,37.2,18.9,18.3,,,,,,
 Size Evaluation,,,,,,,,,,
 Key Encapsulation Schemes,,,,,,,,,,
 Scheme,Implementation,.text [bytes],.data [bytes],.bss [bytes],Total [bytes],,,,,
