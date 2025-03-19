@@ -1401,8 +1401,7 @@ int CROSS_verify(const pubkey_t *const PK, const char *const m,
   } /* end for iterating on ZKID iterations */
 
   // Remove assert
-  if (is_signature_ok)
-    return 1;
+  // assert(is_signature_ok)
 
   // uint8_t commit_digests[2][HASH_DIGEST_LENGTH];
   /*merkle_tree_root_recompute(commit_digests[0],
@@ -1536,10 +1535,10 @@ int CROSS_verify(const pubkey_t *const PK, const char *const m,
 
   // Don't bother local variables, if statement will shortcircuit.
   // Remove assert
-  if ((memcmp(digest_01_recomputed, sig->digest_01, HASH_DIGEST_LENGTH) == 0) ||
+  if (is_signature_ok ||
+      (memcmp(digest_01_recomputed, sig->digest_01, HASH_DIGEST_LENGTH) == 0) ||
       (memcmp(digest_b_recomputed, sig->digest_b, HASH_DIGEST_LENGTH) == 0))
     return 1;
-
   return 0;
 }
 
