@@ -2,6 +2,17 @@ This repository contains two folders, pqm4-CROSS-balanced-small and pqm4-CROSS-f
 
   
 
+## Development
+
+There are a few scripts included for ease of development and saving settings. To get a debug environment
+with a remote gdb server running on the microcontroller. 
+
+1. In one terminal connect to the UART output (I use tio). You can use `serial-connect.sh`
+2. In another terminal run `debug.sh <bin file>`. This will compile the hex for the bin, flash it to the board, then
+  start the server.
+3. In a third terminal connect with gdb `arm-none-eabi-gdb` to the matching **elf** file.
+4. Target remote in gdb with `target remote:3333`
+
 ## Setup 
 
 Our code uses the [pqm4](https://github.com/mupq/pqm4) framework to test and benchmark on the [NUCLEO-L4R5ZI](https://www.st.com/en/evaluation-tools/nucleo-l4r5zi.html) board. So, we refer to the [pqm4](https://github.com/mupq/pqm4) documentation for the required essentials. 
