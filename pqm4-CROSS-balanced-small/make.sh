@@ -1,7 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-if [[ $1 == "-d" ]]; then
-  D="DEBUG=1"
+
+PLAT=nucleo-l4r5zi
+if [[ $QEMU -eq 1 ]]; then
+  PLAT=mps2-an386
 fi
 
-make -j`nproc` PLATFORM=mps2-an386 $D
+DEB=$DEBUG
+
+make -j`nproc` PLATFORM=$PLAT DEBUG=$DEB

@@ -13,6 +13,17 @@ with a remote gdb server running on the microcontroller.
 3. In a third terminal connect with gdb `arm-none-eabi-gdb` to the matching **elf** file.
 4. Target remote in gdb with `target remote:3333`
 
+### Nix Notes
+
+A lot of the development was done on a NixOS system, which is why there are nix dev shells available. Unfortunately
+due to complications with:
+
+- gcc-arm-embedded: GDB from this package does not work because of python3 version mismatch
+- pkgsCross.build-packages.arm-embedded.gcc: GCC doesn't work from here because of a soft/hard float abi mismatch
+
+So there is the `compile-shell.nix` for compiling the project with gcc-arm-embedded, then `debug-shell.nix` for debugging
+and running the binaries on the board with gdb. 
+
 ## Setup 
 
 Our code uses the [pqm4](https://github.com/mupq/pqm4) framework to test and benchmark on the [NUCLEO-L4R5ZI](https://www.st.com/en/evaluation-tools/nucleo-l4r5zi.html) board. So, we refer to the [pqm4](https://github.com/mupq/pqm4) documentation for the required essentials. 
