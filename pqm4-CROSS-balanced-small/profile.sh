@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-nsamples=1
+if [[ $# -eq 0 ]]; then
+  echo "Please provide elf file for gdb"
+  exit -1
+fi
+
+nsamples=10
 sleeptime=0
 #pid=$(pidof mysqld)
 elf=$1
 
 for x in $(seq 1 $nsamples)
   do
-    gdb \
+    arm-none-eabi-gdb \
       -ex "set pagination 0" \
       -ex "target extended-remote :3333" \
       -ex "thread apply all bt" \

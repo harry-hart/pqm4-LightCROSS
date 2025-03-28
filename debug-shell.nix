@@ -5,6 +5,7 @@
       python313
       tio
       pkgsCross.arm-embedded.buildPackages.gdb
+      pkgsCross.arm-embedded.buildPackages.gcc
     ];
 
     packages = [
