@@ -1136,14 +1136,11 @@ i+NUM_NODES_SEED_TREE+HASH_CSPRNG_DOMAIN_SEP_CONST & 0xFF;
 }
 
 /* verify returns 1 if signature is ok, 0 otherwise */
-int CROSS_verify_profile(const pubkey_t *const PK, const char *const m,
-                         const uint64_t mlen, const sig_t *const sig) {
+int CROSS_verify(const pubkey_t *const PK, const char *const m,
+                 const uint64_t mlen, const sig_t *const sig) {
   CSPRNG_STATE_T CSPRNG_state;
 
   FQ_ELEM V_tr[K][N - K];
-
-  // Spray the stack at the start
-  hal_spraystack();
 
 #if defined(RSDP)
   expand_public_seed(V_tr, PK->seed_pub);

@@ -77,7 +77,3 @@ void CROSS_sign(const prikey_t *const SK, const char *const m,
 /* verify returns 1 if signature is ok, 0 otherwise */
 int CROSS_verify(const pubkey_t *const PK, const char *const m,
                  const uint64_t mlen, const sig_t *const sig);
-
-/* verify returns 1 if signature is ok, 0 otherwise */
-int CROSS_verify_profile(const pubkey_t *const PK, const char *const m,
-                         const uint64_t mlen, const sig_t *const sig);
