@@ -651,26 +651,27 @@ void CROSS_keygen_old(prikey_t *SK, pubkey_t *PK) {
   pack_fq_syn(PK->s, pub_syn);
 }
 
-void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
-                sig_t *sig) {
-  /* Wipe any residual information in the sig structure allocated by the
-   * caller */
-  send_unsigned("start sign: ", hal_checkstack());
-  memset(sig, 0, sizeof(sig_t));
-  /* Key material expansion */
-  FQ_ELEM V_tr[K][N - K];
-  FZ_ELEM eta[N];
-#if defined(RSDP)
-  expand_private_seed(eta, V_tr, SK->seed);
-#elif defined(RSDPG)
-  FZ_ELEM zeta[M];
-  FZ_ELEM W_mat[M][N - M];
-  expand_private_seed(eta, zeta, V_tr, W_mat, SK->seed);
-#endif
+/*****************************************************/
+/******************* CROSS SIGN **********************/
+/*****************************************************/
 
+void CROSS_sign_inithash(CSPRNG_STATE_T *csprng_state) {
+  xof_shake_init_new(&csprng_state, SEED_LENGTH_BYTES * 8);
+}
+
+void CROSS_sign_hash(uint8_t *buf, size_t buf_len, uint8_t *m_new, uint8_t *m,
+                     size_t dlen, int offset, CSPRNG_STATE_T *csprng_state) {
+  xof_shake_update_new(&csprng_state, m_new, &dlen, (uint8_t *)m, offset);
+  xof_shake_final_new(&csprng_state);
+  xof_shake_extract_new(&csprng_state, buf, buf_len);
+}
+
+// Commit to tree and return seed leaves
+void CROSS_sign_commit(uint16_t *merkle_leaf_indices, uint8_t *salt) {
+  /****** Computing the commitments ******/
   uint8_t root_seed[SEED_LENGTH_BYTES];
   randombytes(root_seed, SEED_LENGTH_BYTES);
-  randombytes(sig->salt, SALT_LENGTH_BYTES);
+  // randombytes(sig->salt, SALT_LENGTH_BYTES);
   send_unsigned("after setup: ", hal_checkstack());
 
 #if defined(NO_TREES)
@@ -678,18 +679,52 @@ void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
   compute_round_seeds(rounds_seeds, root_seed, sig->salt);
 #else
   uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
-  generate_seed_tree_from_root(seed_tree, root_seed, sig->salt);
+  generate_seed_tree_from_root(seed_tree, root_seed, salt);
   uint8_t *rounds_seeds =
       seed_tree + SEED_LENGTH_BYTES * NUM_INNER_NODES_SEED_TREE;
 #endif
 
   send_unsigned("seed tree from root generation stack: ", hal_checkstack());
+
+  // uint16_t merkle_leaf_indices[T];
+  uint16_t layer_offsets[LOG2(T) + 1];
+  uint16_t nodes_per_layer[LOG2(T) + 1];
+
+  setup_tree(layer_offsets, nodes_per_layer);
+  get_leaf_indices(merkle_leaf_indices, layer_offsets);
+}
+
+void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
+                sig_t *sig) {
+  send_unsigned("start sign: ", hal_checkstack());
+
+  /* Wipe any residual information in the sig structure allocated by the
+   * caller */
+  memset(sig, 0, sizeof(sig_t));
+
+  /****** Key material expansion *******/
+  FQ_ELEM H[K][N - K];
+  FZ_ELEM eta[N];
+#if defined(RSDP)
+  expand_private_seed(eta, H, SK->seed);
+#elif defined(RSDPG)
+  FZ_ELEM zeta[M];
+  FZ_ELEM W_mat[M][N - M];
+  expand_private_seed(eta, zeta, H, W_mat, SK->seed);
+#endif
+
+  /****** Commit to tree ******/
+  uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
+  uint16_t merkle_leaf_indices[T];
+  randombytes(sig->salt, SALT_LENGTH_BYTES);
+  CROSS_sign_commit(merkle_leaf_indices, sig->salt);
+
+  /***** CSPRNG Setup ******/
   FZ_ELEM eta_tilde[T][N];
   // FZ_ELEM sigma[T][N];
   FZ_ELEM sigma_new[N];
   FQ_ELEM u_tilde[T][N];
   FQ_ELEM s_tilde[N - K];
-  send_unsigned("matrices: ", hal_checkstack());
 
 #if defined(RSDP)
   uint8_t cmt_0_i_input[DENSELY_PACKED_FQ_SYN_SIZE +
@@ -717,53 +752,32 @@ void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
   memcpy(cmt_1_i_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
   uint8_t *m_new = cmt_0_i_input;
-  //  uint8_t *m_new1=cmt_1_i_input;
   size_t dlen = 0, dlen1 = 0;
   CSPRNG_STATE_T csprng_state1;
   CSPRNG_STATE_T csprng_state;
 
 #if defined(CATEGORY_1)
   uint8_t r = SHAKE128_RATE;
-#if defined(NO_TREES)
-#else
-#endif
 #else
   uint8_t r = SHA3_256_RATE;
-#if defined(NO_TREES)
-#else
 #endif
-#endif
-  uint8_t cmt_1_new[r + HASH_DIGEST_LENGTH];
-  int i;
-  for (i = 0; i < r + HASH_DIGEST_LENGTH; i++)
-    cmt_1_new[i] = 0;
-
-  /*#if defined (NO_TREES)
-      uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-  #else*/
-  uint8_t cmt_0_new[HASH_DIGEST_LENGTH] = {0};
-  // #endif
-  // uint8_t cmt_1[T][HASH_DIGEST_LENGTH] = {0};
 
   CSPRNG_STATE_T CSPRNG_state;
   uint8_t commit_digests[2][HASH_DIGEST_LENGTH];
-  xof_shake_init_new(&csprng_state1, SEED_LENGTH_BYTES * 8);
+  // xof_shake_init_new(&csprng_state1, SEED_LENGTH_BYTES * 8);
+  CROSS_sign_inithash(csprng_state1);
   uint16_t domain_sep_idx_hash;
   uint16_t domain_sep_i;
   /*#if defined(NO_TREES)
   size_t i1;
   #else*/
-  uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
   size_t i1;
   unsigned int node_ctr, parent_layer;
-
-  uint16_t merkle_leaf_indices[T];
-  uint16_t layer_offsets[LOG2(T) + 1];
-  uint16_t nodes_per_layer[LOG2(T) + 1];
-
-  setup_tree(layer_offsets, nodes_per_layer);
-  get_leaf_indices(merkle_leaf_indices, layer_offsets);
-  // #endif
+  uint8_t cmt_1_new[r + HASH_DIGEST_LENGTH];
+  int i;
+  for (i = 0; i < r + HASH_DIGEST_LENGTH; i++)
+    cmt_1_new[i] = 0;
+  uint8_t cmt_0_new[HASH_DIGEST_LENGTH] = {0};
 
   for (i = 0; i < T; i++) {
     /* CSPRNG is fed with concat(seed,salt,round index) represented
@@ -803,7 +817,7 @@ void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
 
     FQ_ELEM u[N];
     fq_vec_by_fq_vec_pointwise(u, v, u_tilde[i]);
-    fq_vec_by_fq_matrix(s_tilde, u, V_tr);
+    fq_vec_by_fq_matrix(s_tilde, u, H);
     fq_dz_norm_synd(s_tilde);
 
     /* cmt_0_i_input contains s-tilde || sigma_i || salt */
@@ -820,21 +834,16 @@ void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
     cmt_0_i_input[offset_round_idx] = (domain_sep_idx_hash >> 8) & 0xFF;
     cmt_0_i_input[offset_round_idx + 1] = domain_sep_idx_hash & 0xFF;
 
-    // hash(cmt_0[i],cmt_0_i_input,sizeof(cmt_0_i_input));
-    /*#if defined(NO_TREE)
-        m_new = cmt_0_i_input;
-        dlen = sizeof(cmt_0_i_input);
-        xof_shake_init_new(&csprng_state, SEED_LENGTH_BYTES*8);
-        xof_shake_update_new(&csprng_state, m_new, &dlen, cmt_0_i_input, 1);
-        xof_shake_final_new(&csprng_state);
-        xof_shake_extract_new(&csprng_state, cmt_0[i],HASH_DIGEST_LENGTH);
-    #else*/
     m_new = cmt_0_i_input;
     dlen = sizeof(cmt_0_i_input);
-    xof_shake_init_new(&csprng_state, SEED_LENGTH_BYTES * 8);
-    xof_shake_update_new(&csprng_state, m_new, &dlen, cmt_0_i_input, 1);
-    xof_shake_final_new(&csprng_state);
-    xof_shake_extract_new(&csprng_state, cmt_0_new, HASH_DIGEST_LENGTH);
+    // xof_shake_init_new(&csprng_state, SEED_LENGTH_BYTES * 8);
+    // xof_shake_update_new(&csprng_state, m_new, &dlen, cmt_0_i_input, 1);
+    // xof_shake_final_new(&csprng_state);
+    // xof_shake_extract_new(&csprng_state, cmt_0_new, HASH_DIGEST_LENGTH);
+    CROSS_sign_inithash(csprng_state);
+    CROSS_sign_hash(cmt_0_new, HASH_DIGEST_LENGTH, m_new, cmt_0_i_input, dlen,
+                    csprng_state);
+
     memcpy(merkle_tree_0 + merkle_leaf_indices[i] * HASH_DIGEST_LENGTH,
            cmt_0_new, HASH_DIGEST_LENGTH);
     // #endif
@@ -849,10 +858,14 @@ void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
     // hash(cmt_1[i],cmt_1_i_input,sizeof(cmt_1_i_input));
     m_new = cmt_1_i_input;
     dlen = sizeof(cmt_1_i_input);
-    xof_shake_init_new(&csprng_state, SEED_LENGTH_BYTES * 8);
-    xof_shake_update_new(&csprng_state, m_new, &dlen, cmt_1_i_input, 1);
-    xof_shake_final_new(&csprng_state);
-    xof_shake_extract_new(&csprng_state, cmt_1_new + dlen1, HASH_DIGEST_LENGTH);
+    // xof_shake_init_new(&csprng_state, SEED_LENGTH_BYTES * 8);
+    CROSS_inithash(csprng_state);
+    // xof_shake_update_new(&csprng_state, m_new, &dlen, cmt_1_i_input, 1);
+    // xof_shake_final_new(&csprng_state);
+    // xof_shake_extract_new(&csprng_state, cmt_1_new + dlen1,
+    // HASH_DIGEST_LENGTH);
+    CROSS_sign_hash(cmt_1_new + dlen1, HASH_DIGEST_LENGTH, cmt_1_i_input,
+                    cmt_1_i_input, dlen, csprng_input);
 
     dlen1 += HASH_DIGEST_LENGTH;
     if (dlen1 > r && i != T - 1) {
