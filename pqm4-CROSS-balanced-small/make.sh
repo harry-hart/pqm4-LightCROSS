@@ -8,4 +8,6 @@ fi
 
 DEB=$DEBUG
 
-make -j`nproc` PLATFORM=$PLAT DEBUG=$DEB
+TARGET=$1
+
+make -j`nproc` PLATFORM=$PLAT DEBUG=$DEB $TARGET

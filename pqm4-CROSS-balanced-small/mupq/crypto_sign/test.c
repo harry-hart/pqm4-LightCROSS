@@ -75,11 +75,22 @@ static int test_sign(void) {
     // By relying on m == sm we prevent having to allocate CRYPTO_BYTES twice
     if (MUPQ_crypto_sign_open(sm + 8, &mlen, sm + 8, smlen, pk + 8)) {
       hal_send_str("ERROR Signature did not verify correctly!\n");
-    } else if (check_canary(pk) || check_canary(pk + sizeof(pk) - 8) ||
-               check_canary(sk) || check_canary(sk + sizeof(sk) - 8) ||
-               check_canary(sm) || check_canary(sm + sizeof(sm) - 8) ||
-               check_canary(m) || check_canary(m + sizeof(m) - 8)) {
-      hal_send_str("ERROR canary overwritten\n");
+    } else if (check_canary(pk)) {
+      hal_send_str("ERROR canary overwritten: start of pk\n");
+    } else if (check_canary(pk + sizeof(pk) - 8)) {
+      hal_send_str("ERROR canary overwritten: end of pk\n");
+    } else if (check_canary(sk)) {
+      hal_send_str("ERROR canary overwritten: start of sk\n");
+    } else if (check_canary(sk + sizeof(sk) - 8)) {
+      hal_send_str("ERROR canary overwritten: end of sk\n");
+    } else if (check_canary(sm)) {
+      hal_send_str("ERROR canary overwritten: start of sm\n");
+    } else if (check_canary(sm + sizeof(sm) - 8)) {
+      hal_send_str("ERROR canary overwritten: end of sm\n");
+    } else if (check_canary(m)) {
+      hal_send_str("ERROR canary overwritten: start of m\n");
+    } else if (check_canary(m + sizeof(m) - 8)) {
+      hal_send_str("ERROR canary overwritten: end of m\n");
     } else {
       hal_send_str("OK Signature did verify correctly!\n");
     }
