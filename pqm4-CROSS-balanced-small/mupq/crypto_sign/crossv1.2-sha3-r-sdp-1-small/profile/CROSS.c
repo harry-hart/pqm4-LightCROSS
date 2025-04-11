@@ -661,14 +661,14 @@ void CROSS_keygen_old(prikey_t *SK, pubkey_t *PK) {
 /*****************************************************/
 
 void CROSS_sign_inithash(CSPRNG_STATE_T *csprng_state) {
-  xof_shake_init_new(&csprng_state, SEED_LENGTH_BYTES * 8);
+  // xof_shake_init_new(&csprng_state, SEED_LENGTH_BYTES * 8);
 }
 
 void CROSS_sign_hash(uint8_t *buf, size_t buf_len, uint8_t *m_new, uint8_t *m,
                      size_t dlen, int offset, CSPRNG_STATE_T *csprng_state) {
-  xof_shake_update_new(&csprng_state, m_new, &dlen, (uint8_t *)m, offset);
-  xof_shake_final_new(&csprng_state);
-  xof_shake_extract_new(&csprng_state, buf, buf_len);
+  // xof_shake_update_new(&csprng_state, m_new, &dlen, (uint8_t *)m, offset);
+  // xof_shake_final_new(&csprng_state);
+  // xof_shake_extract_new(&csprng_state, buf, buf_len);
 }
 
 // Commit to tree and return seed leaves
@@ -812,6 +812,8 @@ void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
   for (i = 0; i < T; i++) {
     /* CSPRNG is fed with concat(seed,salt,round index) represented
      * as a 2 bytes little endian unsigned integer */
+
+    // Re-declared? Put outside loops
     uint8_t
         csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES + sizeof(uint16_t)];
     memcpy(csprng_input, rounds_seeds + SEED_LENGTH_BYTES * i,
@@ -839,6 +841,7 @@ void CROSS_sign(const prikey_t *SK, const char *const m, const uint64_t mlen,
 #endif
     restr_vec_sub(sigma_new, eta, eta_tilde[i]);
 
+    // Outside loop?
     FQ_ELEM v[N];
     convert_restr_vec_to_fq(v, sigma_new);
     fz_dz_norm_sigma(sigma_new);
@@ -1197,6 +1200,10 @@ int CROSS_verify(const pubkey_t *const PK, const char *const m,
   unpack_fq_syn(pub_syn, PK->s);
 
   send_unsigned("init beta: ", hal_checkstack());
+  // This will hold:
+  // 1. digest_msg
+  // 2. digest_cmt
+  // 3. Salt
   uint8_t beta_buf[2 * HASH_DIGEST_LENGTH + SALT_LENGTH_BYTES];
   uint8_t *m_new = beta_buf;
   // uint8_t *m_new1=beta_buf;
@@ -1216,6 +1223,9 @@ int CROSS_verify(const pubkey_t *const PK, const char *const m,
 #endif
 #endif
 
+  // Compute digest_msg and put it in the first part of
+  // beta_buf
+
   // hash(beta_buf,(uint8_t*) m,mlen);
   m_new = (uint8_t *)m;
   dlen = mlen;
@@ -1225,8 +1235,13 @@ int CROSS_verify(const pubkey_t *const PK, const char *const m,
   xof_shake_extract_new(&csprng_state, beta_buf, HASH_DIGEST_LENGTH);
   send_unsigned("hash beta stack:", hal_checkstack());
 
+  // Put digest_cmt and Salt from the signature in beta buf to
+  // form:
+  //  beta_buf = digest_msg | digest_cmt | Salt
   memcpy(beta_buf + HASH_DIGEST_LENGTH, sig->digest_01, HASH_DIGEST_LENGTH);
   memcpy(beta_buf + 2 * HASH_DIGEST_LENGTH, sig->salt, SALT_LENGTH_BYTES);
+
+  // Calculate digest_chall_1 from beta_buf
 
   uint8_t d_beta[HASH_DIGEST_LENGTH];
   // hash(d_beta,beta_buf,sizeof(beta_buf));
@@ -1236,6 +1251,8 @@ int CROSS_verify(const pubkey_t *const PK, const char *const m,
   xof_shake_update_new(&csprng_state, m_new, &dlen, beta_buf, 1);
   xof_shake_final_new(&csprng_state);
   xof_shake_extract_new(&csprng_state, d_beta, HASH_DIGEST_LENGTH);
+
+  // Beta is chall_1, calculate from CSPRNG
 
   FQ_ELEM beta[T];
   initialize_csprng(&CSPRNG_state, d_beta, HASH_DIGEST_LENGTH);
