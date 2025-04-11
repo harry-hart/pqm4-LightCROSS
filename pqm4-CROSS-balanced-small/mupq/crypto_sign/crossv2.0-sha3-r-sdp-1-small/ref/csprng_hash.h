@@ -235,6 +235,7 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
       // Decrement remaining counter for random buffer
       pos_remaining -= refresh_amount;
     }
+    // Temporarily place value (may be overwritten)
     *((FP_ELEM *)res + placed) = sub_buffer & mask;
     // Check if the value is in the field
     if (*((FP_ELEM *)res + placed) < P) {
