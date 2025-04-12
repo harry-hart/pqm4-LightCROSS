@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 ./benchmarks.py -p mps2-an386 -i 10
+python3 ./benchmarks.py -p nucleo-l4r5zi
