@@ -159,7 +159,7 @@ class PlatformSettings(object):
                 if not os.path.exists(scheme_folder):
                     print(f"Skip {parent}/{scheme_folder}")
                     continue
-                for scheme in os.listdir(scheme_folder):
+                for scheme in sorted(os.listdir(scheme_folder)):
                     print(f"Try scheme {scheme}")
                     scheme_path = os.path.join(scheme_folder, scheme)
                     if not os.path.isdir(scheme_path):

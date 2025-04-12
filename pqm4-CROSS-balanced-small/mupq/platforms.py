@@ -82,7 +82,9 @@ class SerialCommsPlatform(mupq.Platform):
 
     def __init__(self, tty="/dev/ttyACM0", baud=38400, timeout=1):
         super().__init__()
+        self.log.debug(f"Connecting to {tty}...")
         self._dev = serial.Serial(tty, baud, timeout=timeout)
+        self.log.debug(f"Connected to {tty}.")
 
     def __enter__(self):
         return super().__enter__()
@@ -95,10 +97,13 @@ class SerialCommsPlatform(mupq.Platform):
         if expiterations > 1:
             pb = tqdm.tqdm(total=expiterations, leave=False, desc="Running...")
         self._dev.reset_input_buffer()
+        self._dev.reset_output_buffer()
         self.flash(binary_path)
+        self.log.debug(f"Flashed {binary_path}. Waiting for start symbol...")
         # Wait for the first equal sign
+        # If the test times out, return empty output
         if len(self._dev.read_until(b'=')) == 0:
-            # If the test times out, return empty output
+            self.log.warn(f"{binary_path}: Timed out waiting for start")
             return ""
             raise RuntimeError('Timout waiting for start')
         # Wait for the end of the equal delimiter
@@ -108,6 +113,7 @@ class SerialCommsPlatform(mupq.Platform):
             raise RuntimeError('Start does not match')
         # Wait for the end
         output = bytearray()
+        timeout_counter = 0
         while len(output) == 0 or output[-1] != b'#'[0]:
             data = self._dev.read_until(b'#', 128)
             if expiterations > 1:
@@ -116,6 +122,11 @@ class SerialCommsPlatform(mupq.Platform):
                 else:
                     pb.refresh()
             output.extend(data)
+            if len(output) == 0:
+                timeout_counter += 1
+            # Timeout while waitiing for results
+            if timeout_counter >= 5:
+                break
         if expiterations > 1:
             pb.close()
         return output[:-1].decode('utf-8', 'ignore')
