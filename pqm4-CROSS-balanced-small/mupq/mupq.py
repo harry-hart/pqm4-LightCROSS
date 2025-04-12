@@ -503,8 +503,11 @@ class Converter(object):
                 measurements = []
                 for measurement in os.listdir(path+"/"+scheme+"/"+implementation):
                     with open(path+"/"+scheme+"/"+implementation+"/"+measurement, "r") as f:
-                        d = self._parseData(f.read(), benchmark, type_)
-                        measurements.append(d)
+                        try:
+                            d = self._parseData(f.read(), benchmark, type_)
+                            measurements.append(d)
+                        except:
+                            measurements.append([0, 0, 0])
                 self._formatData(scheme, implementation, measurements, benchmark)
                 data[scheme][implementation] = measurements
         return data
