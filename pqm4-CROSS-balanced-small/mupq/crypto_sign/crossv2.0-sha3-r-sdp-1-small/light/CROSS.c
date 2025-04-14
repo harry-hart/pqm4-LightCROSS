@@ -136,7 +136,13 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[M],
 //  s[j] = e[k + j] + \sum_{i = 0}^k e[i] V[i,j]
 // as:
 //  s[j] += \sum_{i = 0}^k e[i] V[i,j]
-void CROSS_keygen_compute_syndrome(FP_ELEM *s, uint8_t *seed_pk) {}
+void CROSS_keygen_compute_syndrome(FP_ELEM *s, uint8_t *seed_pk) {
+  for (int i = 0; i < K; i++) {
+    for (int j = 0; j < N - K; j++) {
+      s[j] =
+    }
+  }
+}
 
 void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
