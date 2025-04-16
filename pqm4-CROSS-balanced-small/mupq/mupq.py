@@ -356,8 +356,10 @@ class TestVectors(BoardTestCase):
         return hash
 
     def run_test(self, implementation):
-        checksum = self.hash_output(
-            super().run_test(implementation).encode('utf-8'))
+        test_result = super().run_test(implementation)
+        if test_result == -1:
+            return -1
+        checksum = self.hash_output(test_result.encode('utf-8'))
         if self.testvectorhash[implementation.scheme] != checksum:
             self.log.error("Test %s - %s Failed!", implementation, self.test_type)
             return -1

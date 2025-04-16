@@ -31,6 +31,7 @@
 
 #include <assert.h>
 #include <stdalign.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "CROSS.h"
@@ -38,6 +39,7 @@
 #include "fp_arith.h"
 #include "merkle_tree.h"
 #include "pack_unpack.h"
+#include "parameters.h"
 #include "seedtree.h"
 
 #include "hal.h"
@@ -136,10 +138,64 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[M],
 //  s[j] = e[k + j] + \sum_{i = 0}^k e[i] V[i,j]
 // as:
 //  s[j] += \sum_{i = 0}^k e[i] V[i,j]
-void CROSS_keygen_compute_syndrome(FP_ELEM *s, uint8_t *seed_pk) {
+void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
+
+  /* Expansion of pk->seed, explicit domain separation for CSPRNG as in keygen
+   */
+  const uint16_t dsc_csprng_seed_pk = CSPRNG_DOMAIN_SEP_CONST + (3 * T + 2);
+  /* Intiialize the csprng to generate V_tr on the fly. */
+  CSPRNG_STATE_T csprng_state_mat;
+  csprng_initialize(&csprng_state_mat, seed_pk, KEYPAIR_SEED_LENGTH_BYTES,
+                    dsc_csprng_seed_pk);
+  /* The on the fly element. */
+  const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
+  int elem_size = BITS_TO_REPRESENT(P - 1);
+  FP_ELEM v;
+  uint64_t v_window;
+  int remaining_window = 0;
+
+  FP_ELEM *e = s_e_bar;
+  FP_ELEM *s = &s_e_bar[K];
+
+  // FOR DEBUGGING
+  FP_ELEM V_tr[K][N - K];
+  expand_pk(V_tr, seed_pk);
+
   for (int i = 0; i < K; i++) {
     for (int j = 0; j < N - K; j++) {
-      s[j] =
+      // Try generate random value
+      // Are they generated column first or row first?
+      // If we have less than 32 remaining
+      do {
+        if (remaining_window <= 32) {
+          uint32_t replace_window;
+          // Get new random bytes
+          csprng_randombytes(&replace_window, sizeof(replace_window),
+                             &csprng_state_mat);
+          // put on sub buffer
+          v_window |= ((uint64_t)replace_window) << remaining_window;
+          // add to remaining window
+          remaining_window += 32;
+          // Rejection sampling if not in field
+        }
+        v = v_window & mask;
+        // If it is in the field
+        if (v < P) {
+          // shift window
+          v_window = v_window >> elem_size;
+          // update counter
+          remaining_window -= elem_size;
+          break;
+        }
+      } while (1);
+
+      if (v != V_tr[i][j]) {
+        hal_send_str("keygen fail at");
+      }
+
+      // Calculate s
+      s[j] = FPRED_DOUBLE((FP_DOUBLEPREC)RESTR_TO_VAL(s[j]) +
+                          (FP_DOUBLEPREC)RESTR_TO_VAL(e[i]) * (FP_DOUBLEPREC)v);
     }
   }
 }
@@ -163,6 +219,8 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
                      &csprng_state);
   memcpy(PK->seed_pk, seed_e_seed_pk[1], KEYPAIR_SEED_LENGTH_BYTES);
 
+#if defined(LIGHTCROSS)
+#else
   /******* Sample V (transposed) *******/
   /* expansion of matrix/matrices */
   FP_ELEM V_tr[K][N - K];
@@ -171,6 +229,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #elif defined(RSDPG)
   FZ_ELEM W_mat[M][N - M];
   expand_pk(V_tr, W_mat, PK->seed_pk);
+#endif
 #endif
 
   /******* Sample e bar for error vector *******/
@@ -182,6 +241,26 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   csprng_initialize(&csprng_state_e_bar, seed_e_seed_pk[0],
                     KEYPAIR_SEED_LENGTH_BYTES, dsc_csprng_seed_e);
 
+#if defined(LIGHTCROSS)
+  // Optimised Implementation
+  // This is an vector structured:
+  //  - s_e_bar[K..N] := s
+  //  - s_e_bar[0..K] := e[0..K]
+  // The full thing is calculated as e, then because we only need e[0..K] for
+  // the rest of the syndrome calculation, we can overlap the end of the vector
+  // with the new s values in the computation.
+  FP_ELEM s_e_bar[N];
+  FP_ELEM *s = &s_e_bar[K];
+#if defined(RSDP)
+  csprng_fz_vec(s_e_bar, &csprng_state_e_bar);
+#elif defined(RSDPG)
+  FZ_ELEM e_G_bar[M];
+  csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
+  fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
+  fz_dz_norm_n(e_bar);
+#endif
+#else
+  // Original Implementation
   FZ_ELEM e_bar[N];
 #if defined(RSDP)
   csprng_fz_vec(e_bar, &csprng_state_e_bar);
@@ -195,10 +274,15 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   /******* Calculate Syndrome *******/
   /* compute public syndrome */
   FP_ELEM s[N - K];
+#endif
 
   // This is the computation s = eH^T
   // Here is where we do optimisation from LightCROSS
+#if defined(LIGHTCROSS)
+  CROSS_keygen_compute_syndrome(s_e_bar, PK->seed_pk);
+#else
   restr_vec_by_fp_matrix(s, e_bar, V_tr);
+#endif
 
   fp_dz_norm_synd(s);
   pack_fp_syn(PK->s, s);
