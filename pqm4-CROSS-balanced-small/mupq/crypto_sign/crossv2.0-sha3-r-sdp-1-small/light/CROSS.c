@@ -163,6 +163,8 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
   // Remove above when finished debugging
 
   // Restrict the values
+  // Note: We don't do the restriction in the computation, because
+  // it should only be done once.
   for (int j = 0; j < N - K; j++) {
     s[j] = RESTR_TO_VAL(s[j]);
   }
@@ -228,8 +230,8 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
                      &csprng_state);
   memcpy(PK->seed_pk, seed_e_seed_pk[1], KEYPAIR_SEED_LENGTH_BYTES);
 
-  // #if defined(LIGHTCROSS)
-  // #else
+#if defined(LIGHTCROSS)
+#else
   /******* Sample V (transposed) *******/
   /* expansion of matrix/matrices */
   FP_ELEM V_tr[K][N - K];
@@ -239,7 +241,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   FZ_ELEM W_mat[M][N - M];
   expand_pk(V_tr, W_mat, PK->seed_pk);
 #endif
-  // #endif
+#endif
 
   /******* Sample e bar for error vector *******/
   /* expansion of secret key material */
@@ -250,12 +252,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   csprng_initialize(&csprng_state_e_bar, seed_e_seed_pk[0],
                     KEYPAIR_SEED_LENGTH_BYTES, dsc_csprng_seed_e);
 
-  // DEBUGGING
-  CSPRNG_STATE_T csprng_state_old_e_bar;
-  csprng_initialize(&csprng_state_old_e_bar, seed_e_seed_pk[0],
-                    KEYPAIR_SEED_LENGTH_BYTES, dsc_csprng_seed_e);
-
-  // #if defined(LIGHTCROSS)
+#if defined(LIGHTCROSS)
   //  Optimised Implementation
   //  This is an vector structured:
   //   - s_e_bar[K..N] := s
@@ -273,11 +270,11 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
   fz_dz_norm_n(e_bar);
 #endif
-  // #else
+#else
   //  Original Implementation
-  FZ_ELEM old_e_bar[N];
+  FZ_ELEM e_bar[N];
 #if defined(RSDP)
-  csprng_fz_vec(old_e_bar, &csprng_state_old_e_bar);
+  csprng_fz_vec(e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
   FZ_ELEM e_G_bar[M];
   csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
@@ -287,23 +284,16 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
   /******* Calculate Syndrome *******/
   /* compute public syndrome */
-  FP_ELEM old_s[N - K];
-  // #endif
+  FP_ELEM s[N - K];
+#endif
 
   // This is the computation s = eH^T
   // Here is where we do optimisation from LightCROSS
-  // #if defined(LIGHTCROSS)
+#if defined(LIGHTCROSS)
   CROSS_keygen_compute_syndrome(s_e_bar, PK->seed_pk);
-  // #else
-  restr_vec_by_fp_matrix(old_s, old_e_bar, V_tr);
-  // #endif
-
-  // DEBUGGING
-  for (int i = 0; i < N - K; i++) {
-    if (old_s[i] != s[i]) {
-      hal_send_str("syndrome error");
-    }
-  }
+#else
+  restr_vec_by_fp_matrix(s, e_bar, V_tr);
+#endif
 
   fp_dz_norm_synd(s);
   pack_fp_syn(PK->s, s);
