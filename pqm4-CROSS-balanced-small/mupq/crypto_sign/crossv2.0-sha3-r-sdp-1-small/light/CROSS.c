@@ -157,11 +157,6 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
   FP_ELEM *e = s_e_bar;
   FP_ELEM *s = &s_e_bar[K];
 
-  // ******* FOR DEBUGGING *************
-  // FP_ELEM V_tr[K][N - K];
-  // expand_pk(V_tr, seed_pk);
-  // Remove above when finished debugging
-
   // Restrict the values
   // Note: We don't do the restriction in the computation, because
   // it should only be done once.
@@ -179,8 +174,8 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
         if (remaining_window <= 32) {
           uint32_t replace_window;
           // Get new random bytes
-          csprng_randombytes(&replace_window, sizeof(replace_window),
-                             &csprng_state_mat);
+          csprng_randombytes((unsigned char *)&replace_window,
+                             sizeof(replace_window), &csprng_state_mat);
           // put on sub buffer
           v_window |= ((uint64_t)replace_window) << remaining_window;
           // add to remaining window
@@ -197,12 +192,6 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
           break;
         }
       } while (1);
-
-      // ******* DEBUGGING ********
-      // These should be equal to be correct according to spec
-      // if (v != V_tr[i][j]) {
-      //  hal_send_str("keygen fail at");
-      //}
 
       // Calculate s
       s[j] = FPRED_DOUBLE((FP_DOUBLEPREC)s[j] +
@@ -356,63 +345,93 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   /* cmt_1_i_input is concat(seed,salt,round index + 2T-1) */
   memcpy(cmt_1_i_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
+#if defined(NO_TREES)
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
+#else
+#if defined(LIGHTCROSS)
+  uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
+#else
+  uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
+#endif
+#endif
   uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
 
   CSPRNG_STATE_T csprng_state;
-  for (uint16_t i = 0; i < T; i++) {
-    /* CSPRNG is fed with concat(seed,salt,round index) represented
-     * as a 2 bytes little endian unsigned integer */
-    uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
-    memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
-           SEED_LENGTH_BYTES);
-    memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
-    uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+  // Double loop so that we can track merkle_tree_0
+  // position. Maybe change this back to single loop
+  // for time optimisation later.
+  uint16_t i = 0;
+  const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
+  const uint16_t leaves_start_indices[TREE_SUBROOTS] =
+      TREE_LEAVES_START_INDICES;
+  for (size_t k = 0; k < TREE_SUBROOTS; k++) {
+    for (size_t j = 0; j < cons_leaves[i]; j++) {
+      // for (uint16_t i = 0; i < T; i++) {
+      /* CSPRNG is fed with concat(seed,salt,round index) represented
+       * as a 2 bytes little endian unsigned integer */
+      uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+      memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
+             SEED_LENGTH_BYTES);
+      memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
-    /* expand seed[i] into seed_e and seed_u */
-    csprng_initialize(&csprng_state, csprng_input,
-                      SEED_LENGTH_BYTES + SALT_LENGTH_BYTES, domain_sep_csprng);
-    /* expand e_bar_prime */
+      uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+
+      /* expand seed[i] into seed_e and seed_u */
+      csprng_initialize(&csprng_state, csprng_input,
+                        SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
+                        domain_sep_csprng);
+      /* expand e_bar_prime */
 #if defined(RSDP)
-    csprng_fz_vec(e_bar_prime[i], &csprng_state);
+      csprng_fz_vec(e_bar_prime[i], &csprng_state);
 #elif defined(RSDPG)
-    csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
-    fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
-    fz_dz_norm_m(v_G_bar[i]);
-    fz_inf_w_by_fz_matrix(e_bar_prime[i], e_G_bar_prime, W_mat);
-    fz_dz_norm_n(e_bar_prime[i]);
+      csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
+      fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
+      fz_dz_norm_m(v_G_bar[i]);
+      fz_inf_w_by_fz_matrix(e_bar_prime[i], e_G_bar_prime, W_mat);
+      fz_dz_norm_n(e_bar_prime[i]);
 #endif
-    fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime[i]);
+      fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime[i]);
 
-    FP_ELEM v[N];
-    convert_restr_vec_to_fp(v, v_bar[i]);
-    fz_dz_norm_n(v_bar[i]);
-    /* expand u_prime */
-    csprng_fp_vec(u_prime[i], &csprng_state);
+      FP_ELEM v[N];
+      convert_restr_vec_to_fp(v, v_bar[i]);
+      fz_dz_norm_n(v_bar[i]);
+      /* expand u_prime */
+      csprng_fp_vec(u_prime[i], &csprng_state);
 
-    FP_ELEM u[N];
-    fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
-    fp_vec_by_fp_matrix(s_prime, u, V_tr);
-    fp_dz_norm_synd(s_prime);
+      FP_ELEM u[N];
+      fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
+      fp_vec_by_fp_matrix(s_prime, u, V_tr);
+      fp_dz_norm_synd(s_prime);
 
-    /* cmt_0_i_input contains s_prime || v_bar resp. v_G_bar || salt */
-    pack_fp_syn(cmt_0_i_input, s_prime);
+      /* cmt_0_i_input contains s_prime || v_bar resp. v_G_bar || salt */
+      pack_fp_syn(cmt_0_i_input, s_prime);
 
 #if defined(RSDP)
-    pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar[i]);
+      pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar[i]);
 #elif defined(RSDPG)
-    pack_fz_rsdp_g_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_G_bar[i]);
+      pack_fz_rsdp_g_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE,
+                         v_G_bar[i]);
 #endif
-    /* Fixed endianness marshalling of round counter */
-    uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
+      /* Fixed endianness marshalling of round counter */
+      uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
-    hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
-    memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
-           SEED_LENGTH_BYTES);
+#if defined(LIGHTCROSS)
+      hash(&merkle_tree_0[leaves_start_indices[k] + j], cmt_0_i_input,
+           sizeof(cmt_0_i_input), domain_sep_hash);
+#else
+      hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+#endif
+      memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
+             SEED_LENGTH_BYTES);
 
-    hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input, sizeof(cmt_1_i_input),
-         domain_sep_hash);
+      hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input, sizeof(cmt_1_i_input),
+           domain_sep_hash);
+
+      // Because of double loop
+      // Remove if single loop returns
+      i++;
+    }
   }
 
   /* vector containing d_0 and d_1 from spec */
@@ -421,8 +440,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(NO_TREES)
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
+#if defined(LIGHTCROSS)
+  tree_root(digest_cmt0_cmt1, merkle_tree_0);
+#else
   uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
   tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
+#endif
 #endif
   hash(digest_cmt0_cmt1 + HASH_DIGEST_LENGTH, cmt_1, sizeof(cmt_1),
        HASH_DOMAIN_SEP_CONST);

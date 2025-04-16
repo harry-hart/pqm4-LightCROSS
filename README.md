@@ -1,3 +1,19 @@
+## TODO
+
+  - [ ] LightCROSS
+    - [ ] Key Generation
+      - [x] First implementation (sdp-1-small)
+      - [ ] Port to all versions (sdpg, fast)
+    - [ ] Merkle Tree
+      - [ ] First implementation (sdp-1-small)
+      - [ ] Port to all versions (sdpg)
+    - [ ] JIT Shake Hash
+      - [ ] First implementation (sdp-1-small)
+      - [ ] Port to all versions (sdpg, fast)
+  - [ ] New contributions
+    - [ ] Parallelise matrix multiplication (with DSP)
+    - [ ] Packing?
+
 This repository contains two folders, pqm4-CROSS-balanced-small and pqm4-CROSS-fast. Our paper "LightCROSS: A Secure and Memory Optimized Post-Quantum Digital Signature CROSS" describes the implementation.  
 
   

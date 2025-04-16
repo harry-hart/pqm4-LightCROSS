@@ -89,6 +89,7 @@ CPPFLAGS += -DMUPQ -DMUPQ_NAMESPACE=$(MUPQ_NAMESPACE) -DMUPQ_ITERATIONS=$(MUPQ_I
 
 CFLAGS += \
 	-Wall -Wextra -Wshadow \
+	-Wfatal-errors \
 	-MMD \
 	-fno-common \
 	$(CPPFLAGS)
@@ -105,6 +106,7 @@ HOST_CFLAGS += \
 	-O2 -g3 \
 	-I$(SRCDIR)/mupq/common \
 	-Wall -Wextra -Wshadow \
+	-Wfatal-errors \
 	-MMD \
 	-fno-common \
 	$(HOST_CPPFLAGS)
