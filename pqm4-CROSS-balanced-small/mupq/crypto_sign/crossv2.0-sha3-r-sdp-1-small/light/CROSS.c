@@ -151,15 +151,16 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
   int elem_size = BITS_TO_REPRESENT(P - 1);
   FP_ELEM v;
-  uint64_t v_window;
+  uint64_t v_window = 0;
   int remaining_window = 0;
 
   FP_ELEM *e = s_e_bar;
   FP_ELEM *s = &s_e_bar[K];
 
-  // FOR DEBUGGING
+  // ******* FOR DEBUGGING *************
   FP_ELEM V_tr[K][N - K];
   expand_pk(V_tr, seed_pk);
+  // Remove above when finished debugging
 
   for (int i = 0; i < K; i++) {
     for (int j = 0; j < N - K; j++) {
@@ -179,16 +180,18 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
           // Rejection sampling if not in field
         }
         v = v_window & mask;
+        // shift window
+        v_window = v_window >> elem_size;
+        // update counter
+        remaining_window -= elem_size;
         // If it is in the field
         if (v < P) {
-          // shift window
-          v_window = v_window >> elem_size;
-          // update counter
-          remaining_window -= elem_size;
           break;
         }
       } while (1);
 
+      // ******* DEBUGGING ********
+      // These should be equal to be correct according to spec
       if (v != V_tr[i][j]) {
         hal_send_str("keygen fail at");
       }
