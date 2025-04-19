@@ -367,11 +367,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(NO_TREES)
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #else
-  // #if defined(LIGHTCROSS)
+#if defined(LIGHTCROSS)
   uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
-  // #else
+#else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-// #endif
+#endif
 #endif
   uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
 
@@ -464,38 +464,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
 #if defined(LIGHTCROSS)
-  // DEBUGGING
-  // uint8_t merkle_tree_0_old[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
-
-  // unsigned int cnt = 0;
-  // for (size_t i = 0; i < TREE_SUBROOTS; i++) {
-  //   for (size_t j = 0; j < cons_leaves[i]; j++) {
-  //     size_t offset = (leaves_start_indices[i] + j) * HASH_DIGEST_LENGTH;
-  //     memcpy(merkle_tree_0_old + offset, cmt_0 + cnt, HASH_DIGEST_LENGTH);
-  //     cnt++;
-  //     if (merkle_tree_0[offset] != merkle_tree_0_old[offset]) {
-  //       hal_send_str("merkle tree calculation incorrect");
-  //     }
-  //   }
-  // }
-
-  // for (int i = 0; i < NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH; i++) {
-  //   if (merkle_tree_0[i] != merkle_tree_0_old[i]) {
-  //     hal_send_str("merkle tree calculation incorrect");
-  //   }
-  // }
-
   tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
   uint8_t merkle_tree_0_old[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
-
-  // DEBUGGING
-  place_cmt_on_leaves(merkle_tree_0_old, cmt_0);
-  for (int i = 0; i < NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH; i++) {
-    if (merkle_tree_0[i] != merkle_tree_0_old[i]) {
-      hal_send_str("merkle tree calculation incorrect");
-    }
-  }
 
   tree_root(digest_cmt0_cmt1, merkle_tree_0_old, cmt_0);
 #endif
