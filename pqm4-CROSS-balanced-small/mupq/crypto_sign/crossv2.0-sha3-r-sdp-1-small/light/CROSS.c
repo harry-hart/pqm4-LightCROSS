@@ -376,102 +376,105 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   CSPRNG_STATE_T csprng_state;
 
-  // Double loop so that we can track merkle_tree_0
-  // position. Maybe change this back to single loop
-  // for time optimisation later.
-  uint16_t i = 0;
-  const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
-  const uint16_t leaves_start_indices[TREE_SUBROOTS] =
-      TREE_LEAVES_START_INDICES;
-  for (size_t k = 0; k < TREE_SUBROOTS; k++) {
-    for (size_t j = 0; j < cons_leaves[k]; j++) {
-      // for (uint16_t i = 0; i < T; i++) {
-      /* CSPRNG is fed with concat(seed,salt,round index) represented
-       * as a 2 bytes little endian unsigned integer */
-      uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
-      memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
-             SEED_LENGTH_BYTES);
-      memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
+  // Contain scope of loop vars
+  {
+    // Double loop so that we can track merkle_tree_0
+    // position. Maybe change this back to single loop
+    // for time optimisation later.
+    uint16_t i = 0;
+    const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
+    const uint16_t leaves_start_indices[TREE_SUBROOTS] =
+        TREE_LEAVES_START_INDICES;
+    for (size_t k = 0; k < TREE_SUBROOTS; k++) {
+      for (size_t j = 0; j < cons_leaves[k]; j++) {
+        // for (uint16_t i = 0; i < T; i++) {
+        /* CSPRNG is fed with concat(seed,salt,round index) represented
+         * as a 2 bytes little endian unsigned integer */
+        uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+        memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
+               SEED_LENGTH_BYTES);
+        memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
-      uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+        uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
-      /* expand seed[i] into seed_e and seed_u */
-      csprng_initialize(&csprng_state, csprng_input,
-                        SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
-                        domain_sep_csprng);
-      /* expand e_bar_prime */
+        /* expand seed[i] into seed_e and seed_u */
+        csprng_initialize(&csprng_state, csprng_input,
+                          SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
+                          domain_sep_csprng);
+        /* expand e_bar_prime */
 #if defined(RSDP)
-      csprng_fz_vec(e_bar_prime[i], &csprng_state);
+        csprng_fz_vec(e_bar_prime[i], &csprng_state);
 #elif defined(RSDPG)
-      csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
-      fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
-      fz_dz_norm_m(v_G_bar[i]);
-      fz_inf_w_by_fz_matrix(e_bar_prime[i], e_G_bar_prime, W_mat);
-      fz_dz_norm_n(e_bar_prime[i]);
+        csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
+        fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
+        fz_dz_norm_m(v_G_bar[i]);
+        fz_inf_w_by_fz_matrix(e_bar_prime[i], e_G_bar_prime, W_mat);
+        fz_dz_norm_n(e_bar_prime[i]);
 #endif
-      fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime[i]);
+        fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime[i]);
 
-      FP_ELEM v[N];
-      convert_restr_vec_to_fp(v, v_bar[i]);
-      fz_dz_norm_n(v_bar[i]);
-      /* expand u_prime */
-      csprng_fp_vec(u_prime[i], &csprng_state);
+        FP_ELEM v[N];
+        convert_restr_vec_to_fp(v, v_bar[i]);
+        fz_dz_norm_n(v_bar[i]);
+        /* expand u_prime */
+        csprng_fp_vec(u_prime[i], &csprng_state);
 
-      FP_ELEM u[N];
-      fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
-      fp_vec_by_fp_matrix(s_prime, u, V_tr);
-      fp_dz_norm_synd(s_prime);
+        FP_ELEM u[N];
+        fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
+        fp_vec_by_fp_matrix(s_prime, u, V_tr);
+        fp_dz_norm_synd(s_prime);
 
-      /* cmt_0_i_input contains s_prime || v_bar resp. v_G_bar || salt */
-      pack_fp_syn(cmt_0_i_input, s_prime);
+        /* cmt_0_i_input contains s_prime || v_bar resp. v_G_bar || salt */
+        pack_fp_syn(cmt_0_i_input, s_prime);
 
 #if defined(RSDP)
-      pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar[i]);
+        pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar[i]);
 #elif defined(RSDPG)
-      pack_fz_rsdp_g_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE,
-                         v_G_bar[i]);
+        pack_fz_rsdp_g_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE,
+                           v_G_bar[i]);
 #endif
-      /* Fixed endianness marshalling of round counter */
-      uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
+        /* Fixed endianness marshalling of round counter */
+        uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
 #if defined(LIGHTCROSS)
 
-      hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
-           cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+        hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
+             cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 
 #else
 
-      hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+        hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 
 #endif
-      memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
-             SEED_LENGTH_BYTES);
+        memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
+               SEED_LENGTH_BYTES);
 
 #if defined(LIGHTCROSS)
-      // Sponge SHAKE hash optimisation for cmt_1
+        // Sponge SHAKE hash optimisation for cmt_1
 
-      // First hash the commitment, and add it to the hash sub-buffer
-      hash(&hash_sub[hash_sub_i * HASH_DIGEST_LENGTH], cmt_1_i_input,
-           sizeof(cmt_1_i_input), domain_sep_hash);
-      hash_sub_i++;
+        // First hash the commitment, and add it to the hash sub-buffer
+        hash(&hash_sub[hash_sub_i * HASH_DIGEST_LENGTH], cmt_1_i_input,
+             sizeof(cmt_1_i_input), domain_sep_hash);
+        hash_sub_i++;
 
-      // Check if we have reached the block size, or final block
-      if (hash_sub_i * HASH_DIGEST_LENGTH >= r || i == T - 1) {
-        // If we have reached block size, update shake state
-        xof_shake_update(&csprng_state_cmt_1, hash_sub,
-                         hash_sub_i * HASH_DIGEST_LENGTH);
-        // Reset the sub-buffer
-        memset(hash_sub, 0, hash_sub_i * HASH_DIGEST_LENGTH);
-        hash_sub_i = 0;
+        // Check if we have reached the block size, or final block
+        if (hash_sub_i * HASH_DIGEST_LENGTH >= r || i == T - 1) {
+          // If we have reached block size, update shake state
+          xof_shake_update(&csprng_state_cmt_1, hash_sub,
+                           hash_sub_i * HASH_DIGEST_LENGTH);
+          // Reset the sub-buffer
+          memset(hash_sub, 0, hash_sub_i * HASH_DIGEST_LENGTH);
+          hash_sub_i = 0;
+        }
+#else
+        hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input,
+             sizeof(cmt_1_i_input), domain_sep_hash);
+#endif
+
+        // Because of double loop
+        // Remove if single loop returns
+        i++;
       }
-#else
-      hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input, sizeof(cmt_1_i_input),
-           domain_sep_hash);
-#endif
-
-      // Because of double loop
-      // Remove if single loop returns
-      i++;
     }
   }
 
@@ -530,12 +533,44 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                     dsc_csprng_chall_1);
   csprng_fp_vec_chall_1(chall_1, &csprng_state);
 
-  /* Computation of the first round of responses */
+/* Computation of the first round of responses */
+#if defined(LIGHTCROSS)
+
+  CSPRNG_STATE_T csprng_state_y;
+  xof_shake_init(&csprng_state_y, SEED_LENGTH_BYTES * 8);
+
+  for (int i = 0; i < T; i++) {
+    // Temp vars
+    FP_ELEM y_i[N];
+    uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE];
+
+    // Calculate y
+    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
+    fp_dz_norm(y_i);
+
+    // Pack it
+    pack_fp_vec(packed_y_i, y_i);
+
+    // Add it to hash
+    xof_shake_update(&csprng_state_y, packed_y_i, DENSELY_PACKED_FP_VEC_SIZE);
+  }
+
+  // Add the chall_1 digest to the hash
+  xof_shake_update(&csprng_state_y, digest_chall_1, HASH_DIGEST_LENGTH);
+
+  dsc_ordered[0] = HASH_DOMAIN_SEP_CONST & 0xff;
+  dsc_ordered[1] = (HASH_DOMAIN_SEP_CONST >> 8) & 0xff;
+  xof_shake_update(&csprng_state_y, dsc_ordered, 2);
+  xof_shake_final(&csprng_state_y);
+  xof_shake_extract(&csprng_state_y, sig->digest_chall_2, HASH_DIGEST_LENGTH);
+
+#else
   FP_ELEM y[T][N];
   for (int i = 0; i < T; i++) {
     fp_vec_by_restr_vec_scaled(y[i], e_bar_prime[i], chall_1[i], u_prime[i]);
     fp_dz_norm(y[i]);
   }
+
   /* y vectors are packed before being hashed */
   uint8_t y_digest_chall_1[T * DENSELY_PACKED_FP_VEC_SIZE + HASH_DIGEST_LENGTH];
 
@@ -548,6 +583,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   hash(sig->digest_chall_2, y_digest_chall_1, sizeof(y_digest_chall_1),
        HASH_DOMAIN_SEP_CONST);
+#endif
 
   uint8_t chall_2[T] = {0};
   expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
@@ -565,7 +601,17 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
       assert(published_rsps < T - W);
+#if defined(LIGHTCROSS)
+      // Have to recalculate y
+      FP_ELEM y_i[N];
+      // Calculate y
+      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
+      fp_dz_norm(y_i);
+      pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
+#else
       pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
+#endif
+
 #if defined(RSDP)
       pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
 #elif defined(RSDPG)
