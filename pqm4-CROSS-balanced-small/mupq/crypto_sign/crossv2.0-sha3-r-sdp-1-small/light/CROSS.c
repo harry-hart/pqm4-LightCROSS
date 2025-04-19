@@ -289,23 +289,6 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 }
 
 /*****************************************************************************/
-static void place_cmt_on_leaves(
-    unsigned char merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH],
-    unsigned char commitments[T][HASH_DIGEST_LENGTH]) {
-  const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
-  const uint16_t leaves_start_indices[TREE_SUBROOTS] =
-      TREE_LEAVES_START_INDICES;
-
-  unsigned int cnt = 0;
-  for (size_t i = 0; i < TREE_SUBROOTS; i++) {
-    for (size_t j = 0; j < cons_leaves[i]; j++) {
-      memcpy(merkle_tree + (leaves_start_indices[i] + j) * HASH_DIGEST_LENGTH,
-             commitments + cnt, HASH_DIGEST_LENGTH);
-      cnt++;
-    }
-  }
-}
-/*****************************************************************************/
 
 /* sign cannot fail */
 void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
@@ -368,12 +351,28 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #else
 #if defined(LIGHTCROSS)
+  // Merkle Tree Optimisation
   uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
+
+  // SHAKE Sponge Optimisation
+  // Define our spong block size
+#if defined(CATEGORY_1)
+  uint8_t r = SHAKE128_RATE;
+  uint8_t hash_sub[SHAKE128_RATE + HASH_DIGEST_LENGTH] = {0};
+#else
+  uint8_t r = SHAKE256_RATE;
+  uint8_t hash_sub[SHAKE256_RATE + HASH_DIGEST_LENGTH] = {0};
+#endif
+  // Our hash sub_buffer
+  size_t hash_sub_i = 0;
+  CSPRNG_STATE_T csprng_state_cmt_1;
+  xof_shake_init(&csprng_state_cmt_1, SEED_LENGTH_BYTES * 8);
+
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-#endif
-#endif
   uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
+#endif
+#endif
 
   CSPRNG_STATE_T csprng_state;
 
@@ -448,8 +447,27 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
              SEED_LENGTH_BYTES);
 
+#if defined(LIGHTCROSS)
+      // Sponge SHAKE hash optimisation for cmt_1
+
+      // First hash the commitment, and add it to the hash sub-buffer
+      hash(&hash_sub[hash_sub_i * HASH_DIGEST_LENGTH], cmt_1_i_input,
+           sizeof(cmt_1_i_input), domain_sep_hash);
+      hash_sub_i++;
+
+      // Check if we have reached the block size, or final block
+      if (hash_sub_i * HASH_DIGEST_LENGTH >= r || i == T - 1) {
+        // If we have reached block size, update shake state
+        xof_shake_update(&csprng_state_cmt_1, hash_sub,
+                         hash_sub_i * HASH_DIGEST_LENGTH);
+        // Reset the sub-buffer
+        memset(hash_sub, 0, hash_sub_i * HASH_DIGEST_LENGTH);
+        hash_sub_i = 0;
+      }
+#else
       hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input, sizeof(cmt_1_i_input),
            domain_sep_hash);
+#endif
 
       // Because of double loop
       // Remove if single loop returns
@@ -471,8 +489,21 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_root(digest_cmt0_cmt1, merkle_tree_0_old, cmt_0);
 #endif
 #endif
+
+#if defined(LIGHTCROSS)
+  // Output the digest after sponging the commitments
+  uint8_t dsc_ordered[2];
+  dsc_ordered[0] = HASH_DOMAIN_SEP_CONST & 0xff;
+  dsc_ordered[1] = (HASH_DOMAIN_SEP_CONST >> 8) & 0xff;
+  xof_shake_update(&csprng_state_cmt_1, dsc_ordered, 2);
+  xof_shake_final(&csprng_state_cmt_1);
+  xof_shake_extract(&csprng_state_cmt_1, digest_cmt0_cmt1 + HASH_DIGEST_LENGTH,
+                    HASH_DIGEST_LENGTH);
+#else
   hash(digest_cmt0_cmt1 + HASH_DIGEST_LENGTH, cmt_1, sizeof(cmt_1),
        HASH_DOMAIN_SEP_CONST);
+#endif
+
   hash(sig->digest_cmt, digest_cmt0_cmt1, sizeof(digest_cmt0_cmt1),
        HASH_DOMAIN_SEP_CONST);
 
@@ -540,8 +571,24 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #elif defined(RSDPG)
       pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
 #endif
+
+#if defined(LIGHTCROSS)
+      // Calculate the cmt_1_i hash value again to avoid storing it
+      // First make the input (Seed[i] | Salt | i + c)
+      // N.B. i + c should already be at the end because of init
+      memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
+             SEED_LENGTH_BYTES);
+      // Temp storage for our cmt_1_i hash
+      uint8_t cmt_1_i[HASH_DIGEST_LENGTH] = {0};
+      // The domain separation
+      uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
+      // Our cmt_1_i hash
+      hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
+      memcpy(sig->resp_1[published_rsps], &cmt_1_i, HASH_DIGEST_LENGTH);
+#else
       memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
              HASH_DIGEST_LENGTH);
+#endif
       published_rsps++;
     }
   }
