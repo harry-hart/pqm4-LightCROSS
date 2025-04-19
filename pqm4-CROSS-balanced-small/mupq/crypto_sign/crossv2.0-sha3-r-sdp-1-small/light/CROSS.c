@@ -44,6 +44,7 @@
 
 #include "hal.h"
 #include "sendfn.h"
+#include "sha3.h"
 
 #if defined(RSDP)
 static void expand_pk(FP_ELEM V_tr[K][N - K],
@@ -640,9 +641,27 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   }
 }
 
+static void place_cmt_on_leaves(
+    unsigned char merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH],
+    unsigned char commitments[T][HASH_DIGEST_LENGTH]) {
+  const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
+  const uint16_t leaves_start_indices[TREE_SUBROOTS] =
+      TREE_LEAVES_START_INDICES;
+
+  unsigned int cnt = 0;
+  for (size_t i = 0; i < TREE_SUBROOTS; i++) {
+    for (size_t j = 0; j < cons_leaves[i]; j++) {
+      memcpy(merkle_tree + (leaves_start_indices[i] + j) * HASH_DIGEST_LENGTH,
+             commitments + cnt, HASH_DIGEST_LENGTH);
+      cnt++;
+    }
+  }
+}
+
 /* verify returns 1 if signature is ok, 0 otherwise */
 int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                  const CROSS_sig_t *const sig) {
+#undef LIGHTCROSS
   CSPRNG_STATE_T csprng_state;
 
   FP_ELEM V_tr[K][N - K];
@@ -709,8 +728,23 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t cmt_1_i_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_i_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
+#if defined(LIGHTCROSS)
+  CSPRNG_STATE_T csprng_state_cmt_1;
+  CSPRNG_STATE_T csprng_state_y;
+
+  FP_ELEM y_i[N] = {0};
+  uint8_t cmt_1_i[HASH_DIGEST_LENGTH] = {0};
+
+  uint8_t merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH] = {0};
+
+  xof_shake_init(&csprng_state_cmt_1, SEED_LENGTH_BYTES * 8);
+  xof_shake_init(&csprng_state_y, SEED_LENGTH_BYTES * 8);
+#else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
   uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
+
+  FP_ELEM y[T][N];
+#endif
 
   FZ_ELEM e_bar_prime[N];
   FP_ELEM u_prime[N];
@@ -719,61 +753,95 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   FP_ELEM y_prime_H[N - K] = {0};
   FP_ELEM s_prime[N - K] = {0};
 
-  FP_ELEM y[T][N];
-
   int used_rsps = 0;
   int is_signature_ok = 1;
   uint8_t is_packed_padd_ok = 1;
+
+#if defined(LIGHTCROSS)
+  {
+    const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
+    const uint16_t leaves_start_indices[TREE_SUBROOTS] =
+        TREE_LEAVES_START_INDICES;
+    uint16_t i = 0;
+    for (size_t k = 0; k < TREE_SUBROOTS; k++) {
+      for (size_t j = 0; j < cons_leaves[i]; j++) {
+#else
   for (uint16_t i = 0; i < T; i++) {
+#endif
 
-    uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
-    uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
+        uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+        uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
-    if (chall_2[i] == 1) {
-      memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
-             SEED_LENGTH_BYTES);
+        if (chall_2[i] == 1) {
+          memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
+                 SEED_LENGTH_BYTES);
 
+#if defined(LIGHTCROSS)
+          hash(&cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
+          xof_shake_update(&csprng_state_cmt_1, cmt_1_i, sizeof(cmt_1_i_input));
+#else
       hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input, sizeof(cmt_1_i_input),
            domain_sep_hash);
+#endif
 
-      /* CSPRNG is fed with concat(seed,salt,round index) represented
-       * as a 2 bytes little endian unsigned integer */
-      const int csprng_input_length = SALT_LENGTH_BYTES + SEED_LENGTH_BYTES;
-      uint8_t csprng_input[csprng_input_length];
-      memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
-      memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
-             SEED_LENGTH_BYTES);
+          /* CSPRNG is fed with concat(seed,salt,round index) represented
+           * as a 2 bytes little endian unsigned integer */
+          const int csprng_input_length = SALT_LENGTH_BYTES + SEED_LENGTH_BYTES;
+          uint8_t csprng_input[csprng_input_length];
+          memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt,
+                 SALT_LENGTH_BYTES);
+          memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
+                 SEED_LENGTH_BYTES);
 
-      /* expand seed[i] into seed_e and seed_u */
-      csprng_initialize(&csprng_state, csprng_input, csprng_input_length,
-                        domain_sep_csprng);
+          /* expand seed[i] into seed_e and seed_u */
+          csprng_initialize(&csprng_state, csprng_input, csprng_input_length,
+                            domain_sep_csprng);
 #if defined(RSDP)
-      /* expand e_bar_prime */
-      csprng_fz_vec(e_bar_prime, &csprng_state);
+          /* expand e_bar_prime */
+          csprng_fz_vec(e_bar_prime, &csprng_state);
 #elif defined(RSDPG)
       FZ_ELEM e_G_bar_prime[M];
       csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
       fz_inf_w_by_fz_matrix(e_bar_prime, e_G_bar_prime, W_mat);
       fz_dz_norm_n(e_bar_prime);
 #endif
-      /* expand u_prime */
-      csprng_fp_vec(u_prime, &csprng_state);
+          /* expand u_prime */
+          csprng_fp_vec(u_prime, &csprng_state);
+#if defined(LIGHTCROSS)
+          uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE] = {0};
+          fp_vec_by_restr_vec_scaled(y_i, e_bar_prime, chall_1[i], u_prime);
+          fp_dz_norm(y_i);
+          pack_fp_vec(packed_y_i, y_i);
+          xof_shake_update(&csprng_state_y, y_i, DENSELY_PACKED_FP_VEC_SIZE);
+#else
       fp_vec_by_restr_vec_scaled(y[i], e_bar_prime, chall_1[i], u_prime);
       fp_dz_norm(y[i]);
-    } else {
-      /* place y[i] in the buffer for later on hashing */
+#endif
+        } else {
+          /* place y[i] in the buffer for later on hashing */
+#if defined(LIGHTCROSS)
+          // Unpack it for cmt_0 calculation
+          is_packed_padd_ok =
+              is_packed_padd_ok && unpack_fp_vec(y_i, sig->resp_0[used_rsps].y);
+          // Hash the packed representation
+          xof_shake_update(&csprng_state_y, sig->resp_0[used_rsps].y,
+                           DENSELY_PACKED_FP_VEC_SIZE);
+#else
       is_packed_padd_ok =
           is_packed_padd_ok && unpack_fp_vec(y[i], sig->resp_0[used_rsps].y);
+#endif
 
-      FZ_ELEM v_bar[N];
+          FZ_ELEM v_bar[N];
 #if defined(RSDP)
-      /*v_bar is memcpy'ed directly into cmt_0 input buffer */
-      FZ_ELEM *v_bar_ptr = cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE;
-      is_packed_padd_ok = is_packed_padd_ok &&
-                          unpack_fz_vec(v_bar, sig->resp_0[used_rsps].v_bar);
-      memcpy(v_bar_ptr, &sig->resp_0[used_rsps].v_bar,
-             DENSELY_PACKED_FZ_VEC_SIZE);
-      is_signature_ok = is_signature_ok && is_fz_vec_in_restr_group_n(v_bar);
+          /*v_bar is memcpy'ed directly into cmt_0 input buffer */
+          FZ_ELEM *v_bar_ptr = cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE;
+          is_packed_padd_ok =
+              is_packed_padd_ok &&
+              unpack_fz_vec(v_bar, sig->resp_0[used_rsps].v_bar);
+          memcpy(v_bar_ptr, &sig->resp_0[used_rsps].v_bar,
+                 DENSELY_PACKED_FZ_VEC_SIZE);
+          is_signature_ok =
+              is_signature_ok && is_fz_vec_in_restr_group_n(v_bar);
 #elif defined(RSDPG)
       /*v_G_bar is memcpy'ed directly into cmt_0 input buffer */
       FZ_ELEM *v_G_bar_ptr = cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE;
@@ -787,22 +855,47 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       fz_inf_w_by_fz_matrix(v_bar, v_G_bar, W_mat);
 
 #endif
+
+#if defined(LIGHTCROSS)
+          // Update cmt_1 hash
+          xof_shake_update(&csprng_state_cmt_1, sig->resp_1[used_rsps],
+                           HASH_DIGEST_LENGTH);
+#else
       memcpy(&cmt_1[i * HASH_DIGEST_LENGTH], sig->resp_1[used_rsps],
              HASH_DIGEST_LENGTH);
-      used_rsps++;
+#endif
+          used_rsps++;
 
-      FP_ELEM v[N];
-      convert_restr_vec_to_fp(v, v_bar);
+          FP_ELEM v[N];
+          convert_restr_vec_to_fp(v, v_bar);
+#if defined(LIGHTCROSS)
+          fp_vec_by_fp_vec_pointwise(y_prime, v, y_i);
+#else
       fp_vec_by_fp_vec_pointwise(y_prime, v, y[i]);
-      fp_vec_by_fp_matrix(y_prime_H, y_prime, V_tr);
-      fp_dz_norm_synd(y_prime_H);
-      fp_synd_minus_fp_vec_scaled(s_prime, y_prime_H, chall_1[i], s);
-      fp_dz_norm_synd(s_prime);
-      pack_fp_syn(cmt_0_i_input, s_prime);
+#endif
+          fp_vec_by_fp_matrix(y_prime_H, y_prime, V_tr);
+          fp_dz_norm_synd(y_prime_H);
+          fp_synd_minus_fp_vec_scaled(s_prime, y_prime_H, chall_1[i], s);
+          fp_dz_norm_synd(s_prime);
+          pack_fp_syn(cmt_0_i_input, s_prime);
 
+#if defined(LIGHTCROSS)
+          // Add directly to tree
+          hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
+               cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+#else
       hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+#endif
+        }
+      } /* end for iterating on ZKID iterations */
+#if defined(LIGHTCROSS)
+      i++;
+      if (i >= T) {
+        hal_send_str("Wrong number of loops");
+      }
     }
-  } /* end for iterating on ZKID iterations */
+  }
+#endif
 
 #ifndef SKIP_ASSERT
   assert(is_signature_ok);
@@ -810,15 +903,62 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
 
+#if defined(LIGHTCROSS)
+  uint8_t compare_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
+
+  place_cmt_on_leaves(compare_tree, cmt_0);
+
+  const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
+  const uint16_t leaves_start_indices[TREE_SUBROOTS] =
+      TREE_LEAVES_START_INDICES;
+  for (size_t i = 0; i < TREE_SUBROOTS; i++) {
+    for (size_t j = 0; j < cons_leaves[i]; j++) {
+      size_t offset = (leaves_start_indices[i] + j) * HASH_DIGEST_LENGTH;
+      if (merkle_tree[offset] != compare_tree[offset]) {
+        hal_send_str("merkle tree recompute will fail");
+      }
+    }
+  }
+
+  uint8_t is_mtree_padding_ok =
+      recompute_root(digest_cmt0_cmt1, merkle_tree, sig->proof, chall_2);
+#else
   uint8_t is_mtree_padding_ok =
       recompute_root(digest_cmt0_cmt1, cmt_0, sig->proof, chall_2);
+#endif
+
+  // Calculate digest_cmt_1
+#if defined(LIGHTCROSS)
+  // Domain separation
+  uint8_t dsc_ordered[2];
+  dsc_ordered[0] = HASH_DOMAIN_SEP_CONST & 0xff;
+  dsc_ordered[1] = (HASH_DOMAIN_SEP_CONST >> 8) & 0xff;
+  xof_shake_update(&csprng_state_cmt_1, dsc_ordered, 2);
+  // Finalise hash
+  xof_shake_final(&csprng_state_cmt_1);
+  xof_shake_extract(&csprng_state_cmt_1, digest_cmt0_cmt1 + HASH_DIGEST_LENGTH,
+                    HASH_DIGEST_LENGTH);
+#else
   hash(digest_cmt0_cmt1 + HASH_DIGEST_LENGTH, cmt_1, sizeof(cmt_1),
        HASH_DOMAIN_SEP_CONST);
+#endif
 
   uint8_t digest_cmt_prime[HASH_DIGEST_LENGTH];
   hash(digest_cmt_prime, digest_cmt0_cmt1, sizeof(digest_cmt0_cmt1),
        HASH_DOMAIN_SEP_CONST);
 
+#if defined(LIGHTCROSS)
+  // Add digest_chall_1
+  xof_shake_update(&csprng_state_y, digest_chall_1, HASH_DIGEST_LENGTH);
+  // Domain separation
+  dsc_ordered[0] = HASH_DOMAIN_SEP_CONST & 0xff;
+  dsc_ordered[1] = (HASH_DOMAIN_SEP_CONST >> 8) & 0xff;
+  xof_shake_update(&csprng_state_y, dsc_ordered, 2);
+  // Finalise hash
+  xof_shake_final(&csprng_state_y);
+  uint8_t digest_chall_2_prime[HASH_DIGEST_LENGTH];
+  xof_shake_extract(&csprng_state_y, digest_chall_2_prime, HASH_DIGEST_LENGTH);
+#else
   uint8_t y_digest_chall_1[T * DENSELY_PACKED_FP_VEC_SIZE + HASH_DIGEST_LENGTH];
 
   for (int x = 0; x < T; x++) {
@@ -830,6 +970,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t digest_chall_2_prime[HASH_DIGEST_LENGTH];
   hash(digest_chall_2_prime, y_digest_chall_1, sizeof(y_digest_chall_1),
        HASH_DOMAIN_SEP_CONST);
+#endif
 
   int does_digest_cmt_match =
       (memcmp(digest_cmt_prime, sig->digest_cmt, HASH_DIGEST_LENGTH) == 0);
