@@ -661,7 +661,6 @@ static void place_cmt_on_leaves(
 /* verify returns 1 if signature is ok, 0 otherwise */
 int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                  const CROSS_sig_t *const sig) {
-#undef LIGHTCROSS
   CSPRNG_STATE_T csprng_state;
 
   FP_ELEM V_tr[K][N - K];
@@ -739,11 +738,11 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
   xof_shake_init(&csprng_state_cmt_1, SEED_LENGTH_BYTES * 8);
   xof_shake_init(&csprng_state_y, SEED_LENGTH_BYTES * 8);
-#else
+  // #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-  uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
+  // uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
 
-  FP_ELEM y[T][N];
+  // FP_ELEM y[T][N];
 #endif
 
   FZ_ELEM e_bar_prime[N];
@@ -812,7 +811,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           fp_vec_by_restr_vec_scaled(y_i, e_bar_prime, chall_1[i], u_prime);
           fp_dz_norm(y_i);
           pack_fp_vec(packed_y_i, y_i);
-          xof_shake_update(&csprng_state_y, y_i, DENSELY_PACKED_FP_VEC_SIZE);
+          xof_shake_update(&csprng_state_y, packed_y_i,
+                           DENSELY_PACKED_FP_VEC_SIZE);
 #else
       fp_vec_by_restr_vec_scaled(y[i], e_bar_prime, chall_1[i], u_prime);
       fp_dz_norm(y[i]);
@@ -883,19 +883,17 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           // Add directly to tree
           hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
                cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
-#else
-      hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+          // DEBUGGING
+          // #else
+          hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
         }
-      } /* end for iterating on ZKID iterations */
 #if defined(LIGHTCROSS)
-      i++;
-      if (i >= T) {
-        hal_send_str("Wrong number of loops");
-      }
+        i++;
+      } /* end for iterating on ZKID iterations */
     }
-  }
 #endif
+  }
 
 #ifndef SKIP_ASSERT
   assert(is_signature_ok);
@@ -904,6 +902,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
 
 #if defined(LIGHTCROSS)
+  // DEBUGGING
   uint8_t compare_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 
   place_cmt_on_leaves(compare_tree, cmt_0);
