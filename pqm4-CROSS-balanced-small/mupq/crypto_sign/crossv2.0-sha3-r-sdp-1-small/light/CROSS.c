@@ -661,6 +661,8 @@ static void place_cmt_on_leaves(
 /* verify returns 1 if signature is ok, 0 otherwise */
 int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                  const CROSS_sig_t *const sig) {
+#if defined(LIGHTCROSS)
+#undef LIGHTCROSS
   CSPRNG_STATE_T csprng_state;
 
   FP_ELEM V_tr[K][N - K];
@@ -738,11 +740,11 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
   xof_shake_init(&csprng_state_cmt_1, SEED_LENGTH_BYTES * 8);
   xof_shake_init(&csprng_state_y, SEED_LENGTH_BYTES * 8);
-  // #else
+#else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-  // uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
+  uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
 
-  // FP_ELEM y[T][N];
+  FP_ELEM y[T][N];
 #endif
 
   FZ_ELEM e_bar_prime[N];
@@ -989,4 +991,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                     does_digest_chall_2_match && is_mtree_padding_ok &&
                     is_stree_padding_ok && is_padd_key_ok && is_packed_padd_ok;
   return is_signature_ok;
+
+#define LIGHTCROSS
+#endif
 }
