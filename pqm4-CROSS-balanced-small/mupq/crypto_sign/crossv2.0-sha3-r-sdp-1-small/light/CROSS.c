@@ -660,8 +660,6 @@ static void place_cmt_on_leaves(
 /* verify returns 1 if signature is ok, 0 otherwise */
 int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                  const CROSS_sig_t *const sig) {
-#if defined(LIGHTCROSS)
-#undef LIGHTCROSS
   CSPRNG_STATE_T csprng_state;
 
   FP_ELEM V_tr[K][N - K];
@@ -728,22 +726,20 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t cmt_1_i_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_i_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
-#if defined(LIGHTCROSS)
-  CSPRNG_STATE_T csprng_state_cmt_1;
-  CSPRNG_STATE_T csprng_state_y;
-
-  FP_ELEM y_i[N] = {0};
-  uint8_t cmt_1_i[HASH_DIGEST_LENGTH] = {0};
-
+#if defined(OPT_MERKLE)
   uint8_t merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH] = {0};
-
-  xof_shake_init(&csprng_state_cmt_1, SEED_LENGTH_BYTES * 8);
-  xof_shake_init(&csprng_state_y, SEED_LENGTH_BYTES * 8);
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-  uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
+#endif
 
-  FP_ELEM y[T][N];
+#if defined(OPT_HASH_CMT1)
+  CSPRNG_STATE_T csprng_state_cmt_1;
+
+  uint8_t cmt_1_i[HASH_DIGEST_LENGTH] = {0};
+
+  xof_shake_init(&csprng_state_cmt_1, SEED_LENGTH_BYTES * 8);
+#else
+  uint8_t cmt_1[T * HASH_DIGEST_LENGTH] = {0};
 #endif
 
   FZ_ELEM e_bar_prime[N];
@@ -753,11 +749,26 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   FP_ELEM y_prime_H[N - K] = {0};
   FP_ELEM s_prime[N - K] = {0};
 
+#if defined(OPT_HASH_Y)
+  CSPRNG_STATE_T csprng_state_y;
+
+  FP_ELEM y_i[N] = {0};
+
+  xof_shake_init(&csprng_state_y, SEED_LENGTH_BYTES * 8);
+#else
+  FP_ELEM y[T][N];
+#endif
+
+// For domain separation calculation
+#if defined(OPT_HASH_CMT_1) || defined(OPT_HASH_Y)
+  uint8_t dsc_ordered[2];
+#endif
+
   int used_rsps = 0;
   int is_signature_ok = 1;
   uint8_t is_packed_padd_ok = 1;
 
-#if defined(LIGHTCROSS)
+#if defined(OPT_MERKLE)
   {
     const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
     const uint16_t leaves_start_indices[TREE_SUBROOTS] =
@@ -776,7 +787,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
                  SEED_LENGTH_BYTES);
 
-#if defined(LIGHTCROSS)
+#if defined(OPT_HASH_CMT1)
           hash(&cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
           xof_shake_update(&csprng_state_cmt_1, cmt_1_i, sizeof(cmt_1_i_input));
 #else
@@ -807,7 +818,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #endif
           /* expand u_prime */
           csprng_fp_vec(u_prime, &csprng_state);
-#if defined(LIGHTCROSS)
+#if defined(OPT_HASH_Y)
           uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE] = {0};
           fp_vec_by_restr_vec_scaled(y_i, e_bar_prime, chall_1[i], u_prime);
           fp_dz_norm(y_i);
@@ -820,7 +831,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #endif
         } else {
           /* place y[i] in the buffer for later on hashing */
-#if defined(LIGHTCROSS)
+#if defined(OPT_HASH_Y)
           // Unpack it for cmt_0 calculation
           is_packed_padd_ok =
               is_packed_padd_ok && unpack_fp_vec(y_i, sig->resp_0[used_rsps].y);
@@ -857,7 +868,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
 #endif
 
-#if defined(LIGHTCROSS)
+#if defined(OPT_HASH_CMT1)
           // Update cmt_1 hash
           xof_shake_update(&csprng_state_cmt_1, sig->resp_1[used_rsps],
                            HASH_DIGEST_LENGTH);
@@ -869,7 +880,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
           FP_ELEM v[N];
           convert_restr_vec_to_fp(v, v_bar);
-#if defined(LIGHTCROSS)
+#if defined(OPT_HASH_Y)
           fp_vec_by_fp_vec_pointwise(y_prime, v, y_i);
 #else
       fp_vec_by_fp_vec_pointwise(y_prime, v, y[i]);
@@ -880,7 +891,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           fp_dz_norm_synd(s_prime);
           pack_fp_syn(cmt_0_i_input, s_prime);
 
-#if defined(LIGHTCROSS)
+#if defined(OPT_MERKLE)
           // Add directly to tree
           hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
                cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
@@ -889,7 +900,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
         }
-#if defined(LIGHTCROSS)
+#if defined(OPT_MERKLE)
         i++;
       } /* end for iterating on ZKID iterations */
     }
@@ -902,23 +913,23 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
 
-#if defined(LIGHTCROSS)
+#if defined(OPT_MERKLE)
   // DEBUGGING
-  uint8_t compare_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
+  // uint8_t compare_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 
-  place_cmt_on_leaves(compare_tree, cmt_0);
+  // place_cmt_on_leaves(compare_tree, cmt_0);
 
-  const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
-  const uint16_t leaves_start_indices[TREE_SUBROOTS] =
-      TREE_LEAVES_START_INDICES;
-  for (size_t i = 0; i < TREE_SUBROOTS; i++) {
-    for (size_t j = 0; j < cons_leaves[i]; j++) {
-      size_t offset = (leaves_start_indices[i] + j) * HASH_DIGEST_LENGTH;
-      if (merkle_tree[offset] != compare_tree[offset]) {
-        hal_send_str("merkle tree recompute will fail");
-      }
-    }
-  }
+  // const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
+  // const uint16_t leaves_start_indices[TREE_SUBROOTS] =
+  //     TREE_LEAVES_START_INDICES;
+  // for (size_t i = 0; i < TREE_SUBROOTS; i++) {
+  //   for (size_t j = 0; j < cons_leaves[i]; j++) {
+  //     size_t offset = (leaves_start_indices[i] + j) * HASH_DIGEST_LENGTH;
+  //     if (merkle_tree[offset] != compare_tree[offset]) {
+  //       hal_send_str("merkle tree recompute will fail");
+  //     }
+  //   }
+  // }
 
   uint8_t is_mtree_padding_ok =
       recompute_root(digest_cmt0_cmt1, merkle_tree, sig->proof, chall_2);
@@ -928,9 +939,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #endif
 
   // Calculate digest_cmt_1
-#if defined(LIGHTCROSS)
+#if defined(OPT_HASH_CMT1)
   // Domain separation
-  uint8_t dsc_ordered[2];
   dsc_ordered[0] = HASH_DOMAIN_SEP_CONST & 0xff;
   dsc_ordered[1] = (HASH_DOMAIN_SEP_CONST >> 8) & 0xff;
   xof_shake_update(&csprng_state_cmt_1, dsc_ordered, 2);
@@ -947,7 +957,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   hash(digest_cmt_prime, digest_cmt0_cmt1, sizeof(digest_cmt0_cmt1),
        HASH_DOMAIN_SEP_CONST);
 
-#if defined(LIGHTCROSS)
+#if defined(OPT_HASH_Y)
   // Add digest_chall_1
   xof_shake_update(&csprng_state_y, digest_chall_1, HASH_DIGEST_LENGTH);
   // Domain separation
@@ -990,7 +1000,4 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                     does_digest_chall_2_match && is_mtree_padding_ok &&
                     is_stree_padding_ok && is_padd_key_ok && is_packed_padd_ok;
   return is_signature_ok;
-
-#define LIGHTCROSS
-#endif
 }

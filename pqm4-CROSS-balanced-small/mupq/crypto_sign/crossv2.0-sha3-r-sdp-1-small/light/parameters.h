@@ -37,6 +37,9 @@
 #define SIG_SIZE
 #define SKIP_ASSERT
 #define LIGHTCROSS
+// #define OPT_MERKLE
+// #define OPT_HASH_CMT1
+#define OPT_HASH_Y
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/

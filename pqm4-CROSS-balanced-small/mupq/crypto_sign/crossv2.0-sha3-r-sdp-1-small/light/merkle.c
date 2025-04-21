@@ -238,7 +238,7 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
 }
 
 /*****************************************************************************/
-#if defined(LIGHTCROSS)
+#if defined(OPT_MERKLE)
 uint8_t
 recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
                uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH],
@@ -251,13 +251,13 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
                const uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
                const uint8_t leaves_to_reveal[T]) {
 #endif
-#if !defined(LIGHTCROSS)
+#if !defined(OPT_MERKLE)
   uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 #endif
   uint8_t flag_tree[NUM_NODES_MERKLE_TREE] = {NOT_COMPUTED};
   uint8_t hash_input[2 * HASH_DIGEST_LENGTH];
 
-#if !defined(LIGHTCROSS)
+#if !defined(OPT_MERKLE)
   place_cmt_on_leaves(tree, recomputed_leaves);
 #endif
   label_leaves(flag_tree, leaves_to_reveal);
