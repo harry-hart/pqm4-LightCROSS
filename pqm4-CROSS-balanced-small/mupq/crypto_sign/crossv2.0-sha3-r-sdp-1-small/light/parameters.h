@@ -41,6 +41,8 @@
 #define OPT_MERKLE
 #define OPT_HASH_CMT1
 #define OPT_HASH_Y
+#define OPT_JIT_MATRIX
+#define OPT_OTF_MATRIX
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/
