@@ -44,7 +44,6 @@
 
 #include "hal.h"
 #include "sendfn.h"
-#include "sha3.h"
 
 #if defined(RSDP)
 static void expand_pk(FP_ELEM V_tr[K][N - K],
@@ -885,9 +884,9 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           // Add directly to tree
           hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
                cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
-          // DEBUGGING
-          // #else
-          hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+// DEBUGGING
+#else
+      hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
         }
 #if defined(LIGHTCROSS)
