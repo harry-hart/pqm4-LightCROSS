@@ -760,7 +760,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #endif
 
 // For domain separation calculation
-#if defined(OPT_HASH_CMT_1) || defined(OPT_HASH_Y)
+#if defined(OPT_HASH_CMT1) || defined(OPT_HASH_Y)
   uint8_t dsc_ordered[2];
 #endif
 
@@ -788,8 +788,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                  SEED_LENGTH_BYTES);
 
 #if defined(OPT_HASH_CMT1)
-          hash(&cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
-          xof_shake_update(&csprng_state_cmt_1, cmt_1_i, sizeof(cmt_1_i_input));
+          hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
+          xof_shake_update(&csprng_state_cmt_1, cmt_1_i, HASH_DIGEST_LENGTH);
 #else
       hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input, sizeof(cmt_1_i_input),
            domain_sep_hash);
