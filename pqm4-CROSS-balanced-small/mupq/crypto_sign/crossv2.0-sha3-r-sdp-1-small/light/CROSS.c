@@ -775,7 +775,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
         TREE_LEAVES_START_INDICES;
     uint16_t i = 0;
     for (size_t k = 0; k < TREE_SUBROOTS; k++) {
-      for (size_t j = 0; j < cons_leaves[i]; j++) {
+      for (size_t j = 0; j < cons_leaves[k]; j++) {
 #else
   for (uint16_t i = 0; i < T; i++) {
 #endif
