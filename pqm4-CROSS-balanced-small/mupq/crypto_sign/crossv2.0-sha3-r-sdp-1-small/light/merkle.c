@@ -143,7 +143,7 @@ static void label_leaves(unsigned char flag_tree[NUM_NODES_MERKLE_TREE],
 }
 
 /*****************************************************************************/
-#if defined(LIGHTCROSS)
+#if defined(OPT_MERKLE)
 // Tree should already be initialized
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
                unsigned char tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH])
@@ -164,7 +164,7 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
   const uint16_t leaves_start_indices[TREE_SUBROOTS] =
       TREE_LEAVES_START_INDICES;
 
-#if defined(LIGHTCROSS)
+#if defined(OPT_MERKLE)
 #else
   /* Place the commitments on the (unbalanced-) Merkle tree using helper arrays
    * for indexing */
@@ -174,9 +174,17 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
   /* Start hashing the nodes from right to left, starting always with
    * the left-child node */
   unsigned int start_node = leaves_start_indices[0];
+  // For each level in the depth of the tree starting at the bottom
   for (int level = LOG2(T); level > 0; level--) {
+    // For the distance from the first node to the right-most node on the leve
     for (int i = npl[level] - 2; i >= 0; i -= 2) {
+      // Get the right-most node
       uint16_t current_node = start_node + i;
+      // Get the parent node by:
+      // 1. Get the offset of the preceding level (it needs an offset if
+      // unbalanced)
+      // 2. Calculate the parent index:
+      //  2a. If it (current_node % 2) == 0, it is the right node,
       uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
 
       // Fetch both children

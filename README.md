@@ -5,12 +5,13 @@
       - [x] First implementation (sdp-1-small)
       - [ ] Port to all versions (sdpg, fast)
     - [ ] Merkle Tree
-      - [ ] First implementation (sdp-1-small)
+      - [x] First implementation (sdp-1-small)
       - [ ] Port to all versions (sdpg)
-    - [ ] JIT Shake Hash
-      - [ ] First implementation (sdp-1-small)
+    - [ ] OTF Shake Hash
+      - [x] First implementation (sdp-1-small)
       - [ ] Port to all versions (sdpg, fast)
   - [ ] New contributions
+    - [x] e_bar_prime from v_bar derivation
     - [ ] Parallelise matrix multiplication (with DSP)
     - [ ] Packing?
 

@@ -46,7 +46,7 @@ uint8_t recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 #else
 
 /* Stub of the interface to Merkle tree root computer from all leaves */
-#if defined(LIGHTCROSS)
+#if defined(OPT_MERKLE)
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
                uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH]);
 #else

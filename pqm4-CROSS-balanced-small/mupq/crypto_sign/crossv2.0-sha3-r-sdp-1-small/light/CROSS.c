@@ -376,12 +376,16 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   seed_leaves(round_seeds, seed_tree);
 #endif
 
-#if defined(OPT_OTF_MATRIX)
+#if defined(OPT_E_BAR_PRIME)
   FZ_ELEM e_bar_prime_i[N] = {0};
 #else
   FZ_ELEM e_bar_prime[T][N];
 #endif
+#if defined(OPT_V_BAR)
+  FZ_ELEM v_bar_i[N] = {0};
+#else
   FZ_ELEM v_bar[T][N];
+#endif
   FP_ELEM u_prime[T][N];
   FP_ELEM s_prime[N - K];
 
@@ -409,11 +413,24 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(NO_TREES)
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #else
+#if defined(OPT_OTF_MERKLE)
+  // This requires at most log(T) hashes to be held
+  // The flag keeps track of whether we have a hash for that level
+  // If a hash exists for the level i:
+  //  merkle_flag & (1 << i) > 0
+  uint16_t merkle_flag = 0;
+  uint8_t max_level = LOG2(T);
+  // At most you hold one hash per level + 1 for working
+  uint8_t merkle_hashes[HASH_DIGEST_LENGTH * (LOG2(T) + 1)] = {0};
+  /* vector containing d_0 and d_1 from spec, hold parent in here*/
+  uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH] = {0};
+#else
 #if defined(OPT_MERKLE)
   // Merkle Tree Optimisation
   uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
+#endif
 #endif
 #endif
 
@@ -450,7 +467,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   CSPRNG_STATE_T csprng_state;
 
-#if defined(OPT_MERKLE)
+#if defined(OPT_MERKLE) || defined(OPT_OTF_MERKLE)
   // Contain scope of loop vars
   {
     // Double loop so that we can track merkle_tree_0
@@ -480,7 +497,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                           domain_sep_csprng);
         /* expand e_bar_prime */
 
-#if defined(OPT_OTF_MATRIX)
+#if defined(OPT_E_BAR_PRIME)
 #if defined(RSDP)
         csprng_fz_vec(e_bar_prime_i, &csprng_state);
 #elif defined(RSDPG)
@@ -501,13 +518,23 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     fz_inf_w_by_fz_matrix(e_bar_prime[i], e_G_bar_prime, W_mat);
     fz_dz_norm_n(e_bar_prime[i]);
 #endif
+#if defined(OPT_V_BAR)
+    fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
+#else
     fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime[i]);
+#endif
 #endif
 
         FP_ELEM v[N];
-        convert_restr_vec_to_fp(v, v_bar[i]);
-        fz_dz_norm_n(v_bar[i]);
-        /* expand u_prime */
+#if defined(OPT_V_BAR)
+        convert_restr_vec_to_fp(v, v_bar_i);
+        fz_dz_norm_n(v_bar_i);
+/* expand u_prime */
+#else
+    convert_restr_vec_to_fp(v, v_bar[i]);
+    fz_dz_norm_n(v_bar[i]);
+/* expand u_prime */
+#endif
         csprng_fp_vec(u_prime[i], &csprng_state);
 
         FP_ELEM u[N];
@@ -519,18 +546,54 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         pack_fp_syn(cmt_0_i_input, s_prime);
 
 #if defined(RSDP)
+#if defined(OPT_V_BAR)
+        pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar_i);
+#else
         pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar[i]);
+#endif
 #elif defined(RSDPG)
     pack_fz_rsdp_g_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_G_bar[i]);
 #endif
         /* Fixed endianness marshalling of round counter */
         uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
+#if defined(OPT_OTF_MERKLE)
+        // First get level, start at end of array
+        uint8_t level = max_level;
+        // Hash for commitment
+        uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+        hash(curr_hash, cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+        // Current hash
+        // if we have a hash stored at the level
+        while (merkle_flag & (1 << level) > 0) {
+          // We have a hash for this level
+          // Put into space next to it to concat
+          memcpy(&merkle_hashes[(level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+                 HASH_DIGEST_LENGTH);
+          // Then hash the two for the next level
+          hash(curr_hash, &merkle_hashes[(level)*HASH_DIGEST_LENGTH],
+               2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+          // Now we have used up that hash, reset flag
+          merkle_flag -= (1 << level);
+          // Go to next level
+          level--;
+        }
+        // We have reached root hash
+        if (level == -1) {
+          // Put curr_hash in digest_cmt0
+          memcpy(digest_cmt0_cmt1, curr_hash, HASH_DIGEST_LENGTH);
+        } else {
+          // Put curr_hash in next level
+          memcpy(&merkle_hashes[level * HASH_DIGEST_LENGTH], curr_hash,
+                 HASH_DIGEST_LENGTH);
+        }
+#else
 #if defined(OPT_MERKLE)
-        hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
-             cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+    hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
+         cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #else
     hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+#endif
 #endif
         memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
                SEED_LENGTH_BYTES);
@@ -567,18 +630,22 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     }
   }
 
+#if !defined(OPT_OTF_MERKLE)
   /* vector containing d_0 and d_1 from spec */
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
+#endif
 
 #if defined(NO_TREES)
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
+#if !defined(OPT_OTF_MERKLE)
 #if defined(OPT_MERKLE)
 tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
 uint8_t merkle_tree_0_old[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 
 tree_root(digest_cmt0_cmt1, merkle_tree_0_old, cmt_0);
+#endif
 #endif
 #endif
 
@@ -631,20 +698,9 @@ hash(digest_cmt0_cmt1 + HASH_DIGEST_LENGTH, cmt_1, sizeof(cmt_1),
     FP_ELEM y_i[N];
     uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE];
 
-// Recalculate e_bar_prime
-#if defined(OPT_OTF_MATRIX)
-    /* expand seed[i] into seed_e and seed_u */
-    csprng_initialize(&csprng_state, csprng_input,
-                      SEED_LENGTH_BYTES + SALT_LENGTH_BYTES, domain_sep_csprng);
-#if defined(RSDP)
-    csprng_fz_vec(e_bar_prime_i, &csprng_state);
-#elif defined(RSDPG)
-    csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
-    fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
-    fz_dz_norm_m(v_G_bar[i]);
-    fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
-    fz_dz_norm_n(e_bar_prime_i);
-#endif
+// Recalculate e_bar_prime from v_bar
+#if defined(OPT_E_BAR_PRIME)
+    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
     // Calculate y
     fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
 #else
@@ -693,7 +749,7 @@ hash(sig->digest_chall_2, y_digest_chall_1, sizeof(y_digest_chall_1),
   uint8_t chall_2[T] = {0};
   expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
 
-  /* Computation of the second round of responses */
+/* Computation of the second round of responses */
 #if defined(NO_TREES)
   tree_proof(sig->proof, cmt_0, chall_2);
   seed_path(sig->path, round_seeds, chall_2);
@@ -710,20 +766,8 @@ seed_path(sig->path, seed_tree, chall_2);
       // Have to recalculate y
       FP_ELEM y_i[N];
       // Calculate y
-#if defined(OPT_OTF_MATRIX)
-      /* expand seed[i] into seed_e and seed_u */
-      csprng_initialize(&csprng_state, csprng_input,
-                        SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
-                        domain_sep_csprng);
-#if defined(RSDP)
-      csprng_fz_vec(e_bar_prime_i, &csprng_state);
-#elif defined(RSDPG)
-      csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
-      fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
-      fz_dz_norm_m(v_G_bar[i]);
-      fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
-      fz_dz_norm_n(e_bar_prime_i);
-#endif
+#if defined(OPT_E_BAR_PRIME)
+      fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
       // Calculate y
       fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
 #else
@@ -737,7 +781,12 @@ seed_path(sig->path, seed_tree, chall_2);
 #endif
 
 #if defined(RSDP)
+#if defined(OPT_V_BAR)
+      fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
+      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
+#else
       pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
+#endif
 #elif defined(RSDPG)
     pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
 #endif

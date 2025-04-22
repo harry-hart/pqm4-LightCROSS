@@ -1,4 +1,32 @@
 
+## Investigating CROSS_sign local variables
+
+V_tr = 3876 bytes
+e_bar = 127 bytes
+root_seed = <16 bytes
+seed_tree = 16624 bytes
+round_seeds = 8320 bytes
+e_bar_prime_i = 127 bytes
+v_bar = 66040 bytes
+u_prime = 66040 bytes
+s_prime = 51 bytes
+cmt_0_i_input = 125 bytes
+offset_salt = <16 bytes
+cmt_1_i_input = 48 bytes
+merkle_tree_0 = 33248 bytes
+csprng_state_cmt_1 = 208 bytes
+cmt_1_i = 32 bytes
+csprng_state_y = 208 bytes
+dsc_ordered = <16 bytes
+csprng_state = 208 bytes
+digest_cmt0_cmt1 = 64 bytes
+digest_msg_cmt_salt = 96 bytes
+digest_chall_1 = 32 bytes
+dsc_csprng_chall_1 = <16 bytes
+chall_1 = 520 bytes
+chall_2 = 520 bytes
+published_rsps = <16 bytes
+
 
 
 nucleo-l4r5zi details:
