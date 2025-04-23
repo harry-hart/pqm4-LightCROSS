@@ -424,6 +424,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   uint8_t merkle_hashes[HASH_DIGEST_LENGTH * (LOG2(T) + 1)] = {0};
   /* vector containing d_0 and d_1 from spec, hold parent in here*/
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH] = {0};
+  uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
+  uint8_t lpl[LOG(2) + 1] = TREE_LEAVES_PER_LEVEL;
 #else
 #if defined(OPT_MERKLE)
   // Merkle Tree Optimisation
@@ -558,12 +560,16 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
 #if defined(OPT_OTF_MERKLE)
+
+        // Make hash and record in cmt_0 for tree proof
+        hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+
+        /* ON THE FLY MERKLE TREE HASH */
         // First get level, start at end of array
         uint8_t level = max_level;
-        // Hash for commitment
-        uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
-        hash(curr_hash, cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
         // Current hash
+        uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+        memcpy(curr_hash, cmt_0[i], HASH_DIGEST_LENGTH);
         // if we have a hash stored at the level
         while (merkle_flag & (1 << level) > 0) {
           // We have a hash for this level
@@ -578,15 +584,23 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
           // Go to next level
           level--;
         }
-        // We have reached root hash
-        if (level == -1) {
+        // We have reached final commitment
+        if (i == T - 1) {
           // Put curr_hash in digest_cmt0
           memcpy(digest_cmt0_cmt1, curr_hash, HASH_DIGEST_LENGTH);
         } else {
           // Put curr_hash in next level
           memcpy(&merkle_hashes[level * HASH_DIGEST_LENGTH], curr_hash,
                  HASH_DIGEST_LENGTH);
+          // Track leaves seen in this level
+          lpl[max_level + 1]--;
+          // If we have seen all the leaves for this level, update max level
+          // Skip all 0 leaf levels
+          while (lpl[max_level + 1] == 0) {
+            max_level--;
+          }
         }
+
 #else
 #if defined(OPT_MERKLE)
     hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,

@@ -200,6 +200,38 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
 }
 
 /*****************************************************************************/
+/*
+ * Here we receive the leaves to reveal. If we need to reveal a leaf we mark it
+ * `COMPUTED`. `COMPUTED` means that the verifier has the information availble
+ * in the signature to compute this value. For any other nodes we must give the
+ * hash in the proof, so that the verifier can compute the root. Obviously
+ * revealed leaves are trivially computable. Then we want to walk up and give
+ * the highest hash available to improve the proof size. There are three cases
+ * when encountering a node:
+ *
+ * 1. It is not computed, and its sibling is not computed:
+ *
+ *  Then the parent is not computed as well, thus it is possible just to reveal
+ *  the hash of the parent, which is more efficient. Mark the parent as computed
+ *  and move on.
+ *
+ * 2. It is computed, and its sibling is computed:
+ *
+ *  Then the parent can be computed from its children. It need not be added to
+ * the proof since the verifier already has the information to compute it. Mark
+ * the parent as computed and move on.
+ *
+ * 3. It is computed, and its sibling is not:
+ *
+ *  Then to continue computing the proof, the verifier needs the uncomputed
+ * sibling to compute and verify the parent hash. Thus we must add the
+ * uncomputed value to the proof.
+ *
+ * Although we do not include the node position information in the proof, since
+ * we visit the nodes in a deterministic order, in the proof reconstruction
+ * through the verification, the verifier will be able to know which hash
+ * corresponds to which node.
+ */
 uint16_t
 tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
            const uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH],
@@ -220,6 +252,8 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
       uint16_t current_node = start_node + i;
       uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
 
+      // If either of the left or right children are computed, then
+      // compute the parent.
       flag_tree[parent_node] = (flag_tree[current_node] == COMPUTED) ||
                                (flag_tree[SIBLING(current_node)] == COMPUTED);
 
@@ -244,6 +278,90 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
   }
   return published;
 }
+
+#if defined(OPT_OTF_MERKLE)
+uint16_t tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
+                    const uint8_t cmt_0[T * HASH_DIGEST_LENGTH],
+                    const uint8_t leaves_to_reveal[T]) {
+  /* Label the flag tree to identify computed/valid nodes */
+
+  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
+  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t leaves_start_indices[TREE_SUBROOTS] =
+      TREE_LEAVES_START_INDICES;
+
+  int published = 0;
+  unsigned int start_node = leaves_start_indices[0];
+  uint8_t level_hashes[(LOG2(T) + 1) * HASH_DIGEST_LENGTH] = {0};
+  uint16_t level_hash_flag = 0;
+  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+
+  // Commitments right to left
+  for (int i = T - 1; i > 0; i--) {
+    // If the leaf has been revealed already, continue
+    if (leaves_to_reveal[i] == CHALLENGE_PROOF_VALUE) {
+      continue;
+    }
+    // Else if it has not been revealed, decide what hash to add
+    uint8_t level = LOG2(T);
+    // Set the current hash to the commitment
+    memcpy(curr_hash, &cmt_0[i], HASH_DIGEST_LENGTH);
+    // Step up the tree, looking for highest node to add
+    while ((level_hash_flag & (1 << level)) > 0) {
+      // If it is left node
+      // if (i % 2 == 0) {
+      // If we revealed the sibling, reveal the parent instead
+      // if (leaves_to_reveal[i + 1] == CHALLENGE_PROOF_VALUE) {
+
+      // Copy the right hash to the adjacent space
+      memcpy(&level_hashes[(level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+             HASH_DIGEST_LENGTH);
+      // Then hash the two for the next level
+      hash(curr_hash, &level_hashes[(level)*HASH_DIGEST_LENGTH],
+           2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+
+      //}
+      //} else {
+      //}
+    }
+
+    level_hashes[level - 1] = cmt_0[i];
+  }
+
+  for (int level = LOG2(T); level > 0; level--) {
+    for (int i = npl[level] - 2; i >= 0; i -= 2) {
+      uint16_t current_node = start_node + i;
+      uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
+
+      // General Strategy:
+      //  - If left node
+      //    - If
+      //  - If right node,
+      flag_tree[parent_node] = (flag_tree[current_node] == COMPUTED) ||
+                               (flag_tree[SIBLING(current_node)] == COMPUTED);
+
+      /* Add left sibling only if right one was computed but left wasn't */
+      if ((flag_tree[current_node] == NOT_COMPUTED) &&
+          (flag_tree[SIBLING(current_node)] == COMPUTED)) {
+        memcpy(mtp + published * HASH_DIGEST_LENGTH,
+               tree + current_node * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
+        published++;
+      }
+
+      /* Add right sibling only if left was computed but right wasn't */
+      if ((flag_tree[current_node] == COMPUTED) &&
+          (flag_tree[SIBLING(current_node)] == NOT_COMPUTED)) {
+        memcpy(mtp + published * HASH_DIGEST_LENGTH,
+               tree + SIBLING(current_node) * HASH_DIGEST_LENGTH,
+               HASH_DIGEST_LENGTH);
+        published++;
+      }
+    }
+    start_node -= npl[level - 1];
+  }
+  return published;
+}
+#endif
 
 /*****************************************************************************/
 #if defined(OPT_MERKLE)
