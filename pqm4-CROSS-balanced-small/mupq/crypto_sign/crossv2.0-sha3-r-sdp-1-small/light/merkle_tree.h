@@ -81,3 +81,16 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
                const uint8_t leaves_to_reveal[T]);
 #endif
 #endif
+
+/**** On the fly merkle ****/
+
+struct MerkleState {
+  uint8_t tree_state[(LOG2(T) + 1) * HASH_DIGEST_LENGTH];
+  // At most ~10 bits will be used
+  uint16_t flag;
+  uint8_t level;
+  uint16_t leaves_seen;
+  uint16_t lpl[LOG2(T) + 1];
+};
+void merkle_init_state(struct MerkleState *state);
+void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value);

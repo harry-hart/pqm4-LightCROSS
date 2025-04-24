@@ -36,6 +36,7 @@
 #include "merkle_tree.h"
 #include "parameters.h"
 
+#include "hal.h"
 #if defined(NO_TREES)
 
 #define TO_PUBLISH 1
@@ -279,90 +280,6 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
   return published;
 }
 
-#if defined(OPT_OTF_MERKLE)
-uint16_t tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
-                    const uint8_t cmt_0[T * HASH_DIGEST_LENGTH],
-                    const uint8_t leaves_to_reveal[T]) {
-  /* Label the flag tree to identify computed/valid nodes */
-
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
-  const uint16_t leaves_start_indices[TREE_SUBROOTS] =
-      TREE_LEAVES_START_INDICES;
-
-  int published = 0;
-  unsigned int start_node = leaves_start_indices[0];
-  uint8_t level_hashes[(LOG2(T) + 1) * HASH_DIGEST_LENGTH] = {0};
-  uint16_t level_hash_flag = 0;
-  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
-
-  // Commitments right to left
-  for (int i = T - 1; i > 0; i--) {
-    // If the leaf has been revealed already, continue
-    if (leaves_to_reveal[i] == CHALLENGE_PROOF_VALUE) {
-      continue;
-    }
-    // Else if it has not been revealed, decide what hash to add
-    uint8_t level = LOG2(T);
-    // Set the current hash to the commitment
-    memcpy(curr_hash, &cmt_0[i], HASH_DIGEST_LENGTH);
-    // Step up the tree, looking for highest node to add
-    while ((level_hash_flag & (1 << level)) > 0) {
-      // If it is left node
-      // if (i % 2 == 0) {
-      // If we revealed the sibling, reveal the parent instead
-      // if (leaves_to_reveal[i + 1] == CHALLENGE_PROOF_VALUE) {
-
-      // Copy the right hash to the adjacent space
-      memcpy(&level_hashes[(level + 1) * HASH_DIGEST_LENGTH], curr_hash,
-             HASH_DIGEST_LENGTH);
-      // Then hash the two for the next level
-      hash(curr_hash, &level_hashes[(level)*HASH_DIGEST_LENGTH],
-           2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
-
-      //}
-      //} else {
-      //}
-    }
-
-    level_hashes[level - 1] = cmt_0[i];
-  }
-
-  for (int level = LOG2(T); level > 0; level--) {
-    for (int i = npl[level] - 2; i >= 0; i -= 2) {
-      uint16_t current_node = start_node + i;
-      uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
-
-      // General Strategy:
-      //  - If left node
-      //    - If
-      //  - If right node,
-      flag_tree[parent_node] = (flag_tree[current_node] == COMPUTED) ||
-                               (flag_tree[SIBLING(current_node)] == COMPUTED);
-
-      /* Add left sibling only if right one was computed but left wasn't */
-      if ((flag_tree[current_node] == NOT_COMPUTED) &&
-          (flag_tree[SIBLING(current_node)] == COMPUTED)) {
-        memcpy(mtp + published * HASH_DIGEST_LENGTH,
-               tree + current_node * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
-        published++;
-      }
-
-      /* Add right sibling only if left was computed but right wasn't */
-      if ((flag_tree[current_node] == COMPUTED) &&
-          (flag_tree[SIBLING(current_node)] == NOT_COMPUTED)) {
-        memcpy(mtp + published * HASH_DIGEST_LENGTH,
-               tree + SIBLING(current_node) * HASH_DIGEST_LENGTH,
-               HASH_DIGEST_LENGTH);
-        published++;
-      }
-    }
-    start_node -= npl[level - 1];
-  }
-  return published;
-}
-#endif
-
 /*****************************************************************************/
 #if defined(OPT_MERKLE)
 uint8_t
@@ -454,18 +371,9 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 /****************** On the fly merkle tree functions *************************/
 /*****************************************************************************/
 
-struct MerkleState {
-  uint8_t tree_state[LOG2(T) + 1][HASH_DIGEST_LENGTH];
-  // At most ~10 bits will be used
-  uint16_t flag;
-  uint8_t level;
-  uint8_t leaves_seen;
-  uint16_t lpl[LOG2(T) + 1];
-};
-
 // Initialise the state with 0's
 void merkle_init_state(struct MerkleState *state) {
-  memset(state->tree_state, 0, LOG2(T) * HASH_DIGEST_LENGTH);
+  memset(state->tree_state, 0, (LOG2(T) + 1) * HASH_DIGEST_LENGTH);
   state->flag = 0;
   state->level = LOG2(T);
   state->leaves_seen = 0;
@@ -479,33 +387,42 @@ void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
   // We can do this because from left to right the tree leaves should have
   // monotonically descending depths.
   while (state->leaves_seen == state->lpl[state->level]) {
+    hal_send_str("reached end of leaves");
     state->level--;
     state->leaves_seen = 0;
   }
   // Set the current hash and level
-  uint8_t curr_hash = *leaf_value;
+  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+  memcpy(curr_hash, leaf_value, HASH_DIGEST_LENGTH);
   // Adjust for 0-index
   uint8_t curr_level = state->level - 1;
   // Look for an empty spot to insert hash
   while ((state->flag & (1 << curr_level)) > 0) {
     // When we encounter a hash at our level, hash with it
     // 1. First concatenate
-    memcpy(state->tree_state[curr_level + 1], &curr_hash, HASH_DIGEST_LENGTH);
+    memcpy(&state->tree_state[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+           HASH_DIGEST_LENGTH);
     // 2. Then hash
-    hash(&curr_hash, state->tree_state[curr_level], 2 * HASH_DIGEST_LENGTH,
-         HASH_DOMAIN_SEP_CONST);
+    hash(curr_hash, &state->tree_state[curr_level * HASH_DIGEST_LENGTH],
+         2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
     // 3. Then clear flag because the hash has been used
     state->flag -= (1 << curr_level);
-    // 4. Go up a level
-    curr_level--;
     // If we hit the top of the tree, return the digest in leaf_value
-    if (curr_level < 0) {
+    if (curr_level == 0) {
+      hal_send_str("Reached root");
       memcpy(leaf_value, &curr_hash, HASH_DIGEST_LENGTH);
       return;
     }
+    // 4. Go up a level
+    curr_level--;
   }
   // After finding a place to insert, put in state
-  memcpy(state->tree_state[curr_level], &curr_hash, HASH_DIGEST_LENGTH);
+  memcpy(&state->tree_state[curr_level * HASH_DIGEST_LENGTH], curr_hash,
+         HASH_DIGEST_LENGTH);
+  state->flag += (1 << curr_level);
+  state->leaves_seen++;
 }
+
+void merkle_proof()
 
 #endif

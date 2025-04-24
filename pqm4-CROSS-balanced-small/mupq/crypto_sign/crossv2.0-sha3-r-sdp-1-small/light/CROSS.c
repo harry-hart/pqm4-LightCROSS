@@ -415,26 +415,23 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
 #if defined(OPT_OTF_MERKLE)
   // This requires at most log(T) hashes to be held
-  // The flag keeps track of whether we have a hash for that level
-  // If a hash exists for the level i:
-  //  merkle_flag & (1 << i) > 0
-  uint16_t merkle_flag = 0;
-  uint8_t max_level = LOG2(T);
-  // At most you hold one hash per level + 1 for working
-  uint8_t merkle_hashes[HASH_DIGEST_LENGTH * (LOG2(T) + 1)] = {0};
+  struct MerkleState merkle_state;
+  merkle_init_state(&merkle_state);
   /* vector containing d_0 and d_1 from spec, hold parent in here*/
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH] = {0};
-  uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-  uint8_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
-#else
+  // uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
+#endif
+// For debugging, still do merkle calculation
+// #else
 #if defined(OPT_MERKLE)
   // Merkle Tree Optimisation
   uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 #else
+  uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #endif
 #endif
-#endif
+  // #endif
 
 #if defined(OPT_HASH_CMT1)
   CSPRNG_STATE_T csprng_state_cmt_1;
@@ -565,40 +562,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 
         /* ON THE FLY MERKLE TREE HASH */
-        // First get level, start at end of array
-        uint8_t level = max_level;
-        // Current hash
-        uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
-        memcpy(curr_hash, cmt_0[i], HASH_DIGEST_LENGTH);
-        // if we have a hash stored at the level
-        while (merkle_flag & (1 << level) > 0) {
-          // We have a hash for this level
-          // Put into space next to it to concat
-          memcpy(&merkle_hashes[(level + 1) * HASH_DIGEST_LENGTH], curr_hash,
-                 HASH_DIGEST_LENGTH);
-          // Then hash the two for the next level
-          hash(curr_hash, &merkle_hashes[(level)*HASH_DIGEST_LENGTH],
-               2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
-          // Now we have used up that hash, reset flag
-          merkle_flag -= (1 << level);
-          // Go to next level
-          level--;
-        }
-        // We have reached final commitment
-        if (i == T - 1) {
-          // Put curr_hash in digest_cmt0
-          memcpy(digest_cmt0_cmt1, curr_hash, HASH_DIGEST_LENGTH);
+        if (i < T - 1) {
+          merkle_add_leaf(&merkle_state, cmt_0[i]);
         } else {
-          // Put curr_hash in next level
-          memcpy(&merkle_hashes[level * HASH_DIGEST_LENGTH], curr_hash,
-                 HASH_DIGEST_LENGTH);
-          // Track leaves seen in this level
-          lpl[max_level + 1]--;
-          // If we have seen all the leaves for this level, update max level
-          // Skip all 0 leaf levels
-          while (lpl[max_level + 1] == 0) {
-            max_level--;
-          }
+          // The final will be the digest
+          memcpy(digest_cmt0_cmt1, cmt_0[i], HASH_DIGEST_LENGTH);
+          merkle_add_leaf(&merkle_state, digest_cmt0_cmt1);
         }
 
 #else
@@ -656,10 +625,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_MERKLE)
 tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
-uint8_t merkle_tree_0_old[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
-
-tree_root(digest_cmt0_cmt1, merkle_tree_0_old, cmt_0);
+tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
 #endif
+#else
+uint8_t digest_cmt0_cmt1_orig[2 * HASH_DIGEST_LENGTH] = {0};
+tree_root(digest_cmt0_cmt1_orig, merkle_tree_0, cmt_0);
 #endif
 #endif
 
