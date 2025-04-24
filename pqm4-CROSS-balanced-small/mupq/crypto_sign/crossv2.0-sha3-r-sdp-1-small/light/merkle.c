@@ -449,4 +449,63 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
   }
   return (error == 0);
 }
+
+/*****************************************************************************/
+/****************** On the fly merkle tree functions *************************/
+/*****************************************************************************/
+
+struct MerkleState {
+  uint8_t tree_state[LOG2(T) + 1][HASH_DIGEST_LENGTH];
+  // At most ~10 bits will be used
+  uint16_t flag;
+  uint8_t level;
+  uint8_t leaves_seen;
+  uint16_t lpl[LOG2(T) + 1];
+};
+
+// Initialise the state with 0's
+void merkle_init_state(struct MerkleState *state) {
+  memset(state->tree_state, 0, LOG2(T) * HASH_DIGEST_LENGTH);
+  state->flag = 0;
+  state->level = LOG2(T);
+  state->leaves_seen = 0;
+  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+  memcpy(state->lpl, lpl, sizeof(lpl));
+}
+
+void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
+  // If we have done all the leaves on this level.
+  // Find the next level with leaves
+  // We can do this because from left to right the tree leaves should have
+  // monotonically descending depths.
+  while (state->leaves_seen == state->lpl[state->level]) {
+    state->level--;
+    state->leaves_seen = 0;
+  }
+  // Set the current hash and level
+  uint8_t curr_hash = *leaf_value;
+  // Adjust for 0-index
+  uint8_t curr_level = state->level - 1;
+  // Look for an empty spot to insert hash
+  while ((state->flag & (1 << curr_level)) > 0) {
+    // When we encounter a hash at our level, hash with it
+    // 1. First concatenate
+    memcpy(state->tree_state[curr_level + 1], &curr_hash, HASH_DIGEST_LENGTH);
+    // 2. Then hash
+    hash(&curr_hash, state->tree_state[curr_level], 2 * HASH_DIGEST_LENGTH,
+         HASH_DOMAIN_SEP_CONST);
+    // 3. Then clear flag because the hash has been used
+    state->flag -= (1 << curr_level);
+    // 4. Go up a level
+    curr_level--;
+    // If we hit the top of the tree, return the digest in leaf_value
+    if (curr_level < 0) {
+      memcpy(leaf_value, &curr_hash, HASH_DIGEST_LENGTH);
+      return;
+    }
+  }
+  // After finding a place to insert, put in state
+  memcpy(state->tree_state[curr_level], &curr_hash, HASH_DIGEST_LENGTH);
+}
+
 #endif

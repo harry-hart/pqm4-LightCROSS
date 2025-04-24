@@ -274,6 +274,7 @@
              IS_REPRESENTABLE_IN_D_BITS(15, N) +                               \
              IS_REPRESENTABLE_IN_D_BITS(16, N)))
 
+// NOTE: This is ceil(log_2(N))
 #define LOG2(L)                                                                \
   ((BITS_TO_REPRESENT(L) > BITS_TO_REPRESENT(L - 1))                           \
        ? (BITS_TO_REPRESENT(L - 1))                                            \

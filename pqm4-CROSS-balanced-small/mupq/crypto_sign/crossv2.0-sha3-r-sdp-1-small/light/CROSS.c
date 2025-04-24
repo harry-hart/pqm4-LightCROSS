@@ -425,7 +425,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   /* vector containing d_0 and d_1 from spec, hold parent in here*/
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH] = {0};
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-  uint8_t lpl[LOG(2) + 1] = TREE_LEAVES_PER_LEVEL;
+  uint8_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
 #else
 #if defined(OPT_MERKLE)
   // Merkle Tree Optimisation
