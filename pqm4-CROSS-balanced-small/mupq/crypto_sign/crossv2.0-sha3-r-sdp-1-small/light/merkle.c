@@ -387,7 +387,6 @@ void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
   // We can do this because from left to right the tree leaves should have
   // monotonically descending depths.
   while (state->leaves_seen == state->lpl[state->level]) {
-    hal_send_str("reached end of leaves");
     state->level--;
     state->leaves_seen = 0;
   }
@@ -409,7 +408,6 @@ void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
     state->flag -= (1 << curr_level);
     // If we hit the top of the tree, return the digest in leaf_value
     if (curr_level == 0) {
-      hal_send_str("Reached root");
       memcpy(leaf_value, &curr_hash, HASH_DIGEST_LENGTH);
       return;
     }
@@ -423,6 +421,126 @@ void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
   state->leaves_seen++;
 }
 
-void merkle_proof()
+void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
+  // Notes:
+  // - Can overwrite cmt_0 as it is never used again
+  //
+  uint8_t flags[T];
+  uint8_t level = LOG2(T);
+  uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t published = 0;
+
+  // Set the first level of flags
+  memcpy(flags, chall_2, T);
+
+  while (level > 0) {
+    uint16_t offset = T - npl[level];
+    for (int i = npl[level]; i > offset; i -= 2) {
+
+      // If there are differing siblings, must add the non computable one
+      if (flags[i] == COMPUTED && flags[i - 1] != COMPUTED) {
+        memcpy(mtp + published * HASH_DIGEST_LENGTH,
+               cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
+        published++;
+      }
+      if (flags[i - 1] == COMPUTED && flags[i] != COMPUTED) {
+        memcpy(mtp + published * HASH_DIGEST_LENGTH,
+               cmt_0 + i * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
+        published++;
+      }
+
+      // Set parent flag to the right
+      flags[i] = (flags[i] == COMPUTED || flags[i - 1] == COMPUTED);
+
+      // If we can already compute parent given info, don't bother hashing,
+      // otherwise
+      if (flags[i] == NOT_COMPUTED) {
+        hash(cmt_0 + i * HASH_DIGEST_LENGTH,
+             cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, 2 * HASH_DIGEST_LENGTH,
+             HASH_DOMAIN_SEP_CONST);
+      }
+    }
+    level--;
+  }
+}
+
+#if 0
+//
+// This one uses less memory, but does not go in the correct order botttom to
+// top, right to left
+void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
+  // Iterate through all commitments
+  // for (size_t i = 0; i < T; i++) {
+  //}
+
+  uint16_t flag = 0;
+  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+  uint8_t level = LOG2(T);
+  uint8_t tree_state[(LOG2(T) + 1) * HASH_DIGEST_LENGTH] = {0};
+
+  // Number of nodes added to proof
+  uint16_t published = 0;
+
+  // Leaf index
+  uint16_t leaf_i = T - 1;
+
+  // Set the current hash and level
+  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+  // Start at the rightmost leaf
+  memcpy(curr_hash, &cmt_0[leaf_i], HASH_DIGEST_LENGTH);
+
+  // Adjust for 0-index
+  uint8_t curr_level = level - 1;
+
+  // If we have revealed this leaf
+  if (chall_2[leaf_i] == CHALLENGE_PROOF_VALUE) {
+    // It's parent will never be given
+    // If there is another sibling on the same level, add it
+    if (leaf_i lpl[level])
+  } else {
+    // If we are the left sibling must be added to proof,
+    // try to combine with hash in table, then add to proof.
+    if (leaf_i % 2 == 0) {
+      // Two cases:
+      // 1. There is no hash at this level
+      //  -> add this leaf to proof and any higher up the tree state
+      while (flag != 0) {
+        if (flag & 1) {
+        }
+      }
+      // Look for an empty spot to insert hash
+      while ((flag & (1 << curr_level)) > 0) {
+        // When we encounter a hash at our level, hash with it
+        // 1. First concatenate
+        memcpy(&tree_state[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+               HASH_DIGEST_LENGTH);
+        // 2. Then hash
+        hash(curr_hash, &tree_state[curr_level * HASH_DIGEST_LENGTH],
+             2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+        // 3. Then clear flag because the hash has been used
+        flag -= (1 << curr_level);
+        // If we hit the top of the tree, return the digest in leaf_value
+        if (curr_level == 0) {
+          // I don't think we should get here, because that would mean no
+          // revealed commitments
+          // memcpy(leaf_value, &curr_hash, HASH_DIGEST_LENGTH); return;
+        }
+        // 4. Go up a level
+        curr_level--;
+      }
+
+      // After finding a place to insert, put in state
+      memcpy(&tree_state[curr_level * HASH_DIGEST_LENGTH], curr_hash,
+             HASH_DIGEST_LENGTH);
+      memcpy(mtp + published * HASH_DIGEST_LENGTH, curr_hash,
+             HASH_DIGEST_LENGTH);
+    }
+    // If we are a right sibliing, we may have to publish parent, hold hash and
+    // wait
+    else {
+    }
+  }
+}
+#endif
 
 #endif

@@ -94,3 +94,4 @@ struct MerkleState {
 };
 void merkle_init_state(struct MerkleState *state);
 void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value);
+void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2);
