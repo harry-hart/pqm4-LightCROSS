@@ -420,17 +420,17 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   /* vector containing d_0 and d_1 from spec, hold parent in here*/
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH] = {0};
   // uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
-#endif
-// For debugging, still do merkle calculation
-// #else
+  uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
+#else
 #if defined(OPT_MERKLE)
   // Merkle Tree Optimisation
   uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
+  uint8_t merkle_tree_0[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 #endif
 #endif
-  // #endif
+#endif
 
 #if defined(OPT_HASH_CMT1)
   CSPRNG_STATE_T csprng_state_cmt_1;
@@ -465,7 +465,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   CSPRNG_STATE_T csprng_state;
 
-#if defined(OPT_MERKLE) || defined(OPT_OTF_MERKLE)
+#if defined(OPT_MERKLE) && !defined(OPT_OTF_MERKLE)
   // Contain scope of loop vars
   {
     // Double loop so that we can track merkle_tree_0
@@ -582,34 +582,20 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_HASH_CMT1)
         // Sponge SHAKE hash optimisation for cmt_1
-
-        // First hash the commitment, and add it to the hash sub-buffer
-        // hash(&hash_sub[hash_sub_i * HASH_DIGEST_LENGTH], cmt_1_i_input,
-        //     sizeof(cmt_1_i_input), domain_sep_hash);
-        // hash_sub_i++;
-
         hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
-
-        // Check if we have reached the block size, or final block
-        // if (hash_sub_i * HASH_DIGEST_LENGTH >= r || i == T - 1) {
-        // If we have reached block size, update shake state
-        // xof_shake_update(&csprng_state_cmt_1, hash_sub,
-        //                 hash_sub_i * HASH_DIGEST_LENGTH);
         xof_shake_update(&csprng_state_cmt_1, cmt_1_i, HASH_DIGEST_LENGTH);
-        // Reset the sub-buffer
-        //  memset(hash_sub, 0, hash_sub_i * HASH_DIGEST_LENGTH);
-        //  hash_sub_i = 0;
-        //}
 #else
     hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input, sizeof(cmt_1_i_input),
          domain_sep_hash);
 #endif
 
+#if defined(OPT_MERKLE) && !defined(OPT_OTF_MERKLE)
         // Because of double loop
         // Remove if single loop returns
         i++;
       }
     }
+#endif
   }
 
 #if !defined(OPT_OTF_MERKLE)
@@ -622,9 +608,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
 #if !defined(OPT_OTF_MERKLE)
 #if defined(OPT_MERKLE)
-tree_root(digest_cmt0_cmt1, merkle_tree_0);
+  tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
-tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
+  tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
 #endif
 #endif
 #endif
@@ -638,8 +624,8 @@ tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
   xof_shake_extract(&csprng_state_cmt_1, digest_cmt0_cmt1 + HASH_DIGEST_LENGTH,
                     HASH_DIGEST_LENGTH);
 #else
-hash(digest_cmt0_cmt1 + HASH_DIGEST_LENGTH, cmt_1, sizeof(cmt_1),
-     HASH_DOMAIN_SEP_CONST);
+  hash(digest_cmt0_cmt1 + HASH_DIGEST_LENGTH, cmt_1, sizeof(cmt_1),
+       HASH_DOMAIN_SEP_CONST);
 #endif
 
   hash(sig->digest_cmt, digest_cmt0_cmt1, sizeof(digest_cmt0_cmt1),
@@ -706,24 +692,24 @@ hash(digest_cmt0_cmt1 + HASH_DIGEST_LENGTH, cmt_1, sizeof(cmt_1),
   xof_shake_extract(&csprng_state_y, sig->digest_chall_2, HASH_DIGEST_LENGTH);
 
 #else
-FP_ELEM y[T][N];
-for (int i = 0; i < T; i++) {
-  fp_vec_by_restr_vec_scaled(y[i], e_bar_prime[i], chall_1[i], u_prime[i]);
-  fp_dz_norm(y[i]);
-}
+  FP_ELEM y[T][N];
+  for (int i = 0; i < T; i++) {
+    fp_vec_by_restr_vec_scaled(y[i], e_bar_prime[i], chall_1[i], u_prime[i]);
+    fp_dz_norm(y[i]);
+  }
 
-/* y vectors are packed before being hashed */
-uint8_t y_digest_chall_1[T * DENSELY_PACKED_FP_VEC_SIZE + HASH_DIGEST_LENGTH];
+  /* y vectors are packed before being hashed */
+  uint8_t y_digest_chall_1[T * DENSELY_PACKED_FP_VEC_SIZE + HASH_DIGEST_LENGTH];
 
-for (int x = 0; x < T; x++) {
-  pack_fp_vec(y_digest_chall_1 + (x * DENSELY_PACKED_FP_VEC_SIZE), y[x]);
-}
-/* Second challenge extraction */
-memcpy(y_digest_chall_1 + T * DENSELY_PACKED_FP_VEC_SIZE, digest_chall_1,
-       HASH_DIGEST_LENGTH);
+  for (int x = 0; x < T; x++) {
+    pack_fp_vec(y_digest_chall_1 + (x * DENSELY_PACKED_FP_VEC_SIZE), y[x]);
+  }
+  /* Second challenge extraction */
+  memcpy(y_digest_chall_1 + T * DENSELY_PACKED_FP_VEC_SIZE, digest_chall_1,
+         HASH_DIGEST_LENGTH);
 
-hash(sig->digest_chall_2, y_digest_chall_1, sizeof(y_digest_chall_1),
-     HASH_DOMAIN_SEP_CONST);
+  hash(sig->digest_chall_2, y_digest_chall_1, sizeof(y_digest_chall_1),
+       HASH_DOMAIN_SEP_CONST);
 #endif
 
   uint8_t chall_2[T] = {0};
@@ -735,11 +721,11 @@ hash(sig->digest_chall_2, y_digest_chall_1, sizeof(y_digest_chall_1),
   seed_path(sig->path, round_seeds, chall_2);
 #else
 #if defined(OPT_OTF_MERKLE)
-merkle_proof(sig->proof, &cmt_0, &chall_2);
+  merkle_proof(sig->proof, &cmt_0, &chall_2);
 #else
-tree_proof(orig_proof, merkle_tree_0, chall_2);
+  tree_proof(orig_proof, merkle_tree_0, chall_2);
 #endif
-seed_path(sig->path, seed_tree, chall_2);
+  seed_path(sig->path, seed_tree, chall_2);
 #endif
 
   int published_rsps = 0;
@@ -761,7 +747,7 @@ seed_path(sig->path, seed_tree, chall_2);
       fp_dz_norm(y_i);
       pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
 #else
-    pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
+      pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
 #endif
 
 #if defined(RSDP)
@@ -772,7 +758,7 @@ seed_path(sig->path, seed_tree, chall_2);
       pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
 #endif
 #elif defined(RSDPG)
-    pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
+      pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
 #endif
 
 #if defined(OPT_HASH_CMT1)
@@ -789,8 +775,8 @@ seed_path(sig->path, seed_tree, chall_2);
       hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
       memcpy(sig->resp_1[published_rsps], &cmt_1_i, HASH_DIGEST_LENGTH);
 #else
-    memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
-           HASH_DIGEST_LENGTH);
+      memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
+             HASH_DIGEST_LENGTH);
 #endif
       published_rsps++;
     }
