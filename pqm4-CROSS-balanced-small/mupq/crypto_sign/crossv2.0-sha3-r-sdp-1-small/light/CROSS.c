@@ -738,7 +738,25 @@ hash(sig->digest_chall_2, y_digest_chall_1, sizeof(y_digest_chall_1),
   tree_proof(sig->proof, cmt_0, chall_2);
   seed_path(sig->path, round_seeds, chall_2);
 #else
-tree_proof(sig->proof, merkle_tree_0, chall_2);
+#if defined(OPT_OTF_MERKLE)
+uint8_t orig_proof[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE] = {0};
+memset(sig->proof, 0, HASH_DIGEST_LENGTH *TREE_NODES_TO_STORE);
+merkle_proof(sig->proof, &cmt_0, &chall_2);
+int published = tree_proof(orig_proof, merkle_tree_0, chall_2);
+
+if (memcmp(sig->proof, orig_proof, HASH_DIGEST_LENGTH *TREE_NODES_TO_STORE) !=
+    0) {
+  int nodes_incorrect = 0;
+  for (int i = 0; i < published; i++) {
+    if (memcmp(sig->proof + i * HASH_DIGEST_LENGTH,
+               orig_proof + i * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH) != 0) {
+      nodes_incorrect++;
+    }
+  }
+  send_unsigned("Failed to calculate proof, ", nodes_incorrect);
+  send_unsigned("nodes wrong out of ", published);
+}
+#endif
 seed_path(sig->path, seed_tree, chall_2);
 #endif
 

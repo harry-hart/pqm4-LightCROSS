@@ -37,6 +37,7 @@
 #include "parameters.h"
 
 #include "hal.h"
+#include "sendfn.h"
 #if defined(NO_TREES)
 
 #define TO_PUBLISH 1
@@ -424,18 +425,33 @@ void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
 void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
   // Notes:
   // - Can overwrite cmt_0 as it is never used again
-  //
-  uint8_t flags[T];
+  // - COMPUTED = 1, NOT_COMPUTED = 0
+  uint8_t flags[T] = {NOT_COMPUTED};
   uint8_t level = LOG2(T);
   uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
   uint16_t published = 0;
+  uint16_t leaves_left = T;
 
   // Set the first level of flags
-  memcpy(flags, chall_2, T);
+  for (int i = 0; i < T; i++) {
+    if (chall_2[i] == CHALLENGE_PROOF_VALUE) {
+      flags[i] = COMPUTED;
+    }
+  }
 
   while (level > 0) {
-    uint16_t offset = T - npl[level];
-    for (int i = npl[level]; i > offset; i -= 2) {
+    // How many leaves to not touch in the cmt_0 buffer
+    leaves_left = leaves_left - lpl[level];
+    // The length of the remaining left buffer
+    uint16_t sub_len = T - leaves_left;
+    // The end of the buffer on the left
+    uint16_t right_shift = sub_len - npl[level];
+    // Because of the step, have to offset the parents
+    uint16_t parent_offset = 0;
+    // uint16_t start_pos = npl[level] + offset - leaves_left;
+    // uint16_t end_pos = offset - leaves_left;
+    for (int i = sub_len - 1; i > right_shift - 1; i -= 2) {
 
       // If there are differing siblings, must add the non computable one
       if (flags[i] == COMPUTED && flags[i - 1] != COMPUTED) {
@@ -450,15 +466,21 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
       }
 
       // Set parent flag to the right
-      flags[i] = (flags[i] == COMPUTED || flags[i - 1] == COMPUTED);
+      // Explanation:
+      //  If either of the children are computed, the non-computed one has
+      //  been added to the proof, thus allowing the parent to be computed.
+      flags[i + parent_offset] =
+          (flags[i] == COMPUTED || flags[i - 1] == COMPUTED);
 
       // If we can already compute parent given info, don't bother hashing,
       // otherwise
-      if (flags[i] == NOT_COMPUTED) {
-        hash(cmt_0 + i * HASH_DIGEST_LENGTH,
+      if (flags[i + parent_offset] == NOT_COMPUTED) {
+        hash(cmt_0 + (i + parent_offset) * HASH_DIGEST_LENGTH,
              cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, 2 * HASH_DIGEST_LENGTH,
              HASH_DOMAIN_SEP_CONST);
       }
+
+      parent_offset = parent_offset + 1;
     }
     level--;
   }
