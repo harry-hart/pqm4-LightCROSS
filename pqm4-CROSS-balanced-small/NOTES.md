@@ -1,3 +1,65 @@
+## MERKLE OPTIMISING
+
+### flags as separate bytes vs bit optimisation
+
+#### BITS
+
+==========================
+keypair cycles:
+1674360
+sign cycles:
+506292504
+verify cycles:
+90492549
+
+
+==========================
+keypair stack usage:
+1216
+sign stack usage:
+185288
+verify stack usage:
+83588
+Signature valid!
+
+#### BYTES
+
+==========================
+keypair cycles:
+1674359
+sign cycles:
+506231851
+verify cycles:
+90489095
+
+==========================
+keypair stack usage:
+1216
+sign stack usage:
+185288
+verify stack usage:
+83588
+Signature valid!
+
+### REF
+
+==========================
+keypair cycles:
+1830358
+sign cycles:
+500320787
+verify cycles:
+90568481
+
+
+==========================
+keypair stack usage:
+8632
+sign stack usage:
+424568
+verify stack usage:
+223928
+Signature valid!
 
 ## Investigating CROSS_sign local variables
 
