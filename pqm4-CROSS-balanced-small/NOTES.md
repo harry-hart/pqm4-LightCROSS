@@ -1,3 +1,14 @@
+### sdp-5-small
+
+==========================
+keypair stack usage:
+1392
+sign stack usage:
+573664
+verify stack usage:
+209224
+Signature valid!
+
 ## MERKLE OPTIMISING
 
 ### flags as separate bytes vs bit optimisation

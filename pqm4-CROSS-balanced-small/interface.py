@@ -30,6 +30,7 @@ def parse_arguments():
     # parser.add_argument("-u", "--uart", default="/dev/ttyUSB0", help="Path to UART output")
     parser.add_argument("-u", "--uart", default="/dev/ttyACM0", help="Path to UART output")
     parser.add_argument("-i", "--iterations", type=int, default=1, help="Number of iterations for benchmarks")
+    parser.add_argument("-t", "--timeout", type=int, default=1, help="Read timeout in seconds")
     return parser.parse_known_args()
 
 
@@ -40,7 +41,7 @@ def get_platform(args):
         platform = platforms.StLink(args.uart)
     elif args.platform == "nucleo-l4r5zi":
         bin_type = 'hex'
-        platform = platforms.OpenOCD("st_nucleo_l4r5.cfg", args.uart)
+        platform = platforms.OpenOCD("st_nucleo_l4r5.cfg", args.uart, timeout=args.timeout)
     elif args.platform in ["cw308t-stm32f3", "cw308t-stm32f415"]:
         bin_type = 'hex'
         platform = platforms.ChipWhisperer()

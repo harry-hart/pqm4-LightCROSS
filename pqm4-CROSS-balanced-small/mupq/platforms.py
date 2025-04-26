@@ -115,6 +115,8 @@ class SerialCommsPlatform(mupq.Platform):
         output = bytearray()
         timeout_counter = 0
         while len(output) == 0 or output[-1] != b'#'[0]:
+            self.log.debug(f'Trying to get data, timeout counter: {timeout_counter}')
+            self.log.debug(f'Timeout secs is {self._dev.timeout}')
             data = self._dev.read_until(b'#', 128)
             if expiterations > 1:
                 if b"+" in data:
@@ -122,10 +124,11 @@ class SerialCommsPlatform(mupq.Platform):
                 else:
                     pb.refresh()
             output.extend(data)
-            if len(output) == 0:
+            self.log.debug(f'Got output {output}')
+            if len(data) == 0:
                 timeout_counter += 1
             # Timeout while waitiing for results
-            if timeout_counter >= 5:
+            if timeout_counter >= 1:
                 break
         if expiterations > 1:
             pb.close()

@@ -422,11 +422,6 @@ void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
   state->leaves_seen++;
 }
 
-#define FLAG_BITMASK(i, m) (1 << (7 - ((i) % 8)))
-#define FLAG_IS_SET(f, i, m) ((f[(i) / 8] & m[(i) % 8]) != 0)
-#define FLAG_SET(f, i, m) ((f[(i) / 8] |= m[(i) % 8]))
-#define FLAG_CLEAR(f, i, m) ((f[(i) / 8] &= ~m[(i) % 8]) == 0)
-
 void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
   // Notes:
   // - Can overwrite cmt_0 as it is never used again
@@ -434,12 +429,7 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
   // Pre-process
   uint8_t bit_masks[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 
-// Bit packed flag
-#if 0
-  uint8_t flags[(T / 8) + 1] = {NOT_COMPUTED};
-#else
   uint8_t flags[T + 1] = {NOT_COMPUTED};
-#endif
   uint8_t level = LOG2(T);
   uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
   uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
@@ -449,11 +439,7 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
   // Set the first level of flags
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == CHALLENGE_PROOF_VALUE) {
-#if 0
-      FLAG_SET(flags, i, bit_masks);
-#else
       flags[i] = COMPUTED;
-#endif
     }
   }
 
@@ -461,29 +447,23 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
     // How many leaves to not touch in the cmt_0 buffer
     leaves_left = leaves_left - lpl[level];
     // The length of the remaining left buffer
-    uint16_t sub_len = T - leaves_left;
+    // uint16_t sub_len = T - leaves_left;
     // The end of the buffer on the left
-    uint16_t right_shift = sub_len - npl[level];
+    // uint16_t right_shift = sub_len - npl[level];
     // Because of the step, have to offset the parents
     uint16_t parent_offset = 0;
     // uint16_t start_pos = npl[level] + offset - leaves_left;
     // uint16_t end_pos = offset - leaves_left;
-    for (int i = sub_len - 1; i > right_shift - 1; i -= 2) {
-#if 0
-      uint8_t flag_i = FLAG_IS_SET(flags, i, bit_masks);
-      uint8_t flag_i_sib = FLAG_IS_SET(flags, i - 1, bit_masks);
-#else
-      uint8_t flag_i = flags[i];
-      uint8_t flag_i_sib = flags[i - 1];
-#endif
+    for (int i = T - leaves_left - 1; i > (T - leaves_left - npl[level]) - 1;
+         i -= 2) {
 
       // If there are differing siblings, must add the non computable one
-      if (flag_i && !flag_i_sib) {
+      if (flags[i] && !flags[i - 1]) {
         memcpy(mtp + published * HASH_DIGEST_LENGTH,
                cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
         published++;
       }
-      if (!flag_i && flag_i_sib) {
+      if (!flags[i] && flags[i - 1]) {
         memcpy(mtp + published * HASH_DIGEST_LENGTH,
                cmt_0 + i * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
         published++;
@@ -493,20 +473,12 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
       // Explanation:
       //  If either of the children are computed, the non-computed one has
       //  been added to the proof, thus allowing the parent to be computed.
-      if (flag_i || flag_i_sib) {
-#if 0
-        FLAG_SET(flags, i + parent_offset, bit_masks);
-#else
+      if (flags[i] || flags[i - 1]) {
         flags[i + parent_offset] = COMPUTED;
-#endif
       } else {
-// If we can already compute parent given info, don't bother hashing,
-// otherwise
-#if 0
-        FLAG_CLEAR(flags, i + parent_offset, bit_masks);
-#else
+        // If we can already compute parent given info, don't bother hashing,
+        // otherwise
         flags[i + parent_offset] = NOT_COMPUTED;
-#endif
         hash(cmt_0 + (i + parent_offset) * HASH_DIGEST_LENGTH,
              cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, 2 * HASH_DIGEST_LENGTH,
              HASH_DOMAIN_SEP_CONST);
