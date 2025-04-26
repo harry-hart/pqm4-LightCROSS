@@ -721,9 +721,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   seed_path(sig->path, round_seeds, chall_2);
 #else
 #if defined(OPT_OTF_MERKLE)
-  merkle_proof(sig->proof, &cmt_0, &chall_2);
+  merkle_proof(sig->proof, cmt_0[0], chall_2);
 #else
-  tree_proof(orig_proof, merkle_tree_0, chall_2);
+  tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
   seed_path(sig->path, seed_tree, chall_2);
 #endif

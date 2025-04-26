@@ -424,8 +424,8 @@ void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
 
 #define FLAG_BITMASK(i, m) (1 << (7 - ((i) % 8)))
 #define FLAG_IS_SET(f, i, m) ((f[(i) / 8] & m[i]) != 0)
-#define FLAG_SET(f, i, m) ((f[(i) / 8] |= m(i)))
-#define FLAG_CLEAR(f, i, m) ((f[(i) / 8] &= ~m(i)) == 0)
+#define FLAG_SET(f, i, m) ((f[(i) / 8] |= m[i]))
+#define FLAG_CLEAR(f, i, m) ((f[(i) / 8] &= ~m[i]) == 0)
 
 void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
   // Notes:
@@ -481,11 +481,11 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
       //  If either of the children are computed, the non-computed one has
       //  been added to the proof, thus allowing the parent to be computed.
       if (flag_i || flag_i_sib) {
-        FLAG_SET(flags, i + parent_offset);
+        FLAG_SET(flags, i + parent_offset, bit_masks);
       } else {
         // If we can already compute parent given info, don't bother hashing,
         // otherwise
-        FLAG_CLEAR(flags, i + parent_offset);
+        FLAG_CLEAR(flags, i + parent_offset, bit_masks);
         hash(cmt_0 + (i + parent_offset) * HASH_DIGEST_LENGTH,
              cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, 2 * HASH_DIGEST_LENGTH,
              HASH_DOMAIN_SEP_CONST);
