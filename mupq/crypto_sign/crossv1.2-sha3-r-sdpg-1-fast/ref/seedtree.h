@@ -1,1 +1,1 @@
-../../crossv1.2-sha3-r-sdp-1-small/ref/seedtree.h
+../../crossv1.2-sha3-r-sdp-1-fast/ref/seedtree.h

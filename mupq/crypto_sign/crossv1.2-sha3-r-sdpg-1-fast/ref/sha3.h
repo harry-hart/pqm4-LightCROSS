@@ -1,1 +1,1 @@
-../../crossv1.2-sha3-r-sdp-1-small/ref/sha3.h
+../../crossv1.2-sha3-r-sdp-1-fast/ref/sha3.h
