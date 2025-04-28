@@ -180,8 +180,8 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   // Restrict the values
   // Note: We don't do the restriction in the computation, because
   // it should only be done once.
-  for (int j = 0; j < N - K; j++) {
-    s[j] = RESTR_TO_VAL(s[j]);
+  for (int j = K; j < N; j++) {
+    s[j - K] = RESTR_TO_VAL(e_bar[j]);
   }
 
   // Compute

@@ -33,7 +33,7 @@
 #include <stdint.h>
 
 #define RSDPG
-#define CATEGORY_3
+#define CATEGORY_1
 #define SIG_SIZE
 #define SKIP_ASSERT
 #define LIGHTCROSS
