@@ -138,7 +138,12 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[M],
 //  s[j] = e[k + j] + \sum_{i = 0}^k e[i] V[i,j]
 // as:
 //  s[j] += \sum_{i = 0}^k e[i] V[i,j]
+#if defined(RSDP)
 void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
+#elif defined(RSDPG)
+void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
+                                   uint8_t *seed_pk) {
+#endif
 
   /* Expansion of pk->seed, explicit domain separation for CSPRNG as in keygen
    */
@@ -147,6 +152,12 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
   CSPRNG_STATE_T csprng_state_mat;
   csprng_initialize(&csprng_state_mat, seed_pk, KEYPAIR_SEED_LENGTH_BYTES,
                     dsc_csprng_seed_pk);
+
+// Generate W_mat matrix first
+#if defined(RSDPG)
+  FZ_ELEM W_mat[M][N - M];
+  csprng_fz_mat(W_mat, &csprng_state_mat);
+#endif
   /* The on the fly element. */
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
   int elem_size = BITS_TO_REPRESENT(P - 1);
@@ -154,8 +165,13 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
   uint64_t v_window = 0;
   int remaining_window = 0;
 
-  FP_ELEM *e = s_e_bar;
+  FP_ELEM *e_bar = s_e_bar;
   FP_ELEM *s = &s_e_bar[K];
+
+#if defined(RSDPG)
+  fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
+  fz_dz_norm_n(e_bar);
+#endif
 
   // Restrict the values
   // Note: We don't do the restriction in the computation, because
@@ -195,7 +211,8 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
 
       // Calculate s
       s[j] = FPRED_DOUBLE((FP_DOUBLEPREC)s[j] +
-                          (FP_DOUBLEPREC)RESTR_TO_VAL(e[i]) * (FP_DOUBLEPREC)v);
+                          (FP_DOUBLEPREC)RESTR_TO_VAL(e_bar[i]) *
+                              (FP_DOUBLEPREC)v);
     }
   }
 }
@@ -255,8 +272,6 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #elif defined(RSDPG)
   FZ_ELEM e_G_bar[M];
   csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
-  fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
-  fz_dz_norm_n(e_bar);
 #endif
 #else
   //  Original Implementation
@@ -278,7 +293,11 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   // This is the computation s = eH^T
   // Here is where we do optimisation from LightCROSS
 #if defined(OPT_KEYGEN)
+#if defined(RSDP)
   CROSS_keygen_compute_syndrome(s_e_bar, PK->seed_pk);
+#elif defined(RSDPG)
+  CROSS_keygen_compute_syndrome(s_e_bar, e_G_bar, PK->seed_pk);
+#endif
 #else
   restr_vec_by_fp_matrix(s, e_bar, V_tr);
 #endif
@@ -288,61 +307,6 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 }
 
 /*****************************************************************************/
-
-void CROSS_sign_compute_sp(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
-
-  /* Expansion of pk->seed, explicit domain separation for CSPRNG as in keygen
-   */
-  const uint16_t dsc_csprng_seed_pk = CSPRNG_DOMAIN_SEP_CONST + (3 * T + 2);
-  /* Intiialize the csprng to generate V_tr on the fly. */
-  CSPRNG_STATE_T csprng_state_mat;
-  csprng_initialize(&csprng_state_mat, seed_pk, KEYPAIR_SEED_LENGTH_BYTES,
-                    dsc_csprng_seed_pk);
-  /* The on the fly element. */
-  const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
-  int elem_size = BITS_TO_REPRESENT(P - 1);
-  FP_ELEM v;
-  uint64_t v_window = 0;
-  int remaining_window = 0;
-
-  FP_ELEM *e = s_e_bar;
-  FP_ELEM *s = &s_e_bar[K];
-
-  // Compute
-  for (int i = 0; i < K; i++) {
-    for (int j = 0; j < N - K; j++) {
-      // Try generate random value
-      // Are they generated column first or row first?
-      // If we have less than 32 remaining
-      do {
-        if (remaining_window <= 32) {
-          uint32_t replace_window;
-          // Get new random bytes
-          csprng_randombytes((unsigned char *)&replace_window,
-                             sizeof(replace_window), &csprng_state_mat);
-          // put on sub buffer
-          v_window |= ((uint64_t)replace_window) << remaining_window;
-          // add to remaining window
-          remaining_window += 32;
-          // Rejection sampling if not in field
-        }
-        v = v_window & mask;
-        // shift window
-        v_window = v_window >> elem_size;
-        // update counter
-        remaining_window -= elem_size;
-        // If it is in the field
-        if (v < P) {
-          break;
-        }
-      } while (1);
-
-      // Calculate s
-      s[j] = FPRED_DOUBLE((FP_DOUBLEPREC)s[j] +
-                          (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)v);
-    }
-  }
-}
 
 /* sign cannot fail */
 void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
@@ -417,8 +381,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   // This requires at most log(T) hashes to be held
   struct MerkleState merkle_state;
   merkle_init_state(&merkle_state);
-  /* vector containing d_0 and d_1 from spec, hold parent in here*/
-  uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH] = {0};
   // uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #else
@@ -431,6 +393,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #endif
 #endif
+
+  /* vector containing d_0 and d_1 from spec, hold parent in here*/
+  uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH] = {0};
 
 #if defined(OPT_HASH_CMT1)
   CSPRNG_STATE_T csprng_state_cmt_1;
@@ -555,6 +520,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         /* Fixed endianness marshalling of round counter */
         uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
+#if !defined(NO_TREES)
 #if defined(OPT_OTF_MERKLE)
 
         // Make hash and record in cmt_0 for tree proof
@@ -571,12 +537,14 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #else
 #if defined(OPT_MERKLE)
-    hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
-         cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+        hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
+             cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #else
-    hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+        hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
 #endif
+#endif
+
         memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
                SEED_LENGTH_BYTES);
 
@@ -597,11 +565,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     }
 #endif
   }
-
-#if !defined(OPT_OTF_MERKLE)
-  /* vector containing d_0 and d_1 from spec */
-  uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
-#endif
 
 #if defined(NO_TREES)
   tree_root(digest_cmt0_cmt1, cmt_0);

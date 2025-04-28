@@ -1,1 +1,0 @@
-../../crossv2.0-sha3-r-sdp-1-small/ref/sign.c
