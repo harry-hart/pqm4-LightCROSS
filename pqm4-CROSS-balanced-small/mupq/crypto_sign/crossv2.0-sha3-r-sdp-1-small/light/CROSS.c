@@ -139,10 +139,10 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[M],
 // as:
 //  s[j] += \sum_{i = 0}^k e[i] V[i,j]
 #if defined(RSDP)
-void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, uint8_t *seed_pk) {
+void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, uint8_t *seed_pk) {
 #elif defined(RSDPG)
-void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
-                                   uint8_t *seed_pk) {
+void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
+                                   FP_ELEM *s, uint8_t *seed_pk) {
 #endif
 
   /* Expansion of pk->seed, explicit domain separation for CSPRNG as in keygen
@@ -165,8 +165,12 @@ void CROSS_keygen_compute_syndrome(FP_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   uint64_t v_window = 0;
   int remaining_window = 0;
 
-  FP_ELEM *e_bar = s_e_bar;
+  FZ_ELEM *e_bar = s_e_bar;
+#if defined(RSDP)
+  // Once again this only works in RSDP because FZ_ELEM and FP_ELEM are same
+  // size
   FP_ELEM *s = &s_e_bar[K];
+#endif
 
 #if defined(RSDPG)
   fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
@@ -265,11 +269,13 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   //  The full thing is calculated as e, then because we only need e[0..K] for
   //  the rest of the syndrome calculation, we can overlap the end of the vector
   //  with the new s values in the computation.
-  FP_ELEM s_e_bar[N];
-  FP_ELEM *s = &s_e_bar[K];
+  FZ_ELEM s_e_bar[N];
 #if defined(RSDP)
+  // This only works because sizeof(FZ_ELEM) == sizeof(FP_ELEM) in RSDP
+  FP_ELEM *s = &s_e_bar[K];
   csprng_fz_vec(s_e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
+  FP_ELEM s[N - K];
   FZ_ELEM e_G_bar[M];
   csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
 #endif
@@ -296,7 +302,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #if defined(RSDP)
   CROSS_keygen_compute_syndrome(s_e_bar, PK->seed_pk);
 #elif defined(RSDPG)
-  CROSS_keygen_compute_syndrome(s_e_bar, e_G_bar, PK->seed_pk);
+  CROSS_keygen_compute_syndrome(s_e_bar, e_G_bar, s, PK->seed_pk);
 #endif
 #else
   restr_vec_by_fp_matrix(s, e_bar, V_tr);
@@ -520,27 +526,30 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         /* Fixed endianness marshalling of round counter */
         uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
-#if !defined(NO_TREES)
-#if defined(OPT_OTF_MERKLE)
-
+#if defined(NO_TREES)
         // Make hash and record in cmt_0 for tree proof
         hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+#else
+#if defined(OPT_OTF_MERKLE)
 
-        /* ON THE FLY MERKLE TREE HASH */
-        if (i < T - 1) {
-          merkle_add_leaf(&merkle_state, cmt_0[i]);
-        } else {
-          // The final will be the digest
-          memcpy(digest_cmt0_cmt1, cmt_0[i], HASH_DIGEST_LENGTH);
-          merkle_add_leaf(&merkle_state, digest_cmt0_cmt1);
-        }
+    // Make hash and record in cmt_0 for tree proof
+    hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+
+    /* ON THE FLY MERKLE TREE HASH */
+    if (i < T - 1) {
+      merkle_add_leaf(&merkle_state, cmt_0[i]);
+    } else {
+      // The final will be the digest
+      memcpy(digest_cmt0_cmt1, cmt_0[i], HASH_DIGEST_LENGTH);
+      merkle_add_leaf(&merkle_state, digest_cmt0_cmt1);
+    }
 
 #else
 #if defined(OPT_MERKLE)
-        hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
-             cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+    hash(merkle_tree_0 + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
+         cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #else
-        hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+    hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
 #endif
 #endif
@@ -815,7 +824,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t cmt_1_i_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_i_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
-#if defined(OPT_MERKLE)
+#if defined(OPT_MERKLE) && !defined(NO_TREES)
   uint8_t merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH] = {0};
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
@@ -857,7 +866,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   int is_signature_ok = 1;
   uint8_t is_packed_padd_ok = 1;
 
-#if defined(OPT_MERKLE)
+#if defined(OPT_MERKLE) && !defined(NO_TREES)
   {
     const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
     const uint16_t leaves_start_indices[TREE_SUBROOTS] =
@@ -980,7 +989,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           fp_dz_norm_synd(s_prime);
           pack_fp_syn(cmt_0_i_input, s_prime);
 
-#if defined(OPT_MERKLE)
+#if defined(OPT_MERKLE) && !defined(NO_TREES)
           // Add directly to tree
           hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
                cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
@@ -989,7 +998,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
         }
-#if defined(OPT_MERKLE)
+#if defined(OPT_MERKLE) && !defined(NO_TREES)
         i++;
       } /* end for iterating on ZKID iterations */
     }
@@ -1002,7 +1011,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
 
-#if defined(OPT_MERKLE)
+#if defined(OPT_MERKLE) && !defined(NO_TREES)
   // DEBUGGING
   // uint8_t compare_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 

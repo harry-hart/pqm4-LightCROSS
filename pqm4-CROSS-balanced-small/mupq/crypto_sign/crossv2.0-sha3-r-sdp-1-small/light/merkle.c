@@ -284,8 +284,7 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
 /*****************************************************************************/
 #if defined(OPT_MERKLE)
 uint8_t
-recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
-               uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH],
+recompute_root(uint8_t root[HASH_DIGEST_LENGTH], uint8_t *tree,
                const uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
                const uint8_t leaves_to_reveal[T]) {
 #else
