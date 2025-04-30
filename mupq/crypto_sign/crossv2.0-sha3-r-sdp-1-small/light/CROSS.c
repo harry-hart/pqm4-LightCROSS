@@ -314,6 +314,255 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
 /*****************************************************************************/
 
+#if defined(OPT_E_BAR_PRIME)
+void compute_response(resp_0_t *rsp_0, uint8_t *rsp_1, FZ_ELEM *e_bar,
+                      FZ_ELEM *v_bar_i, FP_ELEM *chall_1_i, FP_ELEM *u_prime_i,
+                      unsigned char *round_seeds_i, uint16_t *domain_sep_hash) {
+#else
+void compute_response(uint8_t *rsp, FZ_ELEM *e_bar, FZ_ELEM *e_bar_prime,
+                      FZ_ELEM *v_bar_i, FP_ELEM *chall_1_i, FP_ELEM *u_prime_i,
+                      unsigned char *round_seeds) {
+#endif
+  FZ_ELEM e_bar_prime_i[N] = {0};
+  uint8_t cmt_1_i_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+
+#if defined(OPT_HASH_Y)
+  // Have to recalculate y
+  FP_ELEM y_i[N];
+  // Calculate y
+#if defined(OPT_E_BAR_PRIME)
+  fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar_i);
+  // Calculate y
+  fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, *chall_1_i, u_prime_i);
+#else
+  // Calculate y
+  fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1_i, u_prime_i);
+#endif
+  fp_dz_norm(y_i);
+  pack_fp_vec(rsp_0->y, y_i);
+#else
+  pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
+#endif
+
+#if defined(RSDP)
+#if defined(OPT_V_BAR)
+  fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
+  pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
+#else
+  pack_fz_vec(rsp_0->v_bar, v_bar_i);
+#endif
+#elif defined(RSDPG)
+  pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
+#endif
+
+#if defined(OPT_HASH_CMT1)
+  // Calculate the cmt_1_i hash value again to avoid storing it
+  // First make the input (Seed[i] | Salt | i + c)
+  // N.B. i + c should already be at the end because of init
+  memcpy(cmt_1_i_input, round_seeds_i, SEED_LENGTH_BYTES);
+  // Temp storage for our cmt_1_i hash
+  uint8_t cmt_1_i[HASH_DIGEST_LENGTH] = {0};
+  // Our cmt_1_i hash
+  hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
+  memcpy(rsp_1, &cmt_1_i, HASH_DIGEST_LENGTH);
+#else
+  memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
+         HASH_DIGEST_LENGTH);
+#endif
+}
+
+#define REVEAL_VALUE 1
+#define CHALLENGE_REVEAL_VALUE 0
+
+int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
+                   const unsigned char *indices_to_publish,
+                   uint8_t *hash_storage) {
+  // NOTES:
+  // - hash_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
+  // because
+  //  we never calculate the leaf layer. Since SEED_LENGTH_BYTES = 2 *
+  //  HASH_DIGEST_LENGTH we only need (T * HASH_DIGEST_LENGTH) storage. Thus
+  //  cmt_0 is sufficient.
+  // Reveal bitmap
+  uint8_t reveal[T / 8 + 1] = {0};
+  // How many leaves on this subtree
+  uint16_t tree_leaves = T;
+  // How many nodes left at this level
+  uint16_t nodes = 1;
+  // Continue?
+  uint8_t next_level = 1;
+  // Track current level
+  uint8_t curr_level = 0;
+  // Track current node
+  uint16_t node_i = 0;
+  // Set the root as the first level
+  memcpy(hash_storage, root_seed, HASH_DIGEST_LENGTH);
+  // Partition boundaries
+  uint16_t partitions[T] = {0};
+  // Node computation csprng vars
+  const uint32_t csprng_input_len = SALT_LENGTH_BYTES + SEED_LENGTH_BYTES;
+  unsigned char csprng_input[csprng_input_len];
+  CSPRNG_STATE_T tree_csprng_state;
+  memcpy(csprng_input + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
+
+#if defined(OPT_GGM_BIT_CHAL)
+  // First compute the challenge bitmap
+  uint8_t set_bits = 0;
+  uint8_t reveal_i = 0;
+  for (int i = 0; i < T; i++) {
+    if (indices_to_publish[i] == CHALLENGE_REVEAL_VALUE) {
+      // Set leaf to reveal
+      reveal[reveal_i] += REVEAL_VALUE;
+    }
+    set_bits++;
+    if (set_bits == 8) {
+      reveal_i++;
+    }
+    // Shift left
+    reveal[reveal_i] = reveal[reveal_i] << 1;
+  }
+#endif
+
+  while (next_level) {
+    // Reset next_level
+    next_level = 0;
+    // Go through remaining nodes
+    for (int i = 0; i < nodes; i++) {
+      // Partitioning
+      uint16_t partition_start = partitions[i];
+      uint16_t partition_end = partitions[T - i];
+      uint16_t partition_size = partition_end - partition_start;
+      // Compute partition split
+      // Count leading zeroes to find msb
+      uint8_t msb = 0;
+      uint8_t partition = 0;
+      asm("CLZ %1, %0" : "=r"(msb) : "r"(tree_leaves));
+      // Highest power of 2 that divides it (maybe implement in assembly later?)
+      partition = 1 << (15 - msb);
+      // Left tree is big tree
+
+      // Node (Re)computation
+      // If at leaf level, don't recompute!
+      if (curr_level == LOG2(T) - 1) {
+        hash_storage[i * SEED_LENGTH_BYTES] =
+            round_seeds[2 * i * SEED_LENGTH_BYTES];
+        hash_storage[(T - i) * SEED_LENGTH_BYTES] =
+            round_seeds[(2 * i + 1) * SEED_LENGTH_BYTES];
+      } else {
+        /* prepare the CSPRNG input to expand the father node */
+        memcpy(csprng_input, hash_storage[i * SEED_LENGTH_BYTES],
+               SEED_LENGTH_BYTES);
+
+        /* Domain separation using father node index */
+        uint16_t domain_sep = CSPRNG_DOMAIN_SEP_CONST + node_i;
+
+        /* Generate the children (stored contiguously).
+         * By construction, the tree has always two children */
+        csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
+                          domain_sep);
+        // LEFT
+        csprng_randombytes(hash_storage + (i * SEED_LENGTH_BYTES),
+                           SEED_LENGTH_BYTES, &tree_csprng_state);
+        // RIGHT
+        csprng_randombytes(hash_storage + ((T - i) * SEED_LENGTH_BYTES),
+                           SEED_LENGTH_BYTES, &tree_csprng_state);
+      }
+
+      // Check if expands to only revealed leaves
+      for (int j = partition_start; j < partition_end; j++) {
+        uint16_t partition_split = partition_start + partition;
+        uint16_t to_hide = 0;
+        uint16_t to_reveal = 0;
+        // If we encounter a hidden node, skip to end of partition
+        if (indices_to_publish[j] != CHALLENGE_REVEAL_VALUE) {
+          to_hide++;
+          // If it is a mix
+          if (to_reveal != 0) {
+            if (j < partition_split) {
+              // Don't put left node on
+              j = partition_split;
+            } else {
+              // Don't put right node on
+              break;
+            }
+          } else if (j == partition_split - 1 || j == partition_end - 1) {
+            // If they are all hidden in the partition
+            // Add all requisite response values
+            assert(published_rsps < T - W);
+#if defined(OPT_HASH_Y)
+            // Have to recalculate y
+            FP_ELEM y_i[N];
+            // Calculate y
+#if defined(OPT_E_BAR_PRIME)
+            fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
+            // Calculate y
+            fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i],
+                                       u_prime[i]);
+#else
+            // Calculate y
+            fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i],
+                                       u_prime[i]);
+#endif
+            fp_dz_norm(y_i);
+            pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
+#else
+            pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
+#endif
+
+#if defined(RSDP)
+#if defined(OPT_V_BAR)
+            fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
+            pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
+#else
+            pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
+#endif
+#elif defined(RSDPG)
+            pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
+#endif
+
+#if defined(OPT_HASH_CMT1)
+            // Calculate the cmt_1_i hash value again to avoid storing it
+            // First make the input (Seed[i] | Salt | i + c)
+            // N.B. i + c should already be at the end because of init
+            memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
+                   SEED_LENGTH_BYTES);
+            // Temp storage for our cmt_1_i hash
+            uint8_t cmt_1_i[HASH_DIGEST_LENGTH] = {0};
+            // The domain separation
+            uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
+            // Our cmt_1_i hash
+            hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input),
+                 domain_sep_hash);
+            memcpy(sig->resp_1[published_rsps], &cmt_1_i, HASH_DIGEST_LENGTH);
+#else
+            memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
+                   HASH_DIGEST_LENGTH);
+#endif
+            published_rsps++;
+          }
+        } else {
+          to_reveal++;
+          // If we didn't see a hidden node by the end of partition
+          if (j == partition_split - 1 || j == partition_end - 1) {
+            // Publish node
+            // The domain separation
+            uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
+            if (j < partition_split) {
+              // Left
+            }
+          }
+        }
+      }
+      for (int j = partition_start / 8; j < partition_end / 8 + 1; j++) {
+        if (1 << partition) {
+        }
+      }
+    }
+  }
+}
+
+/*****************************************************************************/
+
 /* sign cannot fail */
 void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                 CROSS_sig_t *sig) {
@@ -700,7 +949,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   seed_path(sig->path, seed_tree, chall_2);
 
 #if defined(OPT_GGM)
-  int interval = 
+  int interval = build_response(sig->path, root_seed, round_seeds, chall_2,
+                                e_bar, v_bar, chall_1, u_prime, hash_storage);
+
 #endif
 #endif
 
