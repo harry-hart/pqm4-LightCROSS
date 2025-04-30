@@ -45,6 +45,7 @@
 #define OPT_E_BAR_PRIME
 // #define OPT_V_BAR
 #define OPT_OTF_MERKLE
+#define OPT_GGM
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/

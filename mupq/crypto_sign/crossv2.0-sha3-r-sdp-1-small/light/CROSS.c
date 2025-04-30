@@ -698,6 +698,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
   seed_path(sig->path, seed_tree, chall_2);
+
+#if defined(OPT_GGM)
+  int interval = 
+#endif
 #endif
 
   int published_rsps = 0;
