@@ -314,6 +314,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
 /*****************************************************************************/
 
+/*
 #if defined(OPT_E_BAR_PRIME)
 void compute_response(resp_0_t *rsp_0, uint8_t *rsp_1, FZ_ELEM *e_bar,
                       FZ_ELEM *v_bar_i, FP_ELEM *chall_1_i, FP_ELEM *u_prime_i,
@@ -370,13 +371,25 @@ void compute_response(uint8_t *rsp, FZ_ELEM *e_bar, FZ_ELEM *e_bar_prime,
          HASH_DIGEST_LENGTH);
 #endif
 }
+*/
 
 #define REVEAL_VALUE 1
 #define CHALLENGE_REVEAL_VALUE 0
 
+#if defined(RSDP)
 int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
-                   uint8_t *hash_storage) {
+                   uint8_t *hash_storage, CROSS_sig_t *sig,
+                   unsigned char *round_seeds, FZ_ELEM *e_bar, FZ_ELEM *v_bar,
+                   FP_ELEM *chall_1, FP_ELEM *u_prime) {
+#elif defined(RSDPG)
+int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
+                   const unsigned char *indices_to_publish,
+                   uint8_t *hash_storage, CROSS_sig_t *sig,
+                   unsigned char *round_seeds, FZ_ELEM *e_bar, FZ_ELEM *v_bar,
+                   FP_ELEM *chall_1, FP_ELEM *u_prime, FZ_ELEM *e_G_bar_prime,
+                   FZ_ELEM *v_G_bar) {
+#endif
   // NOTES:
   // - hash_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
   // because
@@ -399,12 +412,23 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   memcpy(hash_storage, root_seed, HASH_DIGEST_LENGTH);
   // Partition boundaries
   uint16_t partitions[T] = {0};
+  // Keep track of how many rsps published
+  int published_rsps = 0;
+  // Keep track of how many path nodes published
+  int published_nodes = 0;
+  //
+  uint8_t hash_storage_len = T / 2;
+  // Tracking for
+  FZ_ELEM e_bar_prime_k[N] = {0};
+  uint8_t cmt_1_k_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+  memcpy(cmt_1_k_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
   // Node computation csprng vars
   const uint32_t csprng_input_len = SALT_LENGTH_BYTES + SEED_LENGTH_BYTES;
   unsigned char csprng_input[csprng_input_len];
   CSPRNG_STATE_T tree_csprng_state;
-  memcpy(csprng_input + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
+  memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
+  // TODO: Bitmap optimisation
 #if defined(OPT_GGM_BIT_CHAL)
   // First compute the challenge bitmap
   uint8_t set_bits = 0;
@@ -446,7 +470,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
       if (curr_level == LOG2(T) - 1) {
         hash_storage[i * SEED_LENGTH_BYTES] =
             round_seeds[2 * i * SEED_LENGTH_BYTES];
-        hash_storage[(T - i) * SEED_LENGTH_BYTES] =
+        hash_storage[(hash_storage_len - i) * SEED_LENGTH_BYTES] =
             round_seeds[(2 * i + 1) * SEED_LENGTH_BYTES];
       } else {
         /* prepare the CSPRNG input to expand the father node */
@@ -471,13 +495,12 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
       // Check if expands to only revealed leaves
       for (int j = partition_start; j < partition_end; j++) {
         uint16_t partition_split = partition_start + partition;
-        uint16_t to_hide = 0;
-        uint16_t to_reveal = 0;
+        uint8_t to_reveal = 0;
         // If we encounter a hidden node, skip to end of partition
         if (indices_to_publish[j] != CHALLENGE_REVEAL_VALUE) {
-          to_hide++;
+          to_reveal |= 1;
           // If it is a mix
-          if (to_reveal != 0) {
+          if (to_reveal == 3) {
             if (j < partition_split) {
               // Don't put left node on
               j = partition_split;
@@ -488,67 +511,79 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
           } else if (j == partition_split - 1 || j == partition_end - 1) {
             // If they are all hidden in the partition
             // Add all requisite response values
-            assert(published_rsps < T - W);
+            for (int k = partition_start; k < partition_end; k++) {
+              assert(published_rsps < T - W);
 #if defined(OPT_HASH_Y)
-            // Have to recalculate y
-            FP_ELEM y_i[N];
-            // Calculate y
+              // Have to recalculate y
+              FP_ELEM y_k[N];
+              // Calculate y
 #if defined(OPT_E_BAR_PRIME)
-            fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
-            // Calculate y
-            fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i],
-                                       u_prime[i]);
+              fz_vec_sub_n(e_bar_prime_k, e_bar, v_bar[k]);
+              // Calculate l
+              fp_vec_by_restr_vec_scaled(y_k, e_bar_prime_k, chall_1[k],
+                                         u_prime[k]);
 #else
-            // Calculate y
-            fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i],
-                                       u_prime[i]);
+              // Calculate y
+              fp_vec_by_restr_vec_scaled(y_k, e_bar_prime[k], chall_1[k],
+                                         u_prime[k]);
 #endif
-            fp_dz_norm(y_i);
-            pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
+              fp_dz_norm(y_k);
+              pack_fp_vec(sig->resp_0[published_rsps].y, y_k);
 #else
-            pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
+              pack_fp_vec(sig->resp_0[published_rsps].y, y[k]);
 #endif
 
 #if defined(RSDP)
 #if defined(OPT_V_BAR)
-            fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
-            pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
+              fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime[k]);
+              pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_k);
 #else
-            pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
+              pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[k]);
 #endif
 #elif defined(RSDPG)
-            pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
+              pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar,
+                                 v_G_bar[k]);
 #endif
 
 #if defined(OPT_HASH_CMT1)
-            // Calculate the cmt_1_i hash value again to avoid storing it
-            // First make the input (Seed[i] | Salt | i + c)
-            // N.B. i + c should already be at the end because of init
-            memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
-                   SEED_LENGTH_BYTES);
-            // Temp storage for our cmt_1_i hash
-            uint8_t cmt_1_i[HASH_DIGEST_LENGTH] = {0};
-            // The domain separation
-            uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
-            // Our cmt_1_i hash
-            hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input),
-                 domain_sep_hash);
-            memcpy(sig->resp_1[published_rsps], &cmt_1_i, HASH_DIGEST_LENGTH);
+              // Calculate the cmt_1_i hash value again to avoid storing it
+              // First make the input (Seed[i] | Salt | i + c)
+              // N.B. i + c should already be at the end because of init
+              memcpy(cmt_1_k_input, round_seeds + SEED_LENGTH_BYTES * k,
+                     SEED_LENGTH_BYTES);
+              // Temp storage for our cmt_1_i hash
+              uint8_t cmt_1_k[HASH_DIGEST_LENGTH] = {0};
+              // The domain separation
+              uint16_t domain_sep_hash =
+                  HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
+              // Our cmt_1_i hash
+              hash(cmt_1_k, cmt_1_k_input, sizeof(cmt_1_k_input),
+                   domain_sep_hash);
+              memcpy(sig->resp_1[published_rsps], &cmt_1_k, HASH_DIGEST_LENGTH);
 #else
-            memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
-                   HASH_DIGEST_LENGTH);
+              memcpy(sig->resp_1[published_rsps],
+                     &cmt_1[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH);
 #endif
-            published_rsps++;
+              published_rsps++;
+            }
           }
         } else {
-          to_reveal++;
-          // If we didn't see a hidden node by the end of partition
+          to_reveal |= 2;
+          // If we didn't see a hidden node by the end of partition then
+          // publish the node in the path
           if (j == partition_split - 1 || j == partition_end - 1) {
             // Publish node
             // The domain separation
             uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
             if (j < partition_split) {
-              // Left
+              // Publish left node
+              memcpy(seed_storage + published_nodes * SEED_LENGTH_BYTES,
+                     hash_storage + i * SEED_LENGTH_BYTES, SEED_LENGTH_BYTES);
+            } else {
+              // Publish right node
+              memcpy(seed_storage + published_nodes * SEED_LENGTH_BYTES,
+                     hash_storage + (hash_storage_len - i) * SEED_LENGTH_BYTES,
+                     SEED_LENGTH_BYTES);
             }
           }
         }
@@ -949,8 +984,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   seed_path(sig->path, seed_tree, chall_2);
 
 #if defined(OPT_GGM)
-  int interval = build_response(sig->path, root_seed, round_seeds, chall_2,
-                                e_bar, v_bar, chall_1, u_prime, hash_storage);
+  // int interval = build_response(sig->path, root_seed, round_seeds, chall_2,
+  //                              e_bar, v_bar, chall_1, u_prime, cmt_0);
 
 #endif
 #endif
