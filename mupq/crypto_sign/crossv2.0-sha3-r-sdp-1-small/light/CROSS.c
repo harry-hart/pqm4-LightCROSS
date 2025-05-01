@@ -377,11 +377,11 @@ void compute_response(uint8_t *rsp, FZ_ELEM *e_bar, FZ_ELEM *e_bar_prime,
 #define CHALLENGE_REVEAL_VALUE 0
 
 #if defined(RSDP)
-int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
+int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
-                   uint8_t *hash_storage, CROSS_sig_t *sig,
-                   unsigned char *round_seeds, FZ_ELEM *e_bar, FZ_ELEM *v_bar,
-                   FP_ELEM *chall_1, FP_ELEM *u_prime) {
+                   uint8_t *hash_storage, unsigned char *round_seeds,
+                   FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
+                   FP_ELEM *u_prime) {
 #elif defined(RSDPG)
 int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
@@ -418,6 +418,9 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   int published_nodes = 0;
   //
   uint8_t hash_storage_len = T / 2;
+  // Subtree seeds
+  uint8_t *left = &hash_storage[0];
+  uint8_t *right = &hash_storage[(T - 1) * HASH_DIGEST_LENGTH];
   // Tracking for
   FZ_ELEM e_bar_prime_k[N] = {0};
   uint8_t cmt_1_k_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
@@ -450,6 +453,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   while (next_level) {
     // Reset next_level
     next_level = 0;
+    int next_nodes = 0;
     // Go through remaining nodes
     for (int i = 0; i < nodes; i++) {
       // Partitioning
@@ -468,13 +472,11 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
       // Node (Re)computation
       // If at leaf level, don't recompute!
       if (curr_level == LOG2(T) - 1) {
-        hash_storage[i * SEED_LENGTH_BYTES] =
-            round_seeds[2 * i * SEED_LENGTH_BYTES];
-        hash_storage[(hash_storage_len - i) * SEED_LENGTH_BYTES] =
-            round_seeds[(2 * i + 1) * SEED_LENGTH_BYTES];
+        left = &round_seeds[2 * i * SEED_LENGTH_BYTES];
+        right = &round_seeds[(2 * i + 1) * SEED_LENGTH_BYTES];
       } else {
         /* prepare the CSPRNG input to expand the father node */
-        memcpy(csprng_input, hash_storage[i * SEED_LENGTH_BYTES],
+        memcpy(csprng_input, &hash_storage[i * SEED_LENGTH_BYTES],
                SEED_LENGTH_BYTES);
 
         /* Domain separation using father node index */
@@ -487,9 +489,11 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
         // LEFT
         csprng_randombytes(hash_storage + (i * SEED_LENGTH_BYTES),
                            SEED_LENGTH_BYTES, &tree_csprng_state);
+        left = hash_storage + (i * SEED_LENGTH_BYTES);
         // RIGHT
         csprng_randombytes(hash_storage + ((T - i) * SEED_LENGTH_BYTES),
                            SEED_LENGTH_BYTES, &tree_csprng_state);
+        right = hash_storage + ((hash_storage_len - i) * SEED_LENGTH_BYTES);
       }
 
       // Check if expands to only revealed leaves
@@ -501,6 +505,9 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
           to_reveal |= 1;
           // If it is a mix
           if (to_reveal == 3) {
+            // Need to revisit children of this node
+            next_nodes++;
+            next_level = 1;
             if (j < partition_split) {
               // Don't put left node on
               j = partition_split;
@@ -513,19 +520,21 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
             // Add all requisite response values
             for (int k = partition_start; k < partition_end; k++) {
               assert(published_rsps < T - W);
+              size_t FZ_vec = N * sizeof(FZ_ELEM);
+              size_t FP_vec = N * sizeof(FP_ELEM);
 #if defined(OPT_HASH_Y)
               // Have to recalculate y
               FP_ELEM y_k[N];
               // Calculate y
 #if defined(OPT_E_BAR_PRIME)
-              fz_vec_sub_n(e_bar_prime_k, e_bar, v_bar[k]);
+              fz_vec_sub_n(e_bar_prime_k, e_bar, v_bar + k * FZ_vec);
               // Calculate l
               fp_vec_by_restr_vec_scaled(y_k, e_bar_prime_k, chall_1[k],
-                                         u_prime[k]);
+                                         u_prime + k * FP_vec);
 #else
               // Calculate y
-              fp_vec_by_restr_vec_scaled(y_k, e_bar_prime[k], chall_1[k],
-                                         u_prime[k]);
+              fp_vec_by_restr_vec_scaled(y_k, e_bar_prime + k * FZ_vec,
+
 #endif
               fp_dz_norm(y_k);
               pack_fp_vec(sig->resp_0[published_rsps].y, y_k);
@@ -535,20 +544,21 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
 
 #if defined(RSDP)
 #if defined(OPT_V_BAR)
-              fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime[k]);
+              fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime + k * FZ_vec);
               pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_k);
 #else
-              pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[k]);
+              pack_fz_vec(sig->resp_0[published_rsps].v_bar,
+                          v_bar + k * FZ_vec);
 #endif
 #elif defined(RSDPG)
               pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar,
-                                 v_G_bar[k]);
+                                 v_G_bar + k * FZ_vec);
 #endif
 
 #if defined(OPT_HASH_CMT1)
               // Calculate the cmt_1_i hash value again to avoid storing it
               // First make the input (Seed[i] | Salt | i + c)
-              // N.B. i + c should already be at the end because of init
+              // N.B. Salt should already be at the end because of init
               memcpy(cmt_1_k_input, round_seeds + SEED_LENGTH_BYTES * k,
                      SEED_LENGTH_BYTES);
               // Temp storage for our cmt_1_i hash
@@ -577,22 +587,21 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
             uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
             if (j < partition_split) {
               // Publish left node
-              memcpy(seed_storage + published_nodes * SEED_LENGTH_BYTES,
-                     hash_storage + i * SEED_LENGTH_BYTES, SEED_LENGTH_BYTES);
+              memcpy(sig->path + published_nodes * SEED_LENGTH_BYTES, left,
+                     SEED_LENGTH_BYTES);
+              published_nodes++;
             } else {
               // Publish right node
-              memcpy(seed_storage + published_nodes * SEED_LENGTH_BYTES,
-                     hash_storage + (hash_storage_len - i) * SEED_LENGTH_BYTES,
+              memcpy(sig->path + published_nodes * SEED_LENGTH_BYTES, right,
                      SEED_LENGTH_BYTES);
+              published_nodes++;
             }
           }
         }
       }
-      for (int j = partition_start / 8; j < partition_end / 8 + 1; j++) {
-        if (1 << partition) {
-        }
-      }
     }
+    curr_level++;
+    nodes = next_nodes;
   }
 }
 
@@ -671,7 +680,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   // This requires at most log(T) hashes to be held
   struct MerkleState merkle_state;
   merkle_init_state(&merkle_state);
-  // uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #else
 #if defined(OPT_MERKLE)
@@ -981,12 +989,20 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
-  seed_path(sig->path, seed_tree, chall_2);
+  uint8_t old_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES];
+  seed_path(old_path, seed_tree, chall_2);
 
 #if defined(OPT_GGM)
-  // int interval = build_response(sig->path, root_seed, round_seeds, chall_2,
-  //                              e_bar, v_bar, chall_1, u_prime, cmt_0);
+  int published_nodes =
+      build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
+                     v_bar[0], chall_1, u_prime[0]);
 
+  for (int i = 0; i < published_nodes; i++) {
+    if (memcmp(&old_path[i * SEED_LENGTH_BYTES],
+               &sig->path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
+      send_unsigned("Detected different node: ", i);
+    }
+  }
 #endif
 #endif
 
