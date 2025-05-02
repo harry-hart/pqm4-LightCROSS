@@ -503,7 +503,8 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
                            SEED_LENGTH_BYTES, &tree_csprng_state);
         left = hash_storage + (i * SEED_LENGTH_BYTES);
         // RIGHT
-        csprng_randombytes(hash_storage + ((T - i) * SEED_LENGTH_BYTES),
+        csprng_randombytes(hash_storage +
+                               ((hash_storage_len - i) * SEED_LENGTH_BYTES),
                            SEED_LENGTH_BYTES, &tree_csprng_state);
         right = hash_storage + ((hash_storage_len - i) * SEED_LENGTH_BYTES);
       }
@@ -1064,10 +1065,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   send_unsigned("Real path size:", published_real);
   send_unsigned("Test path size:", published_test);
-  for (int i = 0; i < published_real; i++) {
-    if (memcmp(&old_path[i * SEED_LENGTH_BYTES],
-               &sig->path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
-      send_unsigned("Detected different node: ", i);
+  if (published_real == published_test) {
+    for (int i = 0; i < published_real; i++) {
+      if (memcmp(&old_path[0 * SEED_LENGTH_BYTES],
+                 &sig->path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) == 0) {
+        send_unsigned("Detected first real node at: ", i);
+      }
     }
   }
 #endif
