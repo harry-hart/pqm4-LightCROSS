@@ -530,10 +530,12 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
       uint16_t child_partition_end = i == 0 ? partition_split : *partition_end;
       uint16_t child_partition_size =
           child_partition_end - child_partition_start;
+      // Skip any responses that have already been published
       while (level_index < index_len &&
              indices_order[level_index] < child_partition_start) {
         level_index++;
       }
+      // Count the hidden nodes in this partition
       while (level_index < index_len &&
              indices_order[level_index] < child_partition_end) {
         level_index++;
@@ -618,13 +620,20 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
         published_nodes++;
       }
       // All hidden publish response
-      else if (hidden_nodes == partition) {
+      else if (hidden_nodes == child_partition_size) {
         // If they are all hidden in the partition
         // Add all requisite response values
+        // To add them in the correct order
+        uint8_t base_index = level_index - hidden_nodes;
+        if (hidden_nodes > 1) {
+          send_unsigned("neighbours", base_index);
+        }
         for (int k = child_partition_start; k < child_partition_end; k++) {
           assert(published_rsps < T - W);
           size_t FZ_vec = N * sizeof(FZ_ELEM);
           size_t FP_vec = N * sizeof(FP_ELEM);
+          // The index of the
+          uint8_t rsp_index = base_index + (k - child_partition_start);
 #if defined(OPT_HASH_Y)
           // Have to recalculate y
           FP_ELEM y_k[N];
@@ -640,7 +649,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
 
 #endif
           fp_dz_norm(y_k);
-          pack_fp_vec(sig->resp_0[published_rsps].y, y_k);
+          pack_fp_vec(sig->resp_0[rsp_index].y, y_k);
 #else
           pack_fp_vec(sig->resp_0[published_rsps].y, y[k]);
 #endif
@@ -650,7 +659,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
           fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime + k * FZ_vec);
           pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_k);
 #else
-              pack_fz_vec(sig->resp_0[published_rsps].v_bar,
+              pack_fz_vec(sig->resp_0[rsp_index].v_bar,
                           v_bar + k * FZ_vec);
 #endif
 #elif defined(RSDPG)
@@ -670,7 +679,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
           uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + k + (2 * T - 1);
           // Our cmt_1_i hash
           hash(cmt_1_k, cmt_1_k_input, sizeof(cmt_1_k_input), domain_sep_hash);
-          memcpy(sig->resp_1[published_rsps], &cmt_1_k, HASH_DIGEST_LENGTH);
+          memcpy(sig->resp_1[rsp_index], &cmt_1_k, HASH_DIGEST_LENGTH);
 #else
           memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
                  HASH_DIGEST_LENGTH);
@@ -1092,7 +1101,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #endif
 
-#if !defined(OPT_GGM)
+  uint8_t old_resp_1[T - W][HASH_DIGEST_LENGTH];
+  resp_0_t old_resp_0[T - W];
+  // #if !defined(OPT_GGM)
   int published_rsps = 0;
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
@@ -1110,7 +1121,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
 #endif
       fp_dz_norm(y_i);
-      pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
+      pack_fp_vec(old_resp_0[published_rsps].y, y_i);
+      if (memcmp(old_resp_0[published_rsps].y, sig->resp_0[published_rsps].y,
+                 DENSELY_PACKED_FP_VEC_SIZE) != 0) {
+        send_unsigned("y diff for:", published_rsps);
+      }
 #else
       pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
 #endif
@@ -1120,7 +1135,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
       pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
 #else
-      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
+      pack_fz_vec(old_resp_0[published_rsps].v_bar, v_bar[i]);
+      if (memcmp(old_resp_0[published_rsps].v_bar,
+                 sig->resp_0[published_rsps].v_bar,
+                 DENSELY_PACKED_FZ_VEC_SIZE) != 0) {
+        send_unsigned("V bar diff for:", published_rsps);
+      }
 #endif
 #elif defined(RSDPG)
       pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
@@ -1138,7 +1158,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
       // Our cmt_1_i hash
       hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
-      memcpy(sig->resp_1[published_rsps], &cmt_1_i, HASH_DIGEST_LENGTH);
+      memcpy(old_resp_1[published_rsps], &cmt_1_i, HASH_DIGEST_LENGTH);
+      if (memcmp(old_resp_1[published_rsps], sig->resp_1[published_rsps],
+                 HASH_DIGEST_LENGTH) != 0) {
+        send_unsigned("resp 1 diff for:", published_rsps);
+      }
 #else
       memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
              HASH_DIGEST_LENGTH);
@@ -1146,7 +1170,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       published_rsps++;
     }
   }
-#endif
+  // #endif
 }
 
 /* verify returns 1 if signature is ok, 0 otherwise */
