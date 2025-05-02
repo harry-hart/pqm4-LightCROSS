@@ -1076,34 +1076,26 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
-  uint8_t old_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES] = {0};
-  int published_real = seed_path(old_path, seed_tree, chall_2);
 
 #if defined(OPT_GGM)
-  for (int i = 0; i < T; i++) {
-    if (chall_2[i] == 0) {
-      send_unsigned("Leaf to publish:", i);
-    }
-  }
+  uint8_t old_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES] = {0};
   int published_test =
       build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
                      v_bar[0], chall_1, u_prime[0]);
-
-  if (published_real != published_test) {
-    send_unsigned("Path wrong size, new published: ", published_test);
-  }
-  for (int i = 0; i < published_real; i++) {
-    if (memcmp(old_path + i * SEED_LENGTH_BYTES,
-               sig->path + i * SEED_LENGTH_BYTES, SEED_LENGTH_BYTES) != 0) {
-      send_unsigned("Path content wrong: ", i);
+  // #else
+  int published_nodes = seed_path(old_path, seed_tree, chall_2);
+  send_unsigned("Real path size: ", published_nodes);
+  send_unsigned("Test path size: ", published_test);
+  for (int i = 0; i < published_nodes; i++) {
+    if (memcmp(sig->path[i * SEED_LENGTH_BYTES],
+               old_path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
+      send_unsigned("Path is wrong at: ", i);
     }
   }
 #endif
 #endif
 
-  uint8_t old_resp_1[T - W][HASH_DIGEST_LENGTH];
-  resp_0_t old_resp_0[T - W];
-  // #if !defined(OPT_GGM)
+#if !defined(OPT_GGM)
   int published_rsps = 0;
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
@@ -1121,11 +1113,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
 #endif
       fp_dz_norm(y_i);
-      pack_fp_vec(old_resp_0[published_rsps].y, y_i);
-      if (memcmp(old_resp_0[published_rsps].y, sig->resp_0[published_rsps].y,
-                 DENSELY_PACKED_FP_VEC_SIZE) != 0) {
-        send_unsigned("y diff for:", published_rsps);
-      }
+      pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
 #else
       pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
 #endif
@@ -1135,12 +1123,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
       pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
 #else
-      pack_fz_vec(old_resp_0[published_rsps].v_bar, v_bar[i]);
-      if (memcmp(old_resp_0[published_rsps].v_bar,
-                 sig->resp_0[published_rsps].v_bar,
-                 DENSELY_PACKED_FZ_VEC_SIZE) != 0) {
-        send_unsigned("V bar diff for:", published_rsps);
-      }
+      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
 #endif
 #elif defined(RSDPG)
       pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
@@ -1158,11 +1141,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
       // Our cmt_1_i hash
       hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
-      memcpy(old_resp_1[published_rsps], &cmt_1_i, HASH_DIGEST_LENGTH);
-      if (memcmp(old_resp_1[published_rsps], sig->resp_1[published_rsps],
-                 HASH_DIGEST_LENGTH) != 0) {
-        send_unsigned("resp 1 diff for:", published_rsps);
-      }
+      memcpy(sig->resp_1[published_rsps], &cmt_1_i, HASH_DIGEST_LENGTH);
 #else
       memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
              HASH_DIGEST_LENGTH);
@@ -1170,7 +1149,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       published_rsps++;
     }
   }
-  // #endif
+#endif
 }
 
 /* verify returns 1 if signature is ok, 0 otherwise */
