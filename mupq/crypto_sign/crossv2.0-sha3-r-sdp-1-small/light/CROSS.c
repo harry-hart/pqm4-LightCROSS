@@ -465,20 +465,27 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
       uint16_t partition_end = partitions[T - 1 - i];
       uint16_t partition_size = partition_end - partition_start;
       // Compute partition split
-      // Count leading zeroes to find msb
-      uint8_t msb = 0;
+      // IF IT IS A PERFECT POWER OF 2
+      // Then each subtree is half
+      // Maybe use RBIT(partition_size) == 1 for a cycle faster here?
       uint16_t partition = 0;
-      asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
-      // Highest power of 2 that divides it (maybe implement in assembly later?)
-      // 31 because registers are 32 bit (CLZ) counts leading bits in register
-      partition = 1 << (31 - msb);
-      // Left tree is big tree
+      if ((partition_size & (partition_size - 1)) == 0) {
+        partition = partition_size >> 1;
+      } else {
+        // Count leading zeroes to find msb
+        uint8_t msb = 0;
+        asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
+        // Highest power of 2 that divides it (maybe implement in assembly
+        // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
+        // register
+        partition = 1 << (31 - msb);
+      }
 
       // Node (Re)computation
       // If at leaf level, don't recompute!
-      if (curr_level == LOG2(T) - 1) {
-        left = &round_seeds[2 * i * SEED_LENGTH_BYTES];
-        right = &round_seeds[(2 * i + 1) * SEED_LENGTH_BYTES];
+      if (partition_size == 2) {
+        left = &round_seeds[partition_start * SEED_LENGTH_BYTES];
+        right = &round_seeds[(partition_end - 1) * SEED_LENGTH_BYTES];
       } else {
         /* prepare the CSPRNG input to expand the father node */
         memcpy(csprng_input, &hash_storage[i * SEED_LENGTH_BYTES],
@@ -513,7 +520,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
             // Save partition
             temp_partition[next_nodes] =
                 j < partition_split ? partition_start : partition_split;
-            temp_partition[(2 * 2 * nodes) - next_nodes] =
+            temp_partition[(2 * 2 * nodes - 1) - next_nodes] =
                 j < partition_split ? partition_split : partition_end;
             // Need to revisit children of this node
             next_nodes++;
@@ -608,7 +615,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
             // Save partition
             temp_partition[next_nodes] =
                 j < partition_split ? partition_start : partition_split;
-            temp_partition[(2 * 2 * nodes) - next_nodes] =
+            temp_partition[(2 * 2 * nodes - 1) - next_nodes] =
                 j < partition_split ? partition_split : partition_end;
             // Need to revisit children of this node
             next_nodes++;
@@ -650,7 +657,8 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
     }
     curr_level++;
     memcpy(partitions, temp_partition, next_nodes * sizeof(uint16_t));
-    memcpy(partitions[T - next_nodes], temp_partition[nodes - next_nodes],
+    memcpy(&partitions[T - next_nodes],
+           &temp_partition[(2 * 2 * nodes) - next_nodes],
            next_nodes * sizeof(uint16_t));
     nodes = next_nodes;
   }
