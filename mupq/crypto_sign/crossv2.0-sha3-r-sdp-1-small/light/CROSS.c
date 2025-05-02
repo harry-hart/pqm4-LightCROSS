@@ -486,18 +486,6 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
       npl_cum += npl[curr_level];
       curr_level++;
     }
-    // Reset next_level
-    // next_level = 0;
-    // int next_nodes = 0;
-    // Temp partition storage
-    // 2 (start, end) * 2 (next level has (at most) double this) * nodes
-    // uint16_t temp_partition[2 * 2 * nodes];
-    // Go through remaining nodes
-    // for (int i = 0; i < nodes; i++) {
-    // Partitioning
-    // uint16_t partition_start = partitions[i];
-    // uint16_t partition_end = partitions[T - 1 - i];
-    // uint16_t partition_size = partition_end - partition_start;
     // Compute partition split
     // IF IT IS A PERFECT POWER OF 2
     // Then each subtree is half
@@ -515,32 +503,6 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
       partition = 1 << (31 - msb);
     }
 
-    // Node (Re)computation
-    // If at leaf level, don't recompute!
-    // if (partition_size == 2) {
-    //  left = &round_seeds[partition_start * SEED_LENGTH_BYTES];
-    //  right = &round_seeds[(partition_end - 1) * SEED_LENGTH_BYTES];
-    //} else {
-    //  // Prepare to calculate seed, but don't calculate till you need it
-    //  /* Domain separation using father node index */
-
-    //  ///* prepare the CSPRNG input to expand the father node */
-    //  // memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
-    //  ///* Generate the children (stored contiguously).
-    //  // * By construction, the tree has always two children */
-    //  // csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
-    //  //                  domain_sep);
-    //  //// LEFT
-    //  // csprng_randombytes(hash_storage + (i * SEED_LENGTH_BYTES),
-    //  //                    SEED_LENGTH_BYTES, &tree_csprng_state);
-    //  // left = hash_storage + (i * SEED_LENGTH_BYTES);
-    //  //// RIGHT
-    //  // csprng_randombytes(hash_storage +
-    //  //                        ((hash_storage_len - i) * SEED_LENGTH_BYTES),
-    //  //                    SEED_LENGTH_BYTES, &tree_csprng_state);
-    //  // right = hash_storage + ((hash_storage_len - i) * SEED_LENGTH_BYTES);
-    //}
-
     uint8_t to_reveal = 0;
     uint16_t partition_split = *partition_start + partition;
     uint8_t left_calculated = 0;
@@ -552,13 +514,6 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
         // If it is a mix
         if (to_reveal == 3) {
           // Save partition
-          // temp_partition[next_nodes] =
-          //    j < partition_split ? partition_start : partition_split;
-          // temp_partition[(2 * 2 * nodes - 1) - next_nodes] =
-          //    j < partition_split ? partition_split : partition_end;
-          // Need to revisit children of this node
-          // next_nodes++;
-          // next_level = 1;
           if (j < partition_split) {
             // ADD THE LEFT NODE TO THE PROCESSING QUEUE
             // Add partition to ring
@@ -690,13 +645,6 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
         // publish the node in the path
         if (to_reveal == 3) {
           // Save partition
-          // temp_partition[next_nodes] =
-          //    j < partition_split ? partition_start : partition_split;
-          // temp_partition[(2 * 2 * nodes - 1) - next_nodes] =
-          //    j < partition_split ? partition_split : partition_end;
-          // Need to revisit children of this node
-          // next_nodes++;
-          // next_level = 1;
           if (j < partition_split) {
             // ADD THE LEFT NODE TO THE PROCESSING QUEUE
             // Add partition to ring
@@ -785,19 +733,6 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
         }
       }
     }
-    //}
-    // curr_level++;
-    // memcpy(partitions, temp_partition, next_nodes * sizeof(uint16_t));
-    // memcpy(&partitions[T - next_nodes],
-    //       &temp_partition[(2 * 2 * nodes) - next_nodes],
-    //       next_nodes * sizeof(uint16_t));
-    // nodes = next_nodes;
-
-    // If we have moved to the next level
-    // if ((*node_i + 1) - npl_cum >= npl[curr_level]) {
-    //  npl_cum += npl[curr_level];
-    //  curr_level++;
-    //}
   }
   return published_nodes;
 }
