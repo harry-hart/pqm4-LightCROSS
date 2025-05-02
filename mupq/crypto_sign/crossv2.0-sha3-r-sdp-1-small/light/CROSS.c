@@ -1190,28 +1190,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   int published_real = seed_path(old_path, seed_tree, chall_2);
 
 #if defined(OPT_GGM)
-  for (int i = 0; i < T; i++) {
-    if (chall_2[i] == 0) {
-      send_unsigned("Reveal seed: ", i);
-    }
-  }
   int published_test =
       build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
                      v_bar[0], chall_1, u_prime[0]);
-
-  send_unsigned("Real path size:", published_real);
-  send_unsigned("Test path size:", published_test);
-  if (published_real == published_test) {
-    for (int i = 0; i < published_real; i++) {
-      if (memcmp(&old_path[i * SEED_LENGTH_BYTES],
-                 &sig->path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
-        send_unsigned("Incorrect node at: ", i);
-      }
-    }
-  }
 #endif
 #endif
 
+#if !defined(OPT_GGM)
   int published_rsps = 0;
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
@@ -1265,6 +1250,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       published_rsps++;
     }
   }
+#endif
 }
 
 /* verify returns 1 if signature is ok, 0 otherwise */
