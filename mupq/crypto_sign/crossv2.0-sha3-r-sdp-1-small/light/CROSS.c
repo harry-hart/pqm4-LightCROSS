@@ -406,18 +406,10 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   uint8_t next_level = 1;
   // Track current level
   uint8_t curr_level = 0;
-  // Track current node
-  uint16_t node_i = 0;
-  // Set the root as the first level
-  memcpy(hash_storage, root_seed, HASH_DIGEST_LENGTH);
-  // Partition boundaries
-  uint16_t partitions[T] = {0};
-  partitions[T - 1] = T;
   // Keep track of how many rsps published
   int published_rsps = 0;
   // Keep track of how many path nodes published
   int published_nodes = 0;
-  //
   uint8_t hash_storage_len = T / 2;
   // Subtree seeds
   uint8_t *left = &hash_storage[0];
@@ -451,217 +443,361 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   }
 #endif
 
-  while (next_level) {
+  // THIS IS BFS, DO BFS
+  size_t head = 0;
+  size_t tail = 0;
+  // Still need to track the global node index for proper domain separation
+  uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t npl_cum = 0;
+  // TWO MAIN RINGS:
+  // - hash_storage: stores the hash for node i at i * SEED_LENGTH_BYTES
+  // - partitions: stores the partition start and end for node i at i * 2
+  // - node_i: Because we need to track the global node index, but still want
+  // to skip nodes. Node index is at i
+  //    to speed up processing. We need to store which nodes are empty
+  // Set up first node on queue
+  memcpy(hash_storage, root_seed, HASH_DIGEST_LENGTH);
+  // Partition boundaries
+  uint16_t partitions[T] = {0};
+  partitions[1] = T;
+  // Node index ring
+  uint16_t node_indices[T / 1] = {0};
+  // Temporary loop vars corresponding to current node
+  uint16_t *node_i = node_indices;
+  uint8_t *node_hash = hash_storage;
+  uint16_t *partition_start = partitions;
+  uint16_t *partition_end = &partitions[1];
+  uint16_t partition_size = *partition_end - *partition_start;
+  uint16_t domain_sep = CSPRNG_DOMAIN_SEP_CONST + 0;
+  tail++;
+
+  // While queue not empty
+  while (head != tail) {
+    // Pop top element
+    node_i = &node_indices[head];
+    node_hash = &hash_storage[head * SEED_LENGTH_BYTES];
+    partition_start = &partitions[2 * head];
+    partition_end = &partitions[2 * head + 1];
+    partition_size = *partition_end - *partition_start;
+    domain_sep = CSPRNG_DOMAIN_SEP_CONST + *node_i;
+    head++;
+    // If we have moved to the next level
+    if ((*node_i + 1) - npl_cum >= npl[curr_level]) {
+      npl_cum += npl[curr_level];
+      curr_level++;
+    }
     // Reset next_level
-    next_level = 0;
-    int next_nodes = 0;
+    // next_level = 0;
+    // int next_nodes = 0;
     // Temp partition storage
     // 2 (start, end) * 2 (next level has (at most) double this) * nodes
-    uint16_t temp_partition[2 * 2 * nodes];
+    // uint16_t temp_partition[2 * 2 * nodes];
     // Go through remaining nodes
-    for (int i = 0; i < nodes; i++) {
-      // Partitioning
-      uint16_t partition_start = partitions[i];
-      uint16_t partition_end = partitions[T - 1 - i];
-      uint16_t partition_size = partition_end - partition_start;
-      // Compute partition split
-      // IF IT IS A PERFECT POWER OF 2
-      // Then each subtree is half
-      // Maybe use RBIT(partition_size) == 1 for a cycle faster here?
-      uint16_t partition = 0;
-      if ((partition_size & (partition_size - 1)) == 0) {
-        partition = partition_size >> 1;
-      } else {
-        // Count leading zeroes to find msb
-        uint8_t msb = 0;
-        asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
-        // Highest power of 2 that divides it (maybe implement in assembly
-        // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
-        // register
-        partition = 1 << (31 - msb);
-      }
+    // for (int i = 0; i < nodes; i++) {
+    // Partitioning
+    // uint16_t partition_start = partitions[i];
+    // uint16_t partition_end = partitions[T - 1 - i];
+    // uint16_t partition_size = partition_end - partition_start;
+    // Compute partition split
+    // IF IT IS A PERFECT POWER OF 2
+    // Then each subtree is half
+    // Maybe use RBIT(partition_size) == 1 for a cycle faster here?
+    uint16_t partition = 0;
+    if ((partition_size & (partition_size - 1)) == 0) {
+      partition = partition_size >> 1;
+    } else {
+      // Count leading zeroes to find msb
+      uint8_t msb = 0;
+      asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
+      // Highest power of 2 that divides it (maybe implement in assembly
+      // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
+      // register
+      partition = 1 << (31 - msb);
+    }
 
-      // Node (Re)computation
-      // If at leaf level, don't recompute!
-      if (partition_size == 2) {
-        left = &round_seeds[partition_start * SEED_LENGTH_BYTES];
-        right = &round_seeds[(partition_end - 1) * SEED_LENGTH_BYTES];
-      } else {
-        /* prepare the CSPRNG input to expand the father node */
-        memcpy(csprng_input, &hash_storage[i * SEED_LENGTH_BYTES],
-               SEED_LENGTH_BYTES);
+    // Node (Re)computation
+    // If at leaf level, don't recompute!
+    // if (partition_size == 2) {
+    //  left = &round_seeds[partition_start * SEED_LENGTH_BYTES];
+    //  right = &round_seeds[(partition_end - 1) * SEED_LENGTH_BYTES];
+    //} else {
+    //  // Prepare to calculate seed, but don't calculate till you need it
+    //  /* Domain separation using father node index */
 
-        /* Domain separation using father node index */
-        uint16_t domain_sep = CSPRNG_DOMAIN_SEP_CONST + node_i;
+    //  ///* prepare the CSPRNG input to expand the father node */
+    //  // memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+    //  ///* Generate the children (stored contiguously).
+    //  // * By construction, the tree has always two children */
+    //  // csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
+    //  //                  domain_sep);
+    //  //// LEFT
+    //  // csprng_randombytes(hash_storage + (i * SEED_LENGTH_BYTES),
+    //  //                    SEED_LENGTH_BYTES, &tree_csprng_state);
+    //  // left = hash_storage + (i * SEED_LENGTH_BYTES);
+    //  //// RIGHT
+    //  // csprng_randombytes(hash_storage +
+    //  //                        ((hash_storage_len - i) * SEED_LENGTH_BYTES),
+    //  //                    SEED_LENGTH_BYTES, &tree_csprng_state);
+    //  // right = hash_storage + ((hash_storage_len - i) * SEED_LENGTH_BYTES);
+    //}
 
-        /* Generate the children (stored contiguously).
-         * By construction, the tree has always two children */
-        csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
-                          domain_sep);
-        // LEFT
-        csprng_randombytes(hash_storage + (i * SEED_LENGTH_BYTES),
-                           SEED_LENGTH_BYTES, &tree_csprng_state);
-        left = hash_storage + (i * SEED_LENGTH_BYTES);
-        // RIGHT
-        csprng_randombytes(hash_storage +
-                               ((hash_storage_len - i) * SEED_LENGTH_BYTES),
-                           SEED_LENGTH_BYTES, &tree_csprng_state);
-        right = hash_storage + ((hash_storage_len - i) * SEED_LENGTH_BYTES);
-      }
-
-      uint8_t to_reveal = 0;
-      uint16_t partition_split = partition_start + partition;
-      // Check if expands to only revealed leaves
-      for (int j = partition_start; j < partition_end; j++) {
-        // If we encounter a hidden node, skip to end of partition
-        if (indices_to_publish[j] != CHALLENGE_REVEAL_VALUE) {
-          to_reveal |= 1;
-          // If it is a mix
-          if (to_reveal == 3) {
-            // Save partition
-            temp_partition[next_nodes] =
-                j < partition_split ? partition_start : partition_split;
-            temp_partition[(2 * 2 * nodes - 1) - next_nodes] =
-                j < partition_split ? partition_split : partition_end;
-            // Need to revisit children of this node
-            next_nodes++;
-            next_level = 1;
-            if (j < partition_split) {
-              // Don't put left node on
-              j = partition_split - 1;
-              to_reveal = 0;
+    uint8_t to_reveal = 0;
+    uint16_t partition_split = *partition_start + partition;
+    uint8_t left_calculated = 0;
+    // Check if expands to only revealed leaves
+    for (int j = *partition_start; j < *partition_end; j++) {
+      // If we encounter a hidden node, skip to end of partition
+      if (indices_to_publish[j] != CHALLENGE_REVEAL_VALUE) {
+        to_reveal |= 1;
+        // If it is a mix
+        if (to_reveal == 3) {
+          // Save partition
+          // temp_partition[next_nodes] =
+          //    j < partition_split ? partition_start : partition_split;
+          // temp_partition[(2 * 2 * nodes - 1) - next_nodes] =
+          //    j < partition_split ? partition_split : partition_end;
+          // Need to revisit children of this node
+          // next_nodes++;
+          // next_level = 1;
+          if (j < partition_split) {
+            // ADD THE LEFT NODE TO THE PROCESSING QUEUE
+            // Add partition to ring
+            partitions[2 * tail] = *partition_start;
+            partitions[2 * tail + 1] = partition_split;
+            // Add seed to ring
+            /* prepare the CSPRNG input to expand the father node */
+            memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+            /* Generate the children (stored contiguously).
+             * By construction, the tree has always two children */
+            csprng_initialize(&tree_csprng_state, csprng_input,
+                              csprng_input_len, domain_sep);
+            csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+                               SEED_LENGTH_BYTES, &tree_csprng_state);
+            left_calculated = 1;
+            // Add node index to ring
+            uint16_t child_offset = (*node_i - npl_cum) * 2;
+            node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
+            tail++;
+            // Jump to next partition
+            j = partition_split - 1;
+            to_reveal = 0;
+          } else {
+            // ADD THE RIGHT NODE TO THE PROCESSING QUEUE
+            // Add partition to ring
+            partitions[2 * tail] = partition_split;
+            partitions[2 * tail + 1] = *partition_end;
+            // Add seed to ring
+            if (left_calculated) {
+              // State has already been initialised and first part taken
+              csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+                                 SEED_LENGTH_BYTES, &tree_csprng_state);
             } else {
-              // Don't put right node on
-              break;
+              /* prepare the CSPRNG input to expand the father node */
+              memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+              /* Generate the children (stored contiguously).
+               * By construction, the tree has always two children */
+              csprng_initialize(&tree_csprng_state, csprng_input,
+                                csprng_input_len, domain_sep);
+              // NOTE: Have to call it twice because of the left node
+              csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+                                 SEED_LENGTH_BYTES, &tree_csprng_state);
+              csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+                                 SEED_LENGTH_BYTES, &tree_csprng_state);
             }
-          } else if (j == partition_split - 1 || j == partition_end - 1) {
-            // If they are all hidden in the partition
-            // Add all requisite response values
-            int first =
-                j == partition_split - 1 ? partition_start : partition_split;
-            int last =
-                j == partition_split - 1 ? partition_split : partition_end;
-            for (int k = first; k < last; k++) {
-              assert(published_rsps < T - W);
-              size_t FZ_vec = N * sizeof(FZ_ELEM);
-              size_t FP_vec = N * sizeof(FP_ELEM);
+            // Add node index to ring
+            uint16_t child_offset = (*node_i - npl_cum) * 2 + 1;
+            node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
+            tail++;
+            // Skip out of partition
+            break;
+          }
+        } else if (j == partition_split - 1 || j == *partition_end - 1) {
+          // If they are all hidden in the partition
+          // Add all requisite response values
+          int first =
+              j == partition_split - 1 ? *partition_start : partition_split;
+          int last =
+              j == partition_split - 1 ? partition_split : *partition_end;
+          for (int k = first; k < last; k++) {
+            assert(published_rsps < T - W);
+            size_t FZ_vec = N * sizeof(FZ_ELEM);
+            size_t FP_vec = N * sizeof(FP_ELEM);
 #if defined(OPT_HASH_Y)
-              // Have to recalculate y
-              FP_ELEM y_k[N];
-              // Calculate y
+            // Have to recalculate y
+            FP_ELEM y_k[N];
+            // Calculate y
 #if defined(OPT_E_BAR_PRIME)
-              fz_vec_sub_n(e_bar_prime_k, e_bar, v_bar + k * FZ_vec);
-              // Calculate l
-              fp_vec_by_restr_vec_scaled(y_k, e_bar_prime_k, chall_1[k],
-                                         u_prime + k * FP_vec);
+            fz_vec_sub_n(e_bar_prime_k, e_bar, v_bar + k * FZ_vec);
+            // Calculate l
+            fp_vec_by_restr_vec_scaled(y_k, e_bar_prime_k, chall_1[k],
+                                       u_prime + k * FP_vec);
 #else
-              // Calculate y
+            // Calculate y
               fp_vec_by_restr_vec_scaled(y_k, e_bar_prime + k * FZ_vec,
 
 #endif
-              fp_dz_norm(y_k);
-              pack_fp_vec(sig->resp_0[published_rsps].y, y_k);
+            fp_dz_norm(y_k);
+            pack_fp_vec(sig->resp_0[published_rsps].y, y_k);
 #else
-              pack_fp_vec(sig->resp_0[published_rsps].y, y[k]);
+            pack_fp_vec(sig->resp_0[published_rsps].y, y[k]);
 #endif
 
 #if defined(RSDP)
 #if defined(OPT_V_BAR)
-              fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime + k * FZ_vec);
-              pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_k);
+            fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime + k * FZ_vec);
+            pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_k);
 #else
               pack_fz_vec(sig->resp_0[published_rsps].v_bar,
                           v_bar + k * FZ_vec);
 #endif
 #elif defined(RSDPG)
-              pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar,
-                                 v_G_bar + k * FZ_vec);
+            pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar,
+                               v_G_bar + k * FZ_vec);
 #endif
 
 #if defined(OPT_HASH_CMT1)
-              // Calculate the cmt_1_i hash value again to avoid storing it
-              // First make the input (Seed[i] | Salt | i + c)
-              // N.B. Salt should already be at the end because of init
-              memcpy(cmt_1_k_input, round_seeds + SEED_LENGTH_BYTES * k,
-                     SEED_LENGTH_BYTES);
-              // Temp storage for our cmt_1_i hash
-              uint8_t cmt_1_k[HASH_DIGEST_LENGTH] = {0};
-              // The domain separation
-              uint16_t domain_sep_hash =
-                  HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
-              // Our cmt_1_i hash
-              hash(cmt_1_k, cmt_1_k_input, sizeof(cmt_1_k_input),
-                   domain_sep_hash);
-              memcpy(sig->resp_1[published_rsps], &cmt_1_k, HASH_DIGEST_LENGTH);
+            // Calculate the cmt_1_i hash value again to avoid storing it
+            // First make the input (Seed[i] | Salt | i + c)
+            // N.B. Salt should already be at the end because of init
+            memcpy(cmt_1_k_input, round_seeds + SEED_LENGTH_BYTES * k,
+                   SEED_LENGTH_BYTES);
+            // Temp storage for our cmt_1_i hash
+            uint8_t cmt_1_k[HASH_DIGEST_LENGTH] = {0};
+            // The domain separation
+            uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + k + (2 * T - 1);
+            // Our cmt_1_i hash
+            hash(cmt_1_k, cmt_1_k_input, sizeof(cmt_1_k_input),
+                 domain_sep_hash);
+            memcpy(sig->resp_1[published_rsps], &cmt_1_k, HASH_DIGEST_LENGTH);
 #else
-              memcpy(sig->resp_1[published_rsps],
-                     &cmt_1[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH);
+            memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
+                   HASH_DIGEST_LENGTH);
 #endif
-              published_rsps++;
-            }
-            if (j < partition_split) {
-              // Don't put left node on
-              j = partition_split - 1;
-              to_reveal = 0;
+            published_rsps++;
+          }
+          if (j < partition_split) {
+            // Don't put left node on
+            j = partition_split - 1;
+            to_reveal = 0;
+          } else {
+            // Don't put right node on
+            break;
+          }
+        }
+      } else {
+        to_reveal |= 2;
+        // If we didn't see a hidden node by the end of partition then
+        // publish the node in the path
+        if (to_reveal == 3) {
+          // Save partition
+          // temp_partition[next_nodes] =
+          //    j < partition_split ? partition_start : partition_split;
+          // temp_partition[(2 * 2 * nodes - 1) - next_nodes] =
+          //    j < partition_split ? partition_split : partition_end;
+          // Need to revisit children of this node
+          // next_nodes++;
+          // next_level = 1;
+          if (j < partition_split) {
+            // ADD THE LEFT NODE TO THE PROCESSING QUEUE
+            // Add partition to ring
+            partitions[2 * tail] = *partition_start;
+            partitions[2 * tail + 1] = partition_split;
+            // Add seed to ring
+            /* prepare the CSPRNG input to expand the father node */
+            memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+            /* Generate the children (stored contiguously).
+             * By construction, the tree has always two children */
+            csprng_initialize(&tree_csprng_state, csprng_input,
+                              csprng_input_len, domain_sep);
+            csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+                               SEED_LENGTH_BYTES, &tree_csprng_state);
+            left_calculated = 1;
+            // Add node index to ring
+            uint16_t child_offset = (*node_i - npl_cum) * 2;
+            node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
+            tail++;
+            // Jump to next partition
+            j = partition_split - 1;
+            to_reveal = 0;
+          } else {
+            // ADD THE RIGHT NODE TO THE PROCESSING QUEUE
+            // Add partition to ring
+            partitions[2 * tail] = partition_split;
+            partitions[2 * tail + 1] = *partition_end;
+            // Add seed to ring
+            if (left_calculated) {
+              // State has already been initialised and first part taken
+              csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+                                 SEED_LENGTH_BYTES, &tree_csprng_state);
             } else {
-              // Don't put right node on
-              break;
+              /* prepare the CSPRNG input to expand the father node */
+              memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+              /* Generate the children (stored contiguously).
+               * By construction, the tree has always two children */
+              csprng_initialize(&tree_csprng_state, csprng_input,
+                                csprng_input_len, domain_sep);
+              // NOTE: Have to call it twice because of the left node
+              csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+                                 SEED_LENGTH_BYTES, &tree_csprng_state);
+              csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+                                 SEED_LENGTH_BYTES, &tree_csprng_state);
+            }
+            // Add node index to ring
+            uint16_t child_offset = (*node_i - npl_cum) * 2 + 1;
+            node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
+            tail++;
+            // Skip out of partition
+            break;
+          }
+        } else if (j == partition_split - 1 || j == *partition_end - 1) {
+          // If all the leaves are to be revealed
+          // If it is leaf level
+          if (partition_size == 2) {
+            memcpy(sig->path + published_nodes * SEED_LENGTH_BYTES,
+                   round_seeds + j * SEED_LENGTH_BYTES, SEED_LENGTH_BYTES);
+          } else {
+            /* prepare the CSPRNG input to expand the father node */
+            memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+            /* Generate the children (stored contiguously).
+             * By construction, the tree has always two children */
+            csprng_initialize(&tree_csprng_state, csprng_input,
+                              csprng_input_len, domain_sep);
+            // Publish node
+            // Always have to calculate left
+            csprng_randombytes(sig->path + published_nodes * SEED_LENGTH_BYTES,
+                               SEED_LENGTH_BYTES, &tree_csprng_state);
+            if (j >= partition_split) {
+              // overwrite right node if in right partition
+              csprng_randombytes(sig->path +
+                                     published_nodes * SEED_LENGTH_BYTES,
+                                 SEED_LENGTH_BYTES, &tree_csprng_state);
             }
           }
-        } else {
-          to_reveal |= 2;
-          // If we didn't see a hidden node by the end of partition then
-          // publish the node in the path
-          if (to_reveal == 3) {
-            // Save partition
-            temp_partition[next_nodes] =
-                j < partition_split ? partition_start : partition_split;
-            temp_partition[(2 * 2 * nodes - 1) - next_nodes] =
-                j < partition_split ? partition_split : partition_end;
-            // Need to revisit children of this node
-            next_nodes++;
-            next_level = 1;
-            if (j < partition_split) {
-              // Don't put left node on
-              j = partition_split - 1;
-              to_reveal = 0;
-            } else {
-              // Don't put right node on
-              break;
-            }
-          } else if (j == partition_split - 1 || j == partition_end - 1) {
-            // Publish node
-            // The domain separation
-            uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
-            if (j < partition_split) {
-              // Publish left node
-              memcpy(sig->path + published_nodes * SEED_LENGTH_BYTES, left,
-                     SEED_LENGTH_BYTES);
-              published_nodes++;
-            } else {
-              // Publish right node
-              memcpy(sig->path + published_nodes * SEED_LENGTH_BYTES, right,
-                     SEED_LENGTH_BYTES);
-              published_nodes++;
-            }
-            if (j < partition_split) {
-              // Don't put left node on
-              j = partition_split - 1;
-              to_reveal = 0;
-            } else {
-              // Don't put right node on
-              break;
-            }
+          published_nodes++;
+          if (j < partition_split) {
+            // Don't put left node on
+            j = partition_split - 1;
+            to_reveal = 0;
+          } else {
+            // Don't put right node on
+            break;
           }
         }
       }
     }
-    curr_level++;
-    memcpy(partitions, temp_partition, next_nodes * sizeof(uint16_t));
-    memcpy(&partitions[T - next_nodes],
-           &temp_partition[(2 * 2 * nodes) - next_nodes],
-           next_nodes * sizeof(uint16_t));
-    nodes = next_nodes;
+    //}
+    // curr_level++;
+    // memcpy(partitions, temp_partition, next_nodes * sizeof(uint16_t));
+    // memcpy(&partitions[T - next_nodes],
+    //       &temp_partition[(2 * 2 * nodes) - next_nodes],
+    //       next_nodes * sizeof(uint16_t));
+    // nodes = next_nodes;
+
+    // If we have moved to the next level
+    // if ((*node_i + 1) - npl_cum >= npl[curr_level]) {
+    //  npl_cum += npl[curr_level];
+    //  curr_level++;
+    //}
   }
   return published_nodes;
 }
@@ -1067,9 +1203,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   send_unsigned("Test path size:", published_test);
   if (published_real == published_test) {
     for (int i = 0; i < published_real; i++) {
-      if (memcmp(&old_path[0 * SEED_LENGTH_BYTES],
-                 &sig->path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) == 0) {
-        send_unsigned("Detected first real node at: ", i);
+      if (memcmp(&old_path[i * SEED_LENGTH_BYTES],
+                 &sig->path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
+        send_unsigned("Incorrect node at: ", i);
       }
     }
   }
