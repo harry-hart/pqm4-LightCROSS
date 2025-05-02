@@ -412,6 +412,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   memcpy(hash_storage, root_seed, HASH_DIGEST_LENGTH);
   // Partition boundaries
   uint16_t partitions[T] = {0};
+  partitions[T - 1] = T;
   // Keep track of how many rsps published
   int published_rsps = 0;
   // Keep track of how many path nodes published
@@ -454,19 +455,23 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
     // Reset next_level
     next_level = 0;
     int next_nodes = 0;
+    // Temp partition storage
+    // 2 (start, end) * 2 (next level has (at most) double this) * nodes
+    uint16_t temp_partition[2 * 2 * nodes];
     // Go through remaining nodes
     for (int i = 0; i < nodes; i++) {
       // Partitioning
       uint16_t partition_start = partitions[i];
-      uint16_t partition_end = partitions[T - i];
+      uint16_t partition_end = partitions[T - 1 - i];
       uint16_t partition_size = partition_end - partition_start;
       // Compute partition split
       // Count leading zeroes to find msb
       uint8_t msb = 0;
-      uint8_t partition = 0;
-      asm("CLZ %1, %0" : "=r"(msb) : "r"(tree_leaves));
+      uint16_t partition = 0;
+      asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
       // Highest power of 2 that divides it (maybe implement in assembly later?)
-      partition = 1 << (15 - msb);
+      // 31 because registers are 32 bit (CLZ) counts leading bits in register
+      partition = 1 << (31 - msb);
       // Left tree is big tree
 
       // Node (Re)computation
@@ -496,21 +501,27 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
         right = hash_storage + ((hash_storage_len - i) * SEED_LENGTH_BYTES);
       }
 
+      uint8_t to_reveal = 0;
+      uint16_t partition_split = partition_start + partition;
       // Check if expands to only revealed leaves
       for (int j = partition_start; j < partition_end; j++) {
-        uint16_t partition_split = partition_start + partition;
-        uint8_t to_reveal = 0;
         // If we encounter a hidden node, skip to end of partition
         if (indices_to_publish[j] != CHALLENGE_REVEAL_VALUE) {
           to_reveal |= 1;
           // If it is a mix
           if (to_reveal == 3) {
+            // Save partition
+            temp_partition[next_nodes] =
+                j < partition_split ? partition_start : partition_split;
+            temp_partition[(2 * 2 * nodes) - next_nodes] =
+                j < partition_split ? partition_split : partition_end;
             // Need to revisit children of this node
             next_nodes++;
             next_level = 1;
             if (j < partition_split) {
               // Don't put left node on
-              j = partition_split;
+              j = partition_split - 1;
+              to_reveal = 0;
             } else {
               // Don't put right node on
               break;
@@ -518,7 +529,11 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
           } else if (j == partition_split - 1 || j == partition_end - 1) {
             // If they are all hidden in the partition
             // Add all requisite response values
-            for (int k = partition_start; k < partition_end; k++) {
+            int first =
+                j == partition_split - 1 ? partition_start : partition_split;
+            int last =
+                j == partition_split - 1 ? partition_split : partition_end;
+            for (int k = first; k < last; k++) {
               assert(published_rsps < T - W);
               size_t FZ_vec = N * sizeof(FZ_ELEM);
               size_t FP_vec = N * sizeof(FP_ELEM);
@@ -576,12 +591,37 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
 #endif
               published_rsps++;
             }
+            if (j < partition_split) {
+              // Don't put left node on
+              j = partition_split - 1;
+              to_reveal = 0;
+            } else {
+              // Don't put right node on
+              break;
+            }
           }
         } else {
           to_reveal |= 2;
           // If we didn't see a hidden node by the end of partition then
           // publish the node in the path
-          if (j == partition_split - 1 || j == partition_end - 1) {
+          if (to_reveal == 3) {
+            // Save partition
+            temp_partition[next_nodes] =
+                j < partition_split ? partition_start : partition_split;
+            temp_partition[(2 * 2 * nodes) - next_nodes] =
+                j < partition_split ? partition_split : partition_end;
+            // Need to revisit children of this node
+            next_nodes++;
+            next_level = 1;
+            if (j < partition_split) {
+              // Don't put left node on
+              j = partition_split - 1;
+              to_reveal = 0;
+            } else {
+              // Don't put right node on
+              break;
+            }
+          } else if (j == partition_split - 1 || j == partition_end - 1) {
             // Publish node
             // The domain separation
             uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
@@ -596,13 +636,25 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
                      SEED_LENGTH_BYTES);
               published_nodes++;
             }
+            if (j < partition_split) {
+              // Don't put left node on
+              j = partition_split - 1;
+              to_reveal = 0;
+            } else {
+              // Don't put right node on
+              break;
+            }
           }
         }
       }
     }
     curr_level++;
+    memcpy(partitions, temp_partition, next_nodes * sizeof(uint16_t));
+    memcpy(partitions[T - next_nodes], temp_partition[nodes - next_nodes],
+           next_nodes * sizeof(uint16_t));
     nodes = next_nodes;
   }
+  return published_nodes;
 }
 
 /*****************************************************************************/
@@ -993,10 +1045,16 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   seed_path(old_path, seed_tree, chall_2);
 
 #if defined(OPT_GGM)
+  for (int i = 0; i < T; i++) {
+    if (chall_2[i] == 0) {
+      send_unsigned("Reveal seed: ", i);
+    }
+  }
   int published_nodes =
       build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
                      v_bar[0], chall_1, u_prime[0]);
 
+  send_unsigned("Test path size:", published_nodes);
   for (int i = 0; i < published_nodes; i++) {
     if (memcmp(&old_path[i * SEED_LENGTH_BYTES],
                &sig->path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
