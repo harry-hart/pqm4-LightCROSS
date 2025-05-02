@@ -374,7 +374,7 @@ void compute_response(uint8_t *rsp, FZ_ELEM *e_bar, FZ_ELEM *e_bar_prime,
 */
 
 #define REVEAL_VALUE 1
-#define CHALLENGE_REVEAL_VALUE 0
+#define CHALLENGE_REVEAL_VALUE 1
 
 #if defined(RSDP)
 int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
@@ -1050,7 +1050,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
   uint8_t old_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES];
-  seed_path(old_path, seed_tree, chall_2);
+  int published_real = seed_path(old_path, seed_tree, chall_2);
 
 #if defined(OPT_GGM)
   for (int i = 0; i < T; i++) {
@@ -1058,12 +1058,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       send_unsigned("Reveal seed: ", i);
     }
   }
-  int published_nodes =
+  int published_test =
       build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
                      v_bar[0], chall_1, u_prime[0]);
 
-  send_unsigned("Test path size:", published_nodes);
-  for (int i = 0; i < published_nodes; i++) {
+  send_unsigned("Real path size:", published_real);
+  send_unsigned("Test path size:", published_test);
+  for (int i = 0; i < published_real; i++) {
     if (memcmp(&old_path[i * SEED_LENGTH_BYTES],
                &sig->path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
       send_unsigned("Detected different node: ", i);
