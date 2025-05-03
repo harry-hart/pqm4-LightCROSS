@@ -73,7 +73,7 @@ MUPQ_ITERATIONS ?= 1
 RETAINED_VARS += DEBUG OPT_SIZE LTO AIO MUPQ_ITERATIONS
 
 ifeq ($(DEBUG),1)
-CFLAGS += -O0 -g3
+CFLAGS += -O0 -g3 -Wall -Wextra -pedantic
 else ifeq ($(OPT_SIZE),1)
 CFLAGS += -Os -g3
 else

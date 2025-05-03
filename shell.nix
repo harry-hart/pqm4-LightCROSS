@@ -48,12 +48,14 @@ pkgs.mkShell {
   nativeBuildInputs = [
     buildPkgs.python313
     buildPkgs.tio
+    buildPkgs.valgrind
 
     # 4. Use the filtered wrapper derivation
     gccArmEmbeddedFiltered
 
     # 5. Add the GDB you *do* want
     armToolchainCross.gdb
+
   ];
 
   packages = [
