@@ -415,7 +415,8 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   // uint8_t *left = &hash_storage[0];
   // uint8_t *right = &hash_storage[(T - 1) * HASH_DIGEST_LENGTH];
   // Tracking for
-  FZ_ELEM e_bar_prime_k[N] = {0};
+  FZ_ELEM e_bar_prime_k[N + 1] = {0};
+  e_bar_prime_k[N] = 0xA;
   uint8_t cmt_1_k_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_k_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
   // Node computation csprng vars
@@ -521,7 +522,8 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
     } else {
       // Count leading zeroes to find msb
       uint8_t msb = 0;
-      asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
+      // asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
+      msb = __builtin_clz(partition_size);
       // Highest power of 2 that divides it (maybe implement in assembly
       // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
       // register
@@ -700,7 +702,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   }
   if (partitions[T] != 0xDB || node_indices[T >> 1] != 0xDB ||
       memcmp(&hash_storage[(T >> 1) * SEED_LENGTH_BYTES], canary, 6) != 0 ||
-      indices_order[(T - W)] != 0xDB) {
+      indices_order[(T - W)] != 0xDB || e_bar_prime_k[N] != 0xA) {
     hal_send_str("Overwrote canary partitions");
   }
   return published_nodes;
