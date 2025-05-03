@@ -379,7 +379,7 @@ void compute_response(uint8_t *rsp, FZ_ELEM *e_bar, FZ_ELEM *e_bar_prime,
 #if defined(RSDP)
 int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
-                   uint8_t *old_hash_storage, unsigned char *round_seeds,
+                   uint8_t *hash_storage, unsigned char *round_seeds,
                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                    FP_ELEM *u_prime) {
 #elif defined(RSDPG)
@@ -392,31 +392,15 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
 #endif
   // NOTES:
   // - hash_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
-  // because
-  //  we never calculate the leaf layer. Since SEED_LENGTH_BYTES = 2 *
-  //  HASH_DIGEST_LENGTH we only need (T * HASH_DIGEST_LENGTH) storage. Thus
-  //  cmt_0 is sufficient.
-  // Reveal bitmap
-  // uint8_t reveal[T / 8 + 1] = {0};
-  //// How many leaves on this subtree
-  // uint16_t tree_leaves = T;
-  //// How many nodes left at this level
-  // uint16_t nodes = 1;
-  //// Continue?
-  // uint8_t next_level = 1;
+
   //// Track current level
   uint8_t curr_level = 0;
   //  Keep track of how many rsps published
   int published_rsps = 0;
   // Keep track of how many path nodes published
   int published_nodes = 0;
-  // uint8_t hash_storage_len = T >> 1;
-  //  Subtree seeds
-  // uint8_t *left = &hash_storage[0];
-  // uint8_t *right = &hash_storage[(T - 1) * HASH_DIGEST_LENGTH];
   // Tracking for
-  FZ_ELEM e_bar_prime_k[N + 1] = {0};
-  e_bar_prime_k[N] = 0xA;
+  FZ_ELEM e_bar_prime_k[N] = {0};
   uint8_t cmt_1_k_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_k_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
   // Node computation csprng vars
@@ -458,11 +442,11 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   // to skip nodes. Node index is at i
   //    to speed up processing. We need to store which nodes are empty
   // Set up first node on queue
-  uint8_t hash_storage[((T >> 1) + 1) * SEED_LENGTH_BYTES] = {0};
+  // uint8_t hash_storage[((T >> 1) + 1) * SEED_LENGTH_BYTES] = {0};
   memcpy(hash_storage, root_seed, SEED_LENGTH_BYTES);
-  char canary[6] = "MAEVE";
-  memcpy(hash_storage + ((T >> 1) * SEED_LENGTH_BYTES), canary, 6);
-  // Partition boundaries
+  // char canary[6] = "MAEVE";
+  // memcpy(hash_storage + ((T >> 1) * SEED_LENGTH_BYTES), canary, 6);
+  //  Partition boundaries
   uint16_t partitions[T + 1] = {0};
   partitions[T] = 0xDB;
   partitions[1] = T;
@@ -636,9 +620,6 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
         // Add all requisite response values
         // To add them in the correct order
         uint8_t base_index = level_index - hidden_nodes;
-        if (hidden_nodes > 1) {
-          send_unsigned("neighbours", base_index);
-        }
         for (int k = child_partition_start; k < child_partition_end; k++) {
           assert(published_rsps < T - W);
           size_t FZ_vec = N * sizeof(FZ_ELEM);
@@ -700,11 +681,6 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
       }
     }
   }
-  if (partitions[T] != 0xDB || node_indices[T >> 1] != 0xDB ||
-      memcmp(&hash_storage[(T >> 1) * SEED_LENGTH_BYTES], canary, 6) != 0 ||
-      indices_order[(T - W)] != 0xDB || e_bar_prime_k[N] != 0xA) {
-    hal_send_str("Overwrote canary partitions");
-  }
   return published_nodes;
 }
 
@@ -736,10 +712,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
   seed_leaves(round_seeds, root_seed, sig->salt);
 #else
-  uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
-  gen_seed_tree(seed_tree, root_seed, sig->salt);
+  // Limit scope for seed_tree
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
-  seed_leaves(round_seeds, seed_tree);
+  {
+    uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
+    gen_seed_tree(seed_tree, root_seed, sig->salt);
+    seed_leaves(round_seeds, seed_tree);
+  }
 #endif
 
 #if defined(OPT_E_BAR_PRIME)
@@ -1094,12 +1073,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(OPT_GGM)
-  uint8_t old_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES] = {0};
   int published_test =
-      build_response(sig, root_seed, chall_2, cmt_0[0][0], round_seeds, e_bar,
+      build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
                      v_bar[0], chall_1, u_prime[0]);
-  // #else
-  int published_nodes = seed_path(old_path, seed_tree, chall_2);
+#else
+  int published_nodes = seed_path(sig->path, seed_tree, chall_2);
   // send_unsigned("Real path size: ", published_nodes);
   // send_unsigned("Test path size: ", published_test);
   // for (int i = 0; i < published_nodes; i++) {
