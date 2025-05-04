@@ -383,12 +383,11 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                    FP_ELEM *u_prime) {
 #elif defined(RSDPG)
-int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
+int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
-                   uint8_t *hash_storage, CROSS_sig_t *sig,
-                   unsigned char *round_seeds, FZ_ELEM *e_bar, FZ_ELEM *v_bar,
-                   FP_ELEM *chall_1, FP_ELEM *u_prime, FZ_ELEM *e_G_bar_prime,
-                   FZ_ELEM *v_G_bar) {
+                   uint8_t *hash_storage, unsigned char *round_seeds,
+                   FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
+                   FP_ELEM *u_prime, FZ_ELEM *v_G_bar) {
 #endif
   // NOTES:
   // - hash_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
@@ -442,10 +441,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
   // to skip nodes. Node index is at i
   //    to speed up processing. We need to store which nodes are empty
   // Set up first node on queue
-  // uint8_t hash_storage[((T >> 1) + 1) * SEED_LENGTH_BYTES] = {0};
   memcpy(hash_storage, root_seed, SEED_LENGTH_BYTES);
-  // char canary[6] = "MAEVE";
-  // memcpy(hash_storage + ((T >> 1) * SEED_LENGTH_BYTES), canary, 6);
   //  Partition boundaries
   uint16_t partitions[T + 1] = {0};
   partitions[T] = 0xDB;
@@ -476,9 +472,6 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
 
   // While queue not empty
   while (head != tail) {
-    if (2 * head + 1 > T) {
-      hal_send_str("Bigger than partition");
-    }
     // Pop top element
     // Set up node specific vars
     node_i = &node_indices[head];
@@ -643,19 +636,19 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
           fp_dz_norm(y_k);
           pack_fp_vec(sig->resp_0[rsp_index].y, y_k);
 #else
-          pack_fp_vec(sig->resp_0[published_rsps].y, y[k]);
+          pack_fp_vec(sig->resp_0[rsp_index].y, y[k]);
 #endif
 
 #if defined(RSDP)
 #if defined(OPT_V_BAR)
           fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime + k * FZ_vec);
-          pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_k);
+          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #else
               pack_fz_vec(sig->resp_0[rsp_index].v_bar,
                           v_bar + k * FZ_vec);
 #endif
 #elif defined(RSDPG)
-          pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar,
+          pack_fz_rsdp_g_vec(sig->resp_0[rsp_index].v_G_bar,
                              v_G_bar + k * FZ_vec);
 #endif
 
@@ -673,7 +666,7 @@ int build_response(unsigned char *seed_storage, const unsigned char *root_seed,
           hash(cmt_1_k, cmt_1_k_input, sizeof(cmt_1_k_input), domain_sep_hash);
           memcpy(sig->resp_1[rsp_index], &cmt_1_k, HASH_DIGEST_LENGTH);
 #else
-          memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
+          memcpy(sig->resp_1[rsp_index], &cmt_1[k * HASH_DIGEST_LENGTH],
                  HASH_DIGEST_LENGTH);
 #endif
           published_rsps++;
@@ -712,13 +705,17 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
   seed_leaves(round_seeds, root_seed, sig->salt);
 #else
-  // Limit scope for seed_tree
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
+  // Limit scope for seed_tree
+#if defined(OPT_GGM)
   {
+#endif
     uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
     gen_seed_tree(seed_tree, root_seed, sig->salt);
     seed_leaves(round_seeds, seed_tree);
+#if defined(OPT_GGM)
   }
+#endif
 #endif
 
 #if defined(OPT_E_BAR_PRIME)
@@ -1073,19 +1070,25 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(OPT_GGM)
+#if defined(RSDP)
   int published_test =
       build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
                      v_bar[0], chall_1, u_prime[0]);
+#elif defined(RSDPG)
+  int published_test =
+      build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
+                     v_bar[0], chall_1, u_prime[0], v_G_bar[0]);
+#endif
 #else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
-  // send_unsigned("Real path size: ", published_nodes);
-  // send_unsigned("Test path size: ", published_test);
-  // for (int i = 0; i < published_nodes; i++) {
-  //   if (memcmp(&sig->path[i * SEED_LENGTH_BYTES],
-  //              &old_path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
-  //     send_unsigned("Path is wrong at: ", i);
-  //   }
-  // }
+// send_unsigned("Real path size: ", published_nodes);
+// send_unsigned("Test path size: ", published_test);
+// for (int i = 0; i < published_nodes; i++) {
+//   if (memcmp(&sig->path[i * SEED_LENGTH_BYTES],
+//              &old_path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
+//     send_unsigned("Path is wrong at: ", i);
+//   }
+// }
 #endif
 #endif
 
@@ -1403,23 +1406,6 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
 
 #if defined(OPT_MERKLE) && !defined(NO_TREES)
-  // DEBUGGING
-  // uint8_t compare_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
-
-  // place_cmt_on_leaves(compare_tree, cmt_0);
-
-  // const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
-  // const uint16_t leaves_start_indices[TREE_SUBROOTS] =
-  //     TREE_LEAVES_START_INDICES;
-  // for (size_t i = 0; i < TREE_SUBROOTS; i++) {
-  //   for (size_t j = 0; j < cons_leaves[i]; j++) {
-  //     size_t offset = (leaves_start_indices[i] + j) * HASH_DIGEST_LENGTH;
-  //     if (merkle_tree[offset] != compare_tree[offset]) {
-  //       hal_send_str("merkle tree recompute will fail");
-  //     }
-  //   }
-  // }
-
   uint8_t is_mtree_padding_ok =
       recompute_root(digest_cmt0_cmt1, merkle_tree, sig->proof, chall_2);
 #else

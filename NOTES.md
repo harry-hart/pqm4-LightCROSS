@@ -1,3 +1,16 @@
+## Update 2025-05-03
+
+Memory is down to about 39% of reference. Now we need speed. We are losing reference in about
+10% in signing sdp-1-small. Ideas:
+
+1. DSP instructions for matrix/vector multiplication
+  - Because we only have 32bit registers and we want 16 bit precision for the multiplication, we could do at most 2 at a time with parrallel. Not convinced there would be any speedup over O3 optim compile which is already using smulbb.
+2. Packing unpacking DSP?
+
+
+
+
+
 ### sdp-5-small
 
 ==========================

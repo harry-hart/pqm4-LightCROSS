@@ -43,6 +43,7 @@
 #define OPT_HASH_Y
 #define OPT_E_BAR_PRIME
 #define OPT_OTF_MERKLE
+#define OPT_GGM
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/

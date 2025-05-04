@@ -38,6 +38,10 @@
 #include "parameters.h"
 #include "restr_arith.h"
 
+#if defined(OPT_DSP)
+#include "arm_math.h"
+#endif
+
 #define NUM_BITS_P (BITS_TO_REPRESENT(P))
 
 #if defined(RSDP)
@@ -139,7 +143,22 @@ static inline void fp_vec_by_fp_vec_pointwise(FP_ELEM res[N],
                                               const FP_ELEM in1[N],
                                               const FP_ELEM in2[N]) {
   for (int i = 0; i < N; i++) {
+#if defined(OPT_DSP)
+    // Extract value i+1 and i+3
+    uint32_t bottom_in1 = __UXTB16(in1[i]);
+    uint32_t bottom_in2 = __UXTB16(in2[i]);
+    // Do multiplication
+    uint32_t bottom_mult = res[i] = FPRED_DOUBLE()
+        // Extract value i and i+2
+        uint32_t rot_top = __ROR(in1[i], 8);
+    uint16_t top_in1 = __UXTB16(rot_top);
+    rot_top = __ROR(in2[i], 8);
+    uint16_t top_in2 = __UXTB16(rot_top);
+    // Do multiplication
+
+#else
     res[i] = FPRED_DOUBLE((FP_DOUBLEPREC)in1[i] * (FP_DOUBLEPREC)in2[i]);
+#endif
   }
 }
 

@@ -9,6 +9,11 @@ EXCLUDED_SCHEMES = \
 
 DEVICES_DATA := ldscripts/devices.data
 
+CPPFLAGS+=-Icommon/mps2
+CPPFLAGS+=-Icommon/CMSIS-DSP/Include
+CPPFLAGS+=-Icommon/CMSIS-DSP/PrivateInclude
+#CPPFLAGS+=-Icommon/CMSIS-DSP/Source
+
 elf/boardtest.elf: CPPFLAGS+=-DSRAM_TIMING_TEST -DHAS_SRAM2 -DHAS_SRAM3
 elf/boardtest.elf: LDSCRIPT=ldscripts/$(PLATFORM)-ramtest.ld
 
