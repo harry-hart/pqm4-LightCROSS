@@ -148,7 +148,6 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
 
 #if defined(OPT_DSP)
 #if defined(RSDP)
-#if 1
 static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
                                 FP_ELEM V_tr[N - K][K]) {
   memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
@@ -156,13 +155,7 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
   for (int j = 0; j < N - K; j++) {
     // Can we improve this with accumulator?
     uint64_t col_accum = 0;
-    uint64_t col_accum_check = 0;
-    // Get pointers for correct value cast
-    //uint8_t *e_32 = &e[0];
-    //uint8_t *V_tr_32 = &V_tr[j][0];
-    // Oneint i = 0 at a time for RSDPG, two for RSDP
     int i = 0;
-#if 1
     for (; i < K; i += 4) {
       uint32_t e_val = *((uint32_t *)&e[i]);
       uint32_t V_tr_val = *((uint32_t *)&V_tr[j][i]);
@@ -174,23 +167,9 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
       uint32_t top_V_tr = __UXTB16(__ROR(V_tr_val, 8));
       // Calculate
       col_accum = __SMLALD(bottom_e, bottom_V_tr, col_accum);
-      col_accum_check += (e[i] * V_tr[j][i] + e[i + 2] * V_tr[j][i + 2]);
-      if (col_accum != col_accum_check) {
-        hal_send_str("calc dont match");
-      }
       col_accum = __SMLALD(top_e, top_V_tr, col_accum);
-      col_accum_check +=
-          (e[i + 1] * V_tr[j][i + 1] + e[i + 3] * V_tr[j][i + 3]);
-      col_accum = FPRED_DOUBLE(col_accum);
-      col_accum_check = FPRED_DOUBLE(col_accum_check);
-    }
-#else
-    for (; i < K; i += 4) {
-      col_accum += (e[i] * V_tr[j][i] + e[i + 2] * V_tr[j][i + 2]);
-      col_accum += (e[i + 1] * V_tr[j][i + 1] + e[i + 3] * V_tr[j][i + 3]);
       col_accum = FPRED_DOUBLE(col_accum);
     }
-#endif
     // finish remaining
     for (; i < K; i++) {
       col_accum +=
@@ -200,17 +179,6 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
     res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
   }
 #elif defined(RSDPG)
-#else
-static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
-                                FP_ELEM V_tr[N - K][K]) {
-  memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
-  for (int i = 0; i < K; i++) {
-    for (int j = 0; j < N - K; j++) {
-      res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
-                            (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]);
-    }
-  }
-#endif
 #endif
 #else
 static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
@@ -220,20 +188,9 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
     for (int j = 0; j < N - K; j++) {
       res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
                             (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[i][j]);
-#}
-    }
-#endif
-}
-
-static void fp_vec_by_fp_matrix_check(FP_ELEM res[N - K], FP_ELEM e[N],
-                                      FP_ELEM V_tr[K][N - K]) {
-  memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
-  for (int i = 0; i < K; i++) {
-    for (int j = 0; j < N - K; j++) {
-      res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
-                            (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[i][j]);
     }
   }
+#endif
 }
 
 static inline void fp_vec_by_fp_vec_pointwise(FP_ELEM res[N],
