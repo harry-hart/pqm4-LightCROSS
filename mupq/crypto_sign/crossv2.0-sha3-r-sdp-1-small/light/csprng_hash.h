@@ -193,8 +193,14 @@ static inline void csprng_fp_vec_chall_1(FP_ELEM res[T],
  * Used for:
  * - Expanding the public key from seed
  */
+#if defined(OPT_DSP)
+// Column major for DSP
+static inline void csprng_fp_mat(FP_ELEM res[N - K][K],
+                                 CSPRNG_STATE_T *const csprng_state) {
+#else
 static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
                                  CSPRNG_STATE_T *const csprng_state) {
+#endif
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
   uint8_t CSPRNG_buffer[ROUND_UP(BITS_V_CT_RNG, 8) / 8];
   /* To facilitate hardware implementations, the uint64_t
@@ -214,39 +220,58 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
   int pos_in_buf = 8;
   // Remaining bits of randomness left
   int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
-  // Size of the matrix
+// Size of the matrix
+#if defined(OPT_DSP)
+  for (int i = 0; i < K; i++) {
+    for (int j = 0; j < N - K; j++) {
+#else
   while (placed < K * (N - K)) {
-    // If we have less than half left in window and
-    // some remaining in random buffer
-    if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
-      /* get at most 4 bytes from buffer */
-      int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
-      // Make refresh window
-      uint32_t refresh_buf = 0;
-      for (int i = 0; i < refresh_amount; i++) {
-        refresh_buf |= ((uint32_t)CSPRNG_buffer[pos_in_buf + i]) << 8 * i;
+#endif
+      // If we have less than half left in window and
+      // some remaining in random buffer
+      if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
+        /* get at most 4 bytes from buffer */
+        int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
+        // Make refresh window
+        uint32_t refresh_buf = 0;
+        for (int i = 0; i < refresh_amount; i++) {
+          refresh_buf |= ((uint32_t)CSPRNG_buffer[pos_in_buf + i]) << 8 * i;
+        }
+        // Increment random buffer counter
+        pos_in_buf += refresh_amount;
+        // Put refresh bits into main window
+        sub_buffer |= ((uint64_t)refresh_buf) << bits_in_sub_buf;
+        // Add amount of bits refreshed
+        bits_in_sub_buf += 8 * refresh_amount;
+        // Decrement remaining counter for random buffer
+        pos_remaining -= refresh_amount;
       }
-      // Increment random buffer counter
-      pos_in_buf += refresh_amount;
-      // Put refresh bits into main window
-      sub_buffer |= ((uint64_t)refresh_buf) << bits_in_sub_buf;
-      // Add amount of bits refreshed
-      bits_in_sub_buf += 8 * refresh_amount;
-      // Decrement remaining counter for random buffer
-      pos_remaining -= refresh_amount;
-    }
-    // Temporarily place value (may be overwritten)
+      // Temporarily place value (may be overwritten)
+#if defined(OPT_DSP)
+      res[j][i] = sub_buffer & mask;
+#else
     *((FP_ELEM *)res + placed) = sub_buffer & mask;
-    // Check if the value is in the field
+#endif
+      // Check if the value is in the field
+#if defined(OPT_DSP)
+      if (res[j][i] >= P) {
+        // If it isn't, go back one
+        j -= 1;
+      }
+#else
     if (*((FP_ELEM *)res + placed) < P) {
       // If it is, keep it
       placed++;
     }
-    // Shift window to the right
-    sub_buffer = sub_buffer >> BITS_FOR_P;
-    // Keep track of how many bits left in window
-    bits_in_sub_buf -= BITS_FOR_P;
+#endif
+      // Shift window to the right
+      sub_buffer = sub_buffer >> BITS_FOR_P;
+      // Keep track of how many bits left in window
+      bits_in_sub_buf -= BITS_FOR_P;
+    }
+#if defined(OPT_DSP)
   }
+#endif
 }
 
 #if defined(RSDP)

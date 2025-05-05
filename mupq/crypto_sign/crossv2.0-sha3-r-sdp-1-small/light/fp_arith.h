@@ -114,6 +114,22 @@ static inline void fp_dz_norm(FP_ELEM v[N]) {
  * V, is provided, transposed, hence linearized by columns so that syndrome
  * computation is vectorizable. */
 
+#if defined(OPT_DSP)
+#if defined(RSDP)
+static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
+                                   FP_ELEM V_tr[N - K][K]) {
+  for (int i = K; i < N; i++) {
+    res[i - K] = RESTR_TO_VAL(e[i]);
+  }
+  for (int i = 0; i < K; i++) {
+    for (int j = 0; j < N - K; j++) {
+      res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
+                            (FP_DOUBLEPREC)RESTR_TO_VAL(e[i]) *
+                                (FP_DOUBLEPREC)V_tr[j][i]);
+    }
+  }
+#endif
+#else
 static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
                                    FP_ELEM V_tr[K][N - K]) {
   for (int i = K; i < N; i++) {
@@ -126,39 +142,57 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
                                 (FP_DOUBLEPREC)V_tr[i][j]);
     }
   }
+#endif
 }
 
+#if defined(OPT_DSP)
+#if defined(RSDP)
+static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
+                                FP_ELEM V_tr[N - K][K]) {
+  memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
+  // Reverse order for optimal access
+  for (int j = 0; j < N - K; j++) {
+    // Can we improve this with accumulator?
+    uint64_t col_accum = 0;
+    // Oneint i = 0 at a time for RSDPG, two for RSDP
+    int i = 0;
+    for (; i < K; i += 4) {
+      // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
+      uint32_t bottom_e = __UXTB16((uint32_t *)&e[i]);
+      uint32_t bottom_V_tr = __UXTB16((uint32_t *)&V_tr[j][i]);
+      // Extract value e[i], e[i+2], V_tr[i], V_tr[i+2]
+      uint32_t top_e = __UXTB16(__ROR((uint32_t *)&e[i], 8));
+      uint32_t top_V_tr = __UXTB16(__ROR((uint32_t *)&V_tr[j][i], 8));
+      // Calculate
+      col_accum = __SMLALD(bottom_e, bottom_V_tr, col_accum);
+      col_accum = __SMLALD(top_e, top_V_tr, col_accum);
+    }
+    // finish remaining
+    for (; i < K; i++) {
+      col_accum += (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i];
+    }
+    // Store and reduce modulo P
+    res[j] = ((uint64_t)res[j] + col_accum) % P;
+  }
+#elif defined(RSDPG)
+#endif
+#else
 static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
                                 FP_ELEM V_tr[K][N - K]) {
-  memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
   for (int i = 0; i < K; i++) {
     for (int j = 0; j < N - K; j++) {
       res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
                             (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[i][j]);
     }
   }
+#endif
 }
 
 static inline void fp_vec_by_fp_vec_pointwise(FP_ELEM res[N],
                                               const FP_ELEM in1[N],
                                               const FP_ELEM in2[N]) {
   for (int i = 0; i < N; i++) {
-#if defined(OPT_DSP)
-    // Extract value i+1 and i+3
-    uint32_t bottom_in1 = __UXTB16(in1[i]);
-    uint32_t bottom_in2 = __UXTB16(in2[i]);
-    // Do multiplication
-    uint32_t bottom_mult = res[i] = FPRED_DOUBLE()
-        // Extract value i and i+2
-        uint32_t rot_top = __ROR(in1[i], 8);
-    uint16_t top_in1 = __UXTB16(rot_top);
-    rot_top = __ROR(in2[i], 8);
-    uint16_t top_in2 = __UXTB16(rot_top);
-    // Do multiplication
-
-#else
     res[i] = FPRED_DOUBLE((FP_DOUBLEPREC)in1[i] * (FP_DOUBLEPREC)in2[i]);
-#endif
   }
 }
 

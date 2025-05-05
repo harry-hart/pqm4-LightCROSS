@@ -46,7 +46,7 @@
 // #define OPT_V_BAR
 #define OPT_OTF_MERKLE
 #define OPT_GGM
-// #define OPT_DSP
+#define OPT_DSP
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/

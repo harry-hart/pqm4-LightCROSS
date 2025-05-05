@@ -46,8 +46,14 @@
 #include "sendfn.h"
 
 #if defined(RSDP)
+#if defined(OPT_DSP)
+// Column major ordering
+static void expand_pk(FP_ELEM V_tr[N - K][K],
+                      const uint8_t seed_pk[KEYPAIR_SEED_LENGTH_BYTES]) {
+#else
 static void expand_pk(FP_ELEM V_tr[K][N - K],
                       const uint8_t seed_pk[KEYPAIR_SEED_LENGTH_BYTES]) {
+#endif
 
   /* Expansion of pk->seed, explicit domain separation for CSPRNG as in keygen
    */
@@ -76,8 +82,14 @@ static void expand_pk(FP_ELEM V_tr[K][N - K], FZ_ELEM W_mat[M][N - M],
 #endif
 
 #if defined(RSDP)
+#if defined(OPT_DSP)
+// Column major ordering
+static void expand_sk(FZ_ELEM e_bar[N], FP_ELEM V_tr[N - K][K],
+                      const uint8_t seed_sk[KEYPAIR_SEED_LENGTH_BYTES]) {
+#else
 static void expand_sk(FZ_ELEM e_bar[N], FP_ELEM V_tr[K][N - K],
                       const uint8_t seed_sk[KEYPAIR_SEED_LENGTH_BYTES]) {
+#endif
 
   uint8_t seed_e_seed_pk[2][KEYPAIR_SEED_LENGTH_BYTES];
 
@@ -200,13 +212,13 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
           v_window |= ((uint64_t)replace_window) << remaining_window;
           // add to remaining window
           remaining_window += 32;
-          // Rejection sampling if not in field
         }
         v = v_window & mask;
         // shift window
         v_window = v_window >> elem_size;
         // update counter
         remaining_window -= elem_size;
+        // Rejection sampling if not in field
         // If it is in the field
         if (v < P) {
           break;
@@ -687,7 +699,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   memset(sig, 0, sizeof(CROSS_sig_t));
 
   /* Key material expansion */
+#if defined(OPT_DSP)
+  FP_ELEM V_tr[N - K][K];
+#else
   FP_ELEM V_tr[K][N - K];
+#endif
   FZ_ELEM e_bar[N];
 #if defined(RSDP)
   expand_sk(e_bar, V_tr, SK->seed_sk);
@@ -1154,7 +1170,11 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                  const CROSS_sig_t *const sig) {
   CSPRNG_STATE_T csprng_state;
 
+#if defined(OPT_DSP)
+  FP_ELEM V_tr[N - K][K];
+#else
   FP_ELEM V_tr[K][N - K];
+#endif
 #if defined(RSDP)
   expand_pk(V_tr, PK->seed_pk);
 #elif defined(RSDPG)
