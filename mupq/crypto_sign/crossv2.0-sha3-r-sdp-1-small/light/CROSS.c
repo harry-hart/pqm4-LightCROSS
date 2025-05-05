@@ -33,6 +33,7 @@
 #include <stdalign.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "CROSS.h"
 #include "csprng_hash.h"
@@ -63,6 +64,18 @@ static void expand_pk(FP_ELEM V_tr[K][N - K],
   csprng_initialize(&csprng_state_mat, seed_pk, KEYPAIR_SEED_LENGTH_BYTES,
                     dsc_csprng_seed_pk);
   csprng_fp_mat(V_tr, &csprng_state_mat);
+}
+
+static void expand_pk_check(FP_ELEM V_tr[K][N - K],
+                            const uint8_t seed_pk[KEYPAIR_SEED_LENGTH_BYTES]) {
+  /* Expansion of pk->seed, explicit domain separation for CSPRNG as in keygen
+   */
+  const uint16_t dsc_csprng_seed_pk = CSPRNG_DOMAIN_SEP_CONST + (3 * T + 2);
+
+  CSPRNG_STATE_T csprng_state_mat;
+  csprng_initialize(&csprng_state_mat, seed_pk, KEYPAIR_SEED_LENGTH_BYTES,
+                    dsc_csprng_seed_pk);
+  csprng_fp_mat_check(V_tr, &csprng_state_mat);
 }
 #elif defined(RSDPG)
 static void expand_pk(FP_ELEM V_tr[K][N - K], FZ_ELEM W_mat[M][N - M],
@@ -113,6 +126,32 @@ static void expand_sk(FZ_ELEM e_bar[N], FP_ELEM V_tr[K][N - K],
                     KEYPAIR_SEED_LENGTH_BYTES, dsc_csprng_seed_e);
   csprng_fz_vec(e_bar, &csprng_state_e_bar);
 }
+
+static void expand_sk_check(FZ_ELEM e_bar[N], FP_ELEM V_tr[K][N - K],
+                            const uint8_t seed_sk[KEYPAIR_SEED_LENGTH_BYTES]) {
+  uint8_t seed_e_seed_pk[2][KEYPAIR_SEED_LENGTH_BYTES];
+
+  /* Expansion of sk->seed, explicit domain separation for CSPRNG, as in keygen
+   */
+  const uint16_t dsc_csprng_seed_sk = CSPRNG_DOMAIN_SEP_CONST + (3 * T + 1);
+
+  CSPRNG_STATE_T csprng_state;
+  csprng_initialize(&csprng_state, seed_sk, KEYPAIR_SEED_LENGTH_BYTES,
+                    dsc_csprng_seed_sk);
+  csprng_randombytes((uint8_t *)seed_e_seed_pk, 2 * KEYPAIR_SEED_LENGTH_BYTES,
+                     &csprng_state);
+
+  expand_pk_check(V_tr, seed_e_seed_pk[1]);
+
+  /* Expansion of seede, explicit domain separation for CSPRNG as in keygen */
+  const uint16_t dsc_csprng_seed_e = CSPRNG_DOMAIN_SEP_CONST + (3 * T + 3);
+
+  CSPRNG_STATE_T csprng_state_e_bar;
+  csprng_initialize(&csprng_state_e_bar, seed_e_seed_pk[0],
+                    KEYPAIR_SEED_LENGTH_BYTES, dsc_csprng_seed_e);
+  csprng_fz_vec(e_bar, &csprng_state_e_bar);
+}
+
 #elif defined(RSDPG)
 static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[M],
                       FP_ELEM V_tr[K][N - K], FZ_ELEM W_mat[M][N - M],
@@ -707,6 +746,20 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   FZ_ELEM e_bar[N];
 #if defined(RSDP)
   expand_sk(e_bar, V_tr, SK->seed_sk);
+#if defined(OPT_DSP)
+  FP_ELEM V_tr_check[K][N - K];
+  expand_sk_check(e_bar, V_tr_check, SK->seed_sk);
+
+  hal_send_str("CROSS_sign check V_tr expand_sk");
+  for (int r = 0; r < K; r++) {
+    for (int c = 0; c < N - K; c++) {
+      if (memcmp(&V_tr[c][r], &V_tr_check[r][c], sizeof(FP_ELEM)) != 0) {
+        send_unsigned("V_tr fails check at row: ", r);
+        send_unsigned("V_tr fails check at col: ", c);
+      }
+    }
+  }
+#endif
 #elif defined(RSDPG)
   FZ_ELEM e_G_bar[M];
   FZ_ELEM W_mat[M][N - M];
@@ -746,6 +799,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
   FP_ELEM u_prime[T][N];
   FP_ELEM s_prime[N - K];
+
+#if defined(OPT_DSP)
+  FP_ELEM s_prime_check[N - K];
+#endif
 
 #if defined(RSDP)
   uint8_t cmt_0_i_input[DENSELY_PACKED_FP_SYN_SIZE +
@@ -896,6 +953,15 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         FP_ELEM u[N];
         fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
         fp_vec_by_fp_matrix(s_prime, u, V_tr);
+#if defined(OPT_DSP)
+        fp_vec_by_fp_matrix_check(s_prime_check, u, V_tr_check);
+        for (int c = 0; c < N - K; c++) {
+          if (memcmp(&s_prime_check[c], &s_prime[c], sizeof(FP_ELEM)) != 0) {
+            send_unsigned("s prime calculated diff at: ", c);
+          }
+        }
+        fp_dz_norm_synd(s_prime_check);
+#endif
         fp_dz_norm_synd(s_prime);
 
         /* cmt_0_i_input contains s_prime || v_bar resp. v_G_bar || salt */

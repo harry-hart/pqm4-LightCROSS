@@ -222,8 +222,8 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
   int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
 // Size of the matrix
 #if defined(OPT_DSP)
-  for (int i = 0; i < K; i++) {
-    for (int j = 0; j < N - K; j++) {
+  for (int r = 0; r < K; r++) {
+    for (int c = 0; c < N - K; c++) {
 #else
   while (placed < K * (N - K)) {
 #endif
@@ -248,15 +248,15 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
       }
       // Temporarily place value (may be overwritten)
 #if defined(OPT_DSP)
-      res[j][i] = sub_buffer & mask;
+      res[c][r] = sub_buffer & mask;
 #else
     *((FP_ELEM *)res + placed) = sub_buffer & mask;
 #endif
       // Check if the value is in the field
 #if defined(OPT_DSP)
-      if (res[j][i] >= P) {
+      if (res[c][r] >= P) {
         // If it isn't, go back one
-        j -= 1;
+        c -= 1;
       }
 #else
     if (*((FP_ELEM *)res + placed) < P) {
@@ -272,6 +272,62 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
 #if defined(OPT_DSP)
   }
 #endif
+}
+
+static inline void csprng_fp_mat_check(FP_ELEM res[K][N - K],
+                                       CSPRNG_STATE_T *const csprng_state) {
+  const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
+  uint8_t CSPRNG_buffer[ROUND_UP(BITS_V_CT_RNG, 8) / 8];
+  /* To facilitate hardware implementations, the uint64_t
+   * sub-buffer is consumed starting from the least significant byte
+   * i.e., from the first being output by SHAKE. Bits in the byte are
+   * discarded shifting them out to the right , shifting fresh ones
+   * in from the left end */
+  csprng_randombytes(CSPRNG_buffer, sizeof(CSPRNG_buffer), csprng_state);
+  int placed = 0;
+  // Our "window" into the random buffer, 8 bytes at a time
+  uint64_t sub_buffer = 0;
+  for (int i = 0; i < 8; i++) {
+    sub_buffer |= ((uint64_t)CSPRNG_buffer[i]) << 8 * i;
+  }
+  /* position of the next fresh byte in CSPRNG_buffer*/
+  int bits_in_sub_buf = 64;
+  int pos_in_buf = 8;
+  // Remaining bits of randomness left
+  int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
+  // Size of the matrix
+  while (placed < K * (N - K)) {
+    // If we have less than half left in window and
+    // some remaining in random buffer
+    if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
+      /* get at most 4 bytes from buffer */
+      int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
+      // Make refresh window
+      uint32_t refresh_buf = 0;
+      for (int i = 0; i < refresh_amount; i++) {
+        refresh_buf |= ((uint32_t)CSPRNG_buffer[pos_in_buf + i]) << 8 * i;
+      }
+      // Increment random buffer counter
+      pos_in_buf += refresh_amount;
+      // Put refresh bits into main window
+      sub_buffer |= ((uint64_t)refresh_buf) << bits_in_sub_buf;
+      // Add amount of bits refreshed
+      bits_in_sub_buf += 8 * refresh_amount;
+      // Decrement remaining counter for random buffer
+      pos_remaining -= refresh_amount;
+    }
+    // Temporarily place value (may be overwritten)
+    *((FP_ELEM *)res + placed) = sub_buffer & mask;
+    // Check if the value is in the field
+    if (*((FP_ELEM *)res + placed) < P) {
+      // If it is, keep it
+      placed++;
+    }
+    // Shift window to the right
+    sub_buffer = sub_buffer >> BITS_FOR_P;
+    // Keep track of how many bits left in window
+    bits_in_sub_buf -= BITS_FOR_P;
+  }
 }
 
 #if defined(RSDP)
