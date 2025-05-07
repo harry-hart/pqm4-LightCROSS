@@ -453,12 +453,10 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   // Set up first node on queue
   memcpy(hash_storage, root_seed, SEED_LENGTH_BYTES);
   //  Partition boundaries
-  uint16_t partitions[T + 1] = {0};
-  partitions[T] = 0xDB;
+  uint16_t partitions[T] = {0};
   partitions[1] = T;
   // Node index ring
-  uint16_t node_indices[(T >> 1) + 1] = {0};
-  node_indices[T >> 1] = 0xDB;
+  uint16_t node_indices[(T >> 1)] = {0};
   // Temporary loop vars corresponding to current node
   uint16_t *node_i = node_indices;
   uint8_t *node_hash = hash_storage;
@@ -473,8 +471,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   // Could this be one of the fabled linked list uses?
   // Linked list memory usage: pointer + value
   //
-  uint16_t indices_order[(T - W) + 1] = {0};
-  indices_order[(T - W)] = 0xDB;
+  uint16_t indices_order[(T - W)] = {0};
   uint8_t index_len = 0;
   for (int i = 0; i < T; i++) {
     if (indices_to_publish[i] != CHALLENGE_REVEAL_VALUE) {
