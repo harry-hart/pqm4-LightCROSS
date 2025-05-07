@@ -43,9 +43,6 @@
 #include "parameters.h"
 #include "seedtree.h"
 
-#include "hal.h"
-#include "sendfn.h"
-
 #if defined(RSDP)
 #if defined(OPT_DSP)
 // Column major ordering
@@ -472,6 +469,10 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   tail++;
 
   // Build index map
+  // Because we want to remove pruned indices from the list in the middle...
+  // Could this be one of the fabled linked list uses?
+  // Linked list memory usage: pointer + value
+  //
   uint16_t indices_order[(T - W) + 1] = {0};
   indices_order[(T - W)] = 0xDB;
   uint8_t index_len = 0;
@@ -520,15 +521,13 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       partition = 1 << (31 - msb);
     }
 
-    uint8_t to_reveal = 0;
-    uint16_t partition_split = *partition_start + partition;
+    partition += *partition_start;
     uint8_t left_calculated = 0;
     // Check both partitions for hidden nodes
     for (int i = 0; i < 2; i++) {
       uint8_t hidden_nodes = 0;
-      uint16_t child_partition_start =
-          i == 0 ? *partition_start : partition_split;
-      uint16_t child_partition_end = i == 0 ? partition_split : *partition_end;
+      uint16_t child_partition_start = i == 0 ? *partition_start : partition;
+      uint16_t child_partition_end = i == 0 ? partition : *partition_end;
       uint16_t child_partition_size =
           child_partition_end - child_partition_start;
       // Skip any responses that have already been published
@@ -549,7 +548,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           // ADD THE LEFT NODE TO THE PROCESSING QUEUE
           // Add partition to ring
           partitions[2 * tail] = *partition_start;
-          partitions[(2 * tail) + 1] = partition_split;
+          partitions[(2 * tail) + 1] = partition;
           // Add seed to ring
           /* prepare the CSPRNG input to expand the father node */
           memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
@@ -566,7 +565,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         } else {
           // ADD THE RIGHT NODE TO THE PROCESSING QUEUE
           // Add partition to ring
-          partitions[2 * tail] = partition_split;
+          partitions[2 * tail] = partition;
           partitions[(2 * tail) + 1] = *partition_end;
           // Add seed to ring
           if (left_calculated) {
@@ -1088,9 +1087,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_GGM)
 #if defined(RSDP)
-  int published_test =
-      build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
-                     v_bar[0], chall_1, u_prime[0]);
+  build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
+                 v_bar[0], chall_1, u_prime[0]);
 #elif defined(RSDPG)
   int published_test =
       build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
@@ -1098,14 +1096,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
-// send_unsigned("Real path size: ", published_nodes);
-// send_unsigned("Test path size: ", published_test);
-// for (int i = 0; i < published_nodes; i++) {
-//   if (memcmp(&sig->path[i * SEED_LENGTH_BYTES],
-//              &old_path[i * SEED_LENGTH_BYTES], SEED_LENGTH_BYTES) != 0) {
-//     send_unsigned("Path is wrong at: ", i);
-//   }
-// }
 #endif
 #endif
 
