@@ -63,8 +63,15 @@ static void expand_pk(FP_ELEM V_tr[K][N - K],
   csprng_fp_mat(V_tr, &csprng_state_mat);
 }
 #elif defined(RSDPG)
-static void expand_pk(FP_ELEM V_tr[K][N - K], FZ_ELEM W_mat[M][N - M],
+#if defined(OPT_DSP)
+static void expand_pk(FP_ELEM V_tr[N - K][K],
+                      FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M],
                       const uint8_t seed_pk[KEYPAIR_SEED_LENGTH_BYTES]) {
+#else
+static void expand_pk(FP_ELEM V_tr[K][N - K],
+                      FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M],
+                      const uint8_t seed_pk[KEYPAIR_SEED_LENGTH_BYTES]) {
+#endif
 
   /* Expansion of pk->seed, explicit domain separation for CSPRNG as in keygen
    */
@@ -112,9 +119,17 @@ static void expand_sk(FZ_ELEM e_bar[N], FP_ELEM V_tr[K][N - K],
   csprng_fz_vec(e_bar, &csprng_state_e_bar);
 }
 #elif defined(RSDPG)
-static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[M],
-                      FP_ELEM V_tr[K][N - K], FZ_ELEM W_mat[M][N - M],
+#if defined(OPT_DSP)
+static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
+                      FP_ELEM V_tr[N - K][K],
+                      FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M],
                       const uint8_t seed_sk[KEYPAIR_SEED_LENGTH_BYTES]) {
+#else
+static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
+                      FP_ELEM V_tr[K][N - K],
+                      FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M],
+                      const uint8_t seed_sk[KEYPAIR_SEED_LENGTH_BYTES]) {
+#endif
 
   uint8_t seed_e_seed_pk[2][KEYPAIR_SEED_LENGTH_BYTES];
   CSPRNG_STATE_T csprng_state;
@@ -165,7 +180,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
 
 // Generate W_mat matrix first
 #if defined(RSDPG)
-  FZ_ELEM W_mat[M][N - M];
+  FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
   csprng_fz_mat(W_mat, &csprng_state_mat);
 #endif
   /* The on the fly element. */
@@ -257,7 +272,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #if defined(RSDP)
   expand_pk(V_tr, PK->seed_pk);
 #elif defined(RSDPG)
-  FZ_ELEM W_mat[M][N - M];
+  FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
   expand_pk(V_tr, W_mat, PK->seed_pk);
 #endif
 #endif
@@ -286,7 +301,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   csprng_fz_vec(s_e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
   FP_ELEM s[N - K];
-  FZ_ELEM e_G_bar[M];
+  FZ_ELEM e_G_bar[RSDPG_M];
   csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
 #endif
 #else
@@ -295,7 +310,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #if defined(RSDP)
   csprng_fz_vec(e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
-  FZ_ELEM e_G_bar[M];
+  FZ_ELEM e_G_bar[RSDPG_M];
   csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
   fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
   fz_dz_norm_n(e_bar);
@@ -705,8 +720,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(RSDP)
   expand_sk(e_bar, V_tr, SK->seed_sk);
 #elif defined(RSDPG)
-  FZ_ELEM e_G_bar[M];
-  FZ_ELEM W_mat[M][N - M];
+  FZ_ELEM e_G_bar[RSDPG_M];
+  FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
   expand_sk(e_bar, e_G_bar, V_tr, W_mat, SK->seed_sk);
 #endif
 
@@ -750,8 +765,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   const int offset_salt =
       DENSELY_PACKED_FP_SYN_SIZE + DENSELY_PACKED_FZ_VEC_SIZE;
 #elif defined(RSDPG)
-  FZ_ELEM e_G_bar_prime[M];
-  FZ_ELEM v_G_bar[T][M];
+  FZ_ELEM e_G_bar_prime[RSDPG_M];
+  FZ_ELEM v_G_bar[T][RSDPG_M];
   uint8_t cmt_0_i_input[DENSELY_PACKED_FP_SYN_SIZE +
                         DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE + SALT_LENGTH_BYTES];
   const int offset_salt =
@@ -1166,7 +1181,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #if defined(RSDP)
   expand_pk(V_tr, PK->seed_pk);
 #elif defined(RSDPG)
-  FZ_ELEM W_mat[M][N - M];
+  FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
   expand_pk(V_tr, W_mat, PK->seed_pk);
 #endif
 
@@ -1311,7 +1326,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           /* expand e_bar_prime */
           csprng_fz_vec(e_bar_prime, &csprng_state);
 #elif defined(RSDPG)
-      FZ_ELEM e_G_bar_prime[M];
+      FZ_ELEM e_G_bar_prime[RSDPG_M];
       csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
       fz_inf_w_by_fz_matrix(e_bar_prime, e_G_bar_prime, W_mat);
       fz_dz_norm_n(e_bar_prime);
@@ -1359,7 +1374,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       FZ_ELEM *v_G_bar_ptr = cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE;
       memcpy(v_G_bar_ptr, &sig->resp_0[used_rsps].v_G_bar,
              DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE);
-      FZ_ELEM v_G_bar[M];
+      FZ_ELEM v_G_bar[RSDPG_M];
       is_packed_padd_ok =
           is_packed_padd_ok &&
           unpack_fz_rsdp_g_vec(v_G_bar, sig->resp_0[used_rsps].v_G_bar);

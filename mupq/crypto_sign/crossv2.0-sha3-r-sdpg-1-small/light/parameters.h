@@ -43,7 +43,8 @@
 #define OPT_HASH_Y
 #define OPT_E_BAR_PRIME
 #define OPT_OTF_MERKLE
-#define OPT_GGM
+// #define OPT_GGM
+#define OPT_DSP
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/
@@ -166,7 +167,8 @@
 #define SEC_MARGIN_LAMBDA (128)
 #define N (55)
 #define K (36)
-#define M (25)
+// Renamed for DSP library conflict
+#define RSDPG_M (25)
 
 #if defined(SPEED)
 #define T (147)
@@ -190,10 +192,10 @@
 #define SEC_MARGIN_LAMBDA (192)
 #define N (79)
 #define K (48)
-#define M (40)
+#define RSDPG_M (40)
 
 #if defined(SPEED)
-#define T (224)
+
 #define W (119)
 #define POSITION_IN_FW_STRING_T uint8_t
 #elif defined(BALANCED)
@@ -214,7 +216,7 @@
 #define SEC_MARGIN_LAMBDA (256)
 #define N (106)
 #define K (69)
-#define M (48)
+#define RSDPG_M (48)
 
 #if defined(SPEED)
 #define T (300)
@@ -305,8 +307,8 @@
    ROUND_UP(((N % 8) * BITS_TO_REPRESENT(Z - 1)), 8) / 8)
 #ifdef RSDPG
 #define DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE                                      \
-  ((M / 8) * BITS_TO_REPRESENT(Z - 1) +                                        \
-   ROUND_UP(((M % 8) * BITS_TO_REPRESENT(Z - 1)), 8) / 8)
+  ((RSDPG_M / 8) * BITS_TO_REPRESENT(Z - 1) +                                  \
+   ROUND_UP(((RSDPG_M % 8) * BITS_TO_REPRESENT(Z - 1)), 8) / 8)
 #endif
 
 /* Derived parameters computed via compute_derived_parameters.py */

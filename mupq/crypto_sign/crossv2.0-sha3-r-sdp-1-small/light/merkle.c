@@ -109,6 +109,7 @@ uint8_t recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 #define COMPUTED 1
 
 /*****************************************************************************/
+#if !defined(OPT_MERKLE)
 static void place_cmt_on_leaves(
     unsigned char merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH],
     unsigned char commitments[T][HASH_DIGEST_LENGTH]) {
@@ -125,6 +126,7 @@ static void place_cmt_on_leaves(
     }
   }
 }
+#endif
 
 /*****************************************************************************/
 static void label_leaves(unsigned char flag_tree[NUM_NODES_MERKLE_TREE],
@@ -425,8 +427,6 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
   // Notes:
   // - Can overwrite cmt_0 as it is never used again
   // - COMPUTED = 1, NOT_COMPUTED = 0
-  // Pre-process
-  uint8_t bit_masks[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 
   uint8_t flags[T + 1] = {NOT_COMPUTED};
   uint8_t level = LOG2(T);

@@ -5,14 +5,14 @@
  * @version 2.0 (February 2025)
  *
  * Authors listed in alphabetical order:
- * 
+ *
  * @author: Alessandro Barenghi <alessandro.barenghi@polimi.it>
  * @author: Marco Gianvecchio <marco.gianvecchio@mail.polimi.it>
  * @author: Patrick Karl <patrick.karl@tum.de>
  * @author: Gerardo Pelosi <gerardo.pelosi@polimi.it>
  * @author: Jonas Schupp <jonas.schupp@tum.de>
- * 
- * 
+ *
+ *
  * This code is hereby placed in the public domain.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ''AS IS'' AND ANY EXPRESS
@@ -34,7 +34,8 @@
 
 #include "pack_unpack.h"
 
-/*Implementation of packing and unpacking of 3/7/9 bit elements into byte vectors*/
+/*Implementation of packing and unpacking of 3/7/9 bit elements into byte
+ * vectors*/
 
 /*
  * generic_pack_3_bit()
@@ -44,59 +45,47 @@
  * size_t outlen      :    Length of out
  * size_t in          :    Length of in
  *
- * This function handles the packing of an vector of uint8_t elements with 3 bit of information
- * of arbitrary length
+ * This function handles the packing of an vector of uint8_t elements with 3 bit
+ * of information of arbitrary length
  */
-static inline
-void generic_pack_3_bit(uint8_t *out, const uint8_t *in,
-                        const size_t outlen, const size_t inlen)
-{
+static inline void generic_pack_3_bit(uint8_t *out, const uint8_t *in,
+                                      const size_t outlen, const size_t inlen) {
   size_t i;
-  for(i = 0; i < outlen; i++)
-  {
+  for (i = 0; i < outlen; i++) {
     out[i] = 0;
   }
-  for(i = 0; i < inlen/8; i++)
-  {
-    out[i*3]   = in[i*8] | (in[i*8+1] << 3) | (in[i*8+2] << 6);
-    out[i*3+1]  = (in[i*8+2] >> 2) | (in[i*8+3] << 1) | (in[i*8+4] << 4) | (in[i*8+5] << 7);
-    out[i*3+2]  = (in[i*8+5] >> 1) | (in[i*8+6] << 2) | (in[i*8+7] << 5);
+  for (i = 0; i < inlen / 8; i++) {
+    out[i * 3] = in[i * 8] | (in[i * 8 + 1] << 3) | (in[i * 8 + 2] << 6);
+    out[i * 3 + 1] = (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 1) |
+                     (in[i * 8 + 4] << 4) | (in[i * 8 + 5] << 7);
+    out[i * 3 + 2] =
+        (in[i * 8 + 5] >> 1) | (in[i * 8 + 6] << 2) | (in[i * 8 + 7] << 5);
   }
   const uint8_t n_remainder = inlen & 0x7;
-  if(n_remainder == 1)
-  {
-    out[i*3]   = in[i*8];
-  }
-  else if(n_remainder == 2)
-  {
-    out[i*3]   = in[i*8] | (in[i*8+1] << 3);
-  }
-  else if(n_remainder == 3)
-  {
-    out[i*3]   = in[i*8] | (in[i*8+1] << 3) | (in[i*8+2] << 6);
-    out[i*3+1]  = (in[i*8+2] >> 2);
-  }
-  else if(n_remainder == 4)
-  {
-    out[i*3]   = in[i*8] | (in[i*8+1] << 3) | (in[i*8+2] << 6);
-    out[i*3+1]  = (in[i*8+2] >> 2)  | (in[i*8+3] << 1);
-  }
-  else if(n_remainder == 5)
-  {
-    out[i*3]   = in[i*8] | (in[i*8+1] << 3) | (in[i*8+2] << 6);
-    out[i*3+1]  = (in[i*8+2] >> 2)  | (in[i*8+3] << 1) | (in[i*8+4] << 4);
-  }
-  else if(n_remainder == 6)
-  {
-    out[i*3]   = in[i*8] | (in[i*8+1] << 3) | (in[i*8+2] << 6);
-    out[i*3+1]  = (in[i*8+2] >> 2) | (in[i*8+3] << 1) | (in[i*8+4] << 4) | (in[i*8+5] << 7);
-    out[i*3+2]  = (in[i*8+5] >> 1);
-  }
-  else if(n_remainder == 7)
-  {
-    out[i*3]   = in[i*8] | (in[i*8+1] << 3) | (in[i*8+2] << 6);
-    out[i*3+1]  = (in[i*8+2] >> 2) | (in[i*8+3] << 1) | (in[i*8+4] << 4) | (in[i*8+5] << 7);
-    out[i*3+2]  = (in[i*8+5] >> 1) | (in[i*8+6] << 2);
+  if (n_remainder == 1) {
+    out[i * 3] = in[i * 8];
+  } else if (n_remainder == 2) {
+    out[i * 3] = in[i * 8] | (in[i * 8 + 1] << 3);
+  } else if (n_remainder == 3) {
+    out[i * 3] = in[i * 8] | (in[i * 8 + 1] << 3) | (in[i * 8 + 2] << 6);
+    out[i * 3 + 1] = (in[i * 8 + 2] >> 2);
+  } else if (n_remainder == 4) {
+    out[i * 3] = in[i * 8] | (in[i * 8 + 1] << 3) | (in[i * 8 + 2] << 6);
+    out[i * 3 + 1] = (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 1);
+  } else if (n_remainder == 5) {
+    out[i * 3] = in[i * 8] | (in[i * 8 + 1] << 3) | (in[i * 8 + 2] << 6);
+    out[i * 3 + 1] =
+        (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 1) | (in[i * 8 + 4] << 4);
+  } else if (n_remainder == 6) {
+    out[i * 3] = in[i * 8] | (in[i * 8 + 1] << 3) | (in[i * 8 + 2] << 6);
+    out[i * 3 + 1] = (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 1) |
+                     (in[i * 8 + 4] << 4) | (in[i * 8 + 5] << 7);
+    out[i * 3 + 2] = (in[i * 8 + 5] >> 1);
+  } else if (n_remainder == 7) {
+    out[i * 3] = in[i * 8] | (in[i * 8 + 1] << 3) | (in[i * 8 + 2] << 6);
+    out[i * 3 + 1] = (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 1) |
+                     (in[i * 8 + 4] << 4) | (in[i * 8 + 5] << 7);
+    out[i * 3 + 2] = (in[i * 8 + 5] >> 1) | (in[i * 8 + 6] << 2);
   }
 }
 
@@ -108,77 +97,60 @@ void generic_pack_3_bit(uint8_t *out, const uint8_t *in,
  * size_t outlen      :    Length of out
  * size_t in          :    Length of in
  *
- * This function handles the packing of an vector of uint8_t elements with 7 bit of information
- * of arbitrary length
+ * This function handles the packing of an vector of uint8_t elements with 7 bit
+ * of information of arbitrary length
  */
-static inline
-void generic_pack_7_bit(uint8_t *out, const uint8_t *in,
-                        const size_t outlen, const size_t inlen)
-{
+static inline void generic_pack_7_bit(uint8_t *out, const uint8_t *in,
+                                      const size_t outlen, const size_t inlen) {
   size_t i;
-  for(i = 0; i < outlen; i++)
-  {
+  for (i = 0; i < outlen; i++) {
     out[i] = 0;
   }
-  for(i = 0; i < inlen/8; i++)
-  {
-    out[i*7] |= (in[i*8]) | (in[i*8+1] << 7);
-    out[i*7+1] |= (in[i*8+1] >> 1) | (in[i*8+2] << 6);
-    out[i*7+2] |= (in[i*8+2] >> 2) | (in[i*8+3] << 5);
-    out[i*7+3] |= (in[i*8+3] >> 3) | (in[i*8+4] << 4);
-    out[i*7+4] |= (in[i*8+4] >> 4) | (in[i*8+5] << 3);
-    out[i*7+5] |= (in[i*8+5] >> 5) | (in[i*8+6] << 2);
-    out[i*7+6] |= (in[i*8+6] >> 6) | (in[i*8+7] << 1);
+  for (i = 0; i < inlen / 8; i++) {
+    out[i * 7] |= (in[i * 8]) | (in[i * 8 + 1] << 7);
+    out[i * 7 + 1] |= (in[i * 8 + 1] >> 1) | (in[i * 8 + 2] << 6);
+    out[i * 7 + 2] |= (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 5);
+    out[i * 7 + 3] |= (in[i * 8 + 3] >> 3) | (in[i * 8 + 4] << 4);
+    out[i * 7 + 4] |= (in[i * 8 + 4] >> 4) | (in[i * 8 + 5] << 3);
+    out[i * 7 + 5] |= (in[i * 8 + 5] >> 5) | (in[i * 8 + 6] << 2);
+    out[i * 7 + 6] |= (in[i * 8 + 6] >> 6) | (in[i * 8 + 7] << 1);
   }
   const uint8_t n_remainder = inlen & 0x7;
-  if(n_remainder == 1)
-  {
-    out[i*7] = (in[i*8]);
-  }
-  else if(n_remainder == 2)
-  {
-    out[i*7] |= (in[i*8]) | (in[i*8+1] << 7);
-    out[i*7+1] = (in[i*8+1] >> 1);
-  }
-  else if(n_remainder == 3)
-  {
-    out[i*7] |= (in[i*8]) | (in[i*8+1] << 7);
-    out[i*7+1] |= (in[i*8+1] >> 1) | (in[i*8+2] << 6);
-    out[i*7+2] = (in[i*8+2] >> 2);
-  }
-  else if(n_remainder == 4)
-  {
-    out[i*7] |= (in[i*8]) | (in[i*8+1] << 7);
-    out[i*7+1] |= (in[i*8+1] >> 1) | (in[i*8+2] << 6);
-    out[i*7+2] |= (in[i*8+2] >> 2) | (in[i*8+3] << 5);
-    out[i*7+3] |= (in[i*8+3] >> 3);
-  }
-  else if(n_remainder == 5)
-  {
-    out[i*7] |= (in[i*8]) | (in[i*8+1] << 7);
-    out[i*7+1] |= (in[i*8+1] >> 1) | (in[i*8+2] << 6);
-    out[i*7+2] |= (in[i*8+2] >> 2) | (in[i*8+3] << 5);
-    out[i*7+3] |= (in[i*8+3] >> 3) | (in[i*8+4] << 4);
-    out[i*7+4] |= (in[i*8+4] >> 4);
-  }
-  else if(n_remainder == 6)
-  {
-    out[i*7] |= (in[i*8]) | (in[i*8+1] << 7);
-    out[i*7+1] |= (in[i*8+1] >> 1) | (in[i*8+2] << 6);
-    out[i*7+2] |= (in[i*8+2] >> 2) | (in[i*8+3] << 5);
-    out[i*7+3] |= (in[i*8+3] >> 3) | (in[i*8+4] << 4);
-    out[i*7+4] |= (in[i*8+4] >> 4) | (in[i*8+5] << 3);
-    out[i*7+5] |= (in[i*8+5] >> 5);
-  }
-  else if(n_remainder == 7)
-  {
-    out[i*7] |= (in[i*8]) | (in[i*8+1] << 7);
-    out[i*7+1] |= (in[i*8+1] >> 1) | (in[i*8+2] << 6);
-    out[i*7+2] |= (in[i*8+2] >> 2) | (in[i*8+3] << 5);
-    out[i*7+3] |= (in[i*8+3] >> 3) | (in[i*8+4] << 4);
-    out[i*7+4] |= (in[i*8+4] >> 4) | (in[i*8+5] << 3);
-    out[i*7+5] |= (in[i*8+5] >> 5) | (in[i*8+6] << 2);
-    out[i*7+6] |= (in[i*8+6] >> 6);
+  if (n_remainder == 1) {
+    out[i * 7] = (in[i * 8]);
+  } else if (n_remainder == 2) {
+    out[i * 7] |= (in[i * 8]) | (in[i * 8 + 1] << 7);
+    out[i * 7 + 1] = (in[i * 8 + 1] >> 1);
+  } else if (n_remainder == 3) {
+    out[i * 7] |= (in[i * 8]) | (in[i * 8 + 1] << 7);
+    out[i * 7 + 1] |= (in[i * 8 + 1] >> 1) | (in[i * 8 + 2] << 6);
+    out[i * 7 + 2] = (in[i * 8 + 2] >> 2);
+  } else if (n_remainder == 4) {
+    out[i * 7] |= (in[i * 8]) | (in[i * 8 + 1] << 7);
+    out[i * 7 + 1] |= (in[i * 8 + 1] >> 1) | (in[i * 8 + 2] << 6);
+    out[i * 7 + 2] |= (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 5);
+    out[i * 7 + 3] |= (in[i * 8 + 3] >> 3);
+  } else if (n_remainder == 5) {
+    out[i * 7] |= (in[i * 8]) | (in[i * 8 + 1] << 7);
+    out[i * 7 + 1] |= (in[i * 8 + 1] >> 1) | (in[i * 8 + 2] << 6);
+    out[i * 7 + 2] |= (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 5);
+    out[i * 7 + 3] |= (in[i * 8 + 3] >> 3) | (in[i * 8 + 4] << 4);
+    out[i * 7 + 4] |= (in[i * 8 + 4] >> 4);
+  } else if (n_remainder == 6) {
+    out[i * 7] |= (in[i * 8]) | (in[i * 8 + 1] << 7);
+    out[i * 7 + 1] |= (in[i * 8 + 1] >> 1) | (in[i * 8 + 2] << 6);
+    out[i * 7 + 2] |= (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 5);
+    out[i * 7 + 3] |= (in[i * 8 + 3] >> 3) | (in[i * 8 + 4] << 4);
+    out[i * 7 + 4] |= (in[i * 8 + 4] >> 4) | (in[i * 8 + 5] << 3);
+    out[i * 7 + 5] |= (in[i * 8 + 5] >> 5);
+  } else if (n_remainder == 7) {
+    out[i * 7] |= (in[i * 8]) | (in[i * 8 + 1] << 7);
+    out[i * 7 + 1] |= (in[i * 8 + 1] >> 1) | (in[i * 8 + 2] << 6);
+    out[i * 7 + 2] |= (in[i * 8 + 2] >> 2) | (in[i * 8 + 3] << 5);
+    out[i * 7 + 3] |= (in[i * 8 + 3] >> 3) | (in[i * 8 + 4] << 4);
+    out[i * 7 + 4] |= (in[i * 8 + 4] >> 4) | (in[i * 8 + 5] << 3);
+    out[i * 7 + 5] |= (in[i * 8 + 5] >> 5) | (in[i * 8 + 6] << 2);
+    out[i * 7 + 6] |= (in[i * 8 + 6] >> 6);
   }
 }
 
@@ -190,86 +162,69 @@ void generic_pack_7_bit(uint8_t *out, const uint8_t *in,
  * size_t outlen      :    Length of out
  * size_t in          :    Length of in
  *
- * This function handles the packing of an vector of uint16_t elements with 9 bit of information
- * of arbitrary length
+ * This function handles the packing of an vector of uint16_t elements with 9
+ * bit of information of arbitrary length
  */
-static inline
-void generic_pack_9_bit(uint8_t *out, const uint16_t *in,
-                        const size_t outlen, const size_t inlen)
-{
+static inline void generic_pack_9_bit(uint8_t *out, const uint16_t *in,
+                                      const size_t outlen, const size_t inlen) {
   size_t i;
-  for(i = 0; i < outlen; i++)
-  {
+  for (i = 0; i < outlen; i++) {
     out[i] = 0;
   }
-  for(i = 0; i < inlen/8; i++)
-  {
-    out[i*9] = in[i*8];
-    out[i*9+1] |= (in[i*8] >> 8) | (in[i*8+1] << 1);
-    out[i*9+2] |= (in[i*8+1] >> 7) | (in[i*8+2] << 2);
-    out[i*9+3] |= (in[i*8+2] >> 6) | (in[i*8+3] << 3);
-    out[i*9+4] |= (in[i*8+3] >> 5) | (in[i*8+4] << 4);
-    out[i*9+5] |= (in[i*8+4] >> 4) | (in[i*8+5] << 5);
-    out[i*9+6] |= (in[i*8+5] >> 3) | (in[i*8+6] << 6);
-    out[i*9+7] |= (in[i*8+6] >> 2) | (in[i*8+7] << 7);
-    out[i*9+8] |= (in[i*8+7] >> 1);
+  for (i = 0; i < inlen / 8; i++) {
+    out[i * 9] = in[i * 8];
+    out[i * 9 + 1] |= (in[i * 8] >> 8) | (in[i * 8 + 1] << 1);
+    out[i * 9 + 2] |= (in[i * 8 + 1] >> 7) | (in[i * 8 + 2] << 2);
+    out[i * 9 + 3] |= (in[i * 8 + 2] >> 6) | (in[i * 8 + 3] << 3);
+    out[i * 9 + 4] |= (in[i * 8 + 3] >> 5) | (in[i * 8 + 4] << 4);
+    out[i * 9 + 5] |= (in[i * 8 + 4] >> 4) | (in[i * 8 + 5] << 5);
+    out[i * 9 + 6] |= (in[i * 8 + 5] >> 3) | (in[i * 8 + 6] << 6);
+    out[i * 9 + 7] |= (in[i * 8 + 6] >> 2) | (in[i * 8 + 7] << 7);
+    out[i * 9 + 8] |= (in[i * 8 + 7] >> 1);
   }
   const uint8_t n_remainder = inlen & 0x7;
-  if(n_remainder == 1)
-  {
-    out[i*9] = in[i*8];
-    out[i*9+1] |= (in[i*8] >> 8);
-  }
-  else if(n_remainder == 2)
-  {
-    out[i*9] = in[i*8];
-    out[i*9+1] |= (in[i*8] >> 8) | (in[i*8+1] << 1);
-    out[i*9+2] |= (in[i*8+1] >> 7);
-  }
-  else if(n_remainder == 3)
-  {
-    out[i*9] = in[i*8];
-    out[i*9+1] |= (in[i*8] >> 8) | (in[i*8+1] << 1);
-    out[i*9+2] |= (in[i*8+1] >> 7) | (in[i*8+2] << 2);
-    out[i*9+3] |= (in[i*8+2] >> 6);
-  }
-  else if(n_remainder == 4)
-  {
-    out[i*9] = in[i*8];
-    out[i*9+1] |= (in[i*8] >> 8) | (in[i*8+1] << 1);
-    out[i*9+2] |= (in[i*8+1] >> 7) | (in[i*8+2] << 2);
-    out[i*9+3] |= (in[i*8+2] >> 6) | (in[i*8+3] << 3);
-    out[i*9+4] |= (in[i*8+3] >> 5);
-  }
-  else if(n_remainder == 5)
-  {
-    out[i*9] = in[i*8];
-    out[i*9+1] |= (in[i*8] >> 8) | (in[i*8+1] << 1);
-    out[i*9+2] |= (in[i*8+1] >> 7) | (in[i*8+2] << 2);
-    out[i*9+3] |= (in[i*8+2] >> 6) | (in[i*8+3] << 3);
-    out[i*9+4] |= (in[i*8+3] >> 5) | (in[i*8+4] << 4);
-    out[i*9+5] |= (in[i*8+4] >> 4);
-  }
-  else if(n_remainder == 6)
-  {
-    out[i*9] = in[i*8];
-    out[i*9+1] |= (in[i*8] >> 8) | (in[i*8+1] << 1);
-    out[i*9+2] |= (in[i*8+1] >> 7) | (in[i*8+2] << 2);
-    out[i*9+3] |= (in[i*8+2] >> 6) | (in[i*8+3] << 3);
-    out[i*9+4] |= (in[i*8+3] >> 5) | (in[i*8+4] << 4);
-    out[i*9+5] |= (in[i*8+4] >> 4) | (in[i*8+5] << 5);
-    out[i*9+6] |= (in[i*8+5] >> 3);
-  }
-  else if(n_remainder == 7)
-  {
-    out[i*9] = in[i*8];
-    out[i*9+1] |= (in[i*8] >> 8) | (in[i*8+1] << 1);
-    out[i*9+2] |= (in[i*8+1] >> 7) | (in[i*8+2] << 2);
-    out[i*9+3] |= (in[i*8+2] >> 6) | (in[i*8+3] << 3);
-    out[i*9+4] |= (in[i*8+3] >> 5) | (in[i*8+4] << 4);
-    out[i*9+5] |= (in[i*8+4] >> 4) | (in[i*8+5] << 5);
-    out[i*9+6] |= (in[i*8+5] >> 3) | (in[i*8+6] << 6);
-    out[i*9+7] |= (in[i*8+6] >> 2);
+  if (n_remainder == 1) {
+    out[i * 9] = in[i * 8];
+    out[i * 9 + 1] |= (in[i * 8] >> 8);
+  } else if (n_remainder == 2) {
+    out[i * 9] = in[i * 8];
+    out[i * 9 + 1] |= (in[i * 8] >> 8) | (in[i * 8 + 1] << 1);
+    out[i * 9 + 2] |= (in[i * 8 + 1] >> 7);
+  } else if (n_remainder == 3) {
+    out[i * 9] = in[i * 8];
+    out[i * 9 + 1] |= (in[i * 8] >> 8) | (in[i * 8 + 1] << 1);
+    out[i * 9 + 2] |= (in[i * 8 + 1] >> 7) | (in[i * 8 + 2] << 2);
+    out[i * 9 + 3] |= (in[i * 8 + 2] >> 6);
+  } else if (n_remainder == 4) {
+    out[i * 9] = in[i * 8];
+    out[i * 9 + 1] |= (in[i * 8] >> 8) | (in[i * 8 + 1] << 1);
+    out[i * 9 + 2] |= (in[i * 8 + 1] >> 7) | (in[i * 8 + 2] << 2);
+    out[i * 9 + 3] |= (in[i * 8 + 2] >> 6) | (in[i * 8 + 3] << 3);
+    out[i * 9 + 4] |= (in[i * 8 + 3] >> 5);
+  } else if (n_remainder == 5) {
+    out[i * 9] = in[i * 8];
+    out[i * 9 + 1] |= (in[i * 8] >> 8) | (in[i * 8 + 1] << 1);
+    out[i * 9 + 2] |= (in[i * 8 + 1] >> 7) | (in[i * 8 + 2] << 2);
+    out[i * 9 + 3] |= (in[i * 8 + 2] >> 6) | (in[i * 8 + 3] << 3);
+    out[i * 9 + 4] |= (in[i * 8 + 3] >> 5) | (in[i * 8 + 4] << 4);
+    out[i * 9 + 5] |= (in[i * 8 + 4] >> 4);
+  } else if (n_remainder == 6) {
+    out[i * 9] = in[i * 8];
+    out[i * 9 + 1] |= (in[i * 8] >> 8) | (in[i * 8 + 1] << 1);
+    out[i * 9 + 2] |= (in[i * 8 + 1] >> 7) | (in[i * 8 + 2] << 2);
+    out[i * 9 + 3] |= (in[i * 8 + 2] >> 6) | (in[i * 8 + 3] << 3);
+    out[i * 9 + 4] |= (in[i * 8 + 3] >> 5) | (in[i * 8 + 4] << 4);
+    out[i * 9 + 5] |= (in[i * 8 + 4] >> 4) | (in[i * 8 + 5] << 5);
+    out[i * 9 + 6] |= (in[i * 8 + 5] >> 3);
+  } else if (n_remainder == 7) {
+    out[i * 9] = in[i * 8];
+    out[i * 9 + 1] |= (in[i * 8] >> 8) | (in[i * 8 + 1] << 1);
+    out[i * 9 + 2] |= (in[i * 8 + 1] >> 7) | (in[i * 8 + 2] << 2);
+    out[i * 9 + 3] |= (in[i * 8 + 2] >> 6) | (in[i * 8 + 3] << 3);
+    out[i * 9 + 4] |= (in[i * 8 + 3] >> 5) | (in[i * 8 + 4] << 4);
+    out[i * 9 + 5] |= (in[i * 8 + 4] >> 4) | (in[i * 8 + 5] << 5);
+    out[i * 9 + 6] |= (in[i * 8 + 5] >> 3) | (in[i * 8 + 6] << 6);
+    out[i * 9 + 7] |= (in[i * 8 + 6] >> 2);
   }
 }
 
@@ -283,10 +238,8 @@ void generic_pack_9_bit(uint8_t *out, const uint16_t *in,
  *
  * This function handles the packing of an vector of el. in FP of arbit. length
  */
-static inline
-void generic_pack_fp(uint8_t *out, const FP_ELEM *in,
-                const size_t outlen, const size_t inlen)
-{
+static inline void generic_pack_fp(uint8_t *out, const FP_ELEM *in,
+                                   const size_t outlen, const size_t inlen) {
 #if P == 127
   generic_pack_7_bit(out, in, outlen, inlen);
 
@@ -294,24 +247,23 @@ void generic_pack_fp(uint8_t *out, const FP_ELEM *in,
   generic_pack_9_bit(out, in, outlen, inlen);
 
 #else
-  #error not implemented
+#error not implemented
 
 #endif
 }
 
-/* 
+/*
  * generic_pack_fz()
  *
  * uint8_t *out      :    FZ packed in bytes
  * const FZ_ELEM *in :    FZ Vec input, to be packed
  * size_t outlen     :    Length of out
  * size_t in         :    Length of in
- * 
+ *
  * This function handles the packing of an vector of el. in FZ of arbit. length
  */
-static inline
-void generic_pack_fz(uint8_t *out, const FZ_ELEM *in, const size_t outlen, const size_t inlen)
-{
+static inline void generic_pack_fz(uint8_t *out, const FZ_ELEM *in,
+                                   const size_t outlen, const size_t inlen) {
 #if Z == 127
   generic_pack_7_bit(out, in, outlen, inlen);
 
@@ -319,7 +271,7 @@ void generic_pack_fz(uint8_t *out, const FZ_ELEM *in, const size_t outlen, const
   generic_pack_3_bit(out, in, outlen, inlen);
 
 #else
-  #error not implemented
+#error not implemented
 
 #endif
 }
@@ -332,83 +284,67 @@ void generic_pack_fz(uint8_t *out, const FZ_ELEM *in, const size_t outlen, const
  * size_t outlen      :    Length of out
  * size_t in          :    Length of in
  *
- * This function handles the packing of an vector of uint8_t elements with 3 bit of information
- * of arbitrary length
+ * This function handles the packing of an vector of uint8_t elements with 3 bit
+ * of information of arbitrary length
  */
-static inline
-uint8_t generic_unpack_3_bit(uint8_t *out, const uint8_t *in,
-                        const size_t outlen, const size_t inlen)
-{
+static inline uint8_t generic_unpack_3_bit(uint8_t *out, const uint8_t *in,
+                                           const size_t outlen,
+                                           const size_t inlen) {
   uint8_t is_packed_padd_ok = 1;
   size_t i;
-  for(i = 0; i < outlen; i++)
-  {
+  for (i = 0; i < outlen; i++) {
     out[i] = 0;
   }
-  for(i = 0; i < outlen/8; i++)
-  {
-    out[i*8]   = in[i*3] & 0x7;
-    out[i*8+1]  = (in[i*3] >> 3) & 0x7;
-    out[i*8+2]  = ((in[i*3] >> 6) | (in[i*3+1] << 2)) & 0x7;
-    out[i*8+3]  = (in[i*3+1] >> 1) & 0x7;
-    out[i*8+4]  = (in[i*3+1] >> 4) & 0x7;
-    out[i*8+5]  = ((in[i*3+1] >> 7) | (in[i*3+2] << 1)) & 0x7;
-    out[i*8+6]  = (in[i*3+2] >> 2) & 0x7;
-    out[i*8+7]  = (in[i*3+2] >> 5) & 0x7;
+  for (i = 0; i < outlen / 8; i++) {
+    out[i * 8] = in[i * 3] & 0x7;
+    out[i * 8 + 1] = (in[i * 3] >> 3) & 0x7;
+    out[i * 8 + 2] = ((in[i * 3] >> 6) | (in[i * 3 + 1] << 2)) & 0x7;
+    out[i * 8 + 3] = (in[i * 3 + 1] >> 1) & 0x7;
+    out[i * 8 + 4] = (in[i * 3 + 1] >> 4) & 0x7;
+    out[i * 8 + 5] = ((in[i * 3 + 1] >> 7) | (in[i * 3 + 2] << 1)) & 0x7;
+    out[i * 8 + 6] = (in[i * 3 + 2] >> 2) & 0x7;
+    out[i * 8 + 7] = (in[i * 3 + 2] >> 5) & 0x7;
   }
   const uint8_t n_remainder = outlen & 0x7;
-  if(n_remainder == 1)
-  {
-    out[i*8]   = in[i*3] & 0x7;
+  if (n_remainder == 1) {
+    out[i * 8] = in[i * 3] & 0x7;
+  } else if (n_remainder == 2) {
+    out[i * 8] = in[i * 3] & 0x7;
+    out[i * 8 + 1] = (in[i * 3] >> 3) & 0x7;
+  } else if (n_remainder == 3) {
+    out[i * 8] = in[i * 3] & 0x7;
+    out[i * 8 + 1] = (in[i * 3] >> 3) & 0x7;
+    out[i * 8 + 2] = ((in[i * 3] >> 6) | (in[i * 3 + 1] << 2)) & 0x7;
+  } else if (n_remainder == 4) {
+    out[i * 8] = in[i * 3] & 0x7;
+    out[i * 8 + 1] = (in[i * 3] >> 3) & 0x7;
+    out[i * 8 + 2] = ((in[i * 3] >> 6) | (in[i * 3 + 1] << 2)) & 0x7;
+    out[i * 8 + 3] = (in[i * 3 + 1] >> 1) & 0x7;
+  } else if (n_remainder == 5) {
+    out[i * 8] = in[i * 3] & 0x7;
+    out[i * 8 + 1] = (in[i * 3] >> 3) & 0x7;
+    out[i * 8 + 2] = ((in[i * 3] >> 6) | (in[i * 3 + 1] << 2)) & 0x7;
+    out[i * 8 + 3] = (in[i * 3 + 1] >> 1) & 0x7;
+    out[i * 8 + 4] = (in[i * 3 + 1] >> 4) & 0x7;
+  } else if (n_remainder == 6) {
+    out[i * 8] = in[i * 3] & 0x7;
+    out[i * 8 + 1] = (in[i * 3] >> 3) & 0x7;
+    out[i * 8 + 2] = ((in[i * 3] >> 6) | (in[i * 3 + 1] << 2)) & 0x7;
+    out[i * 8 + 3] = (in[i * 3 + 1] >> 1) & 0x7;
+    out[i * 8 + 4] = (in[i * 3 + 1] >> 4) & 0x7;
+    out[i * 8 + 5] = ((in[i * 3 + 1] >> 7) | (in[i * 3 + 2] << 1)) & 0x7;
+  } else if (n_remainder == 7) {
+    out[i * 8] = in[i * 3] & 0x7;
+    out[i * 8 + 1] = (in[i * 3] >> 3) & 0x7;
+    out[i * 8 + 2] = ((in[i * 3] >> 6) | (in[i * 3 + 1] << 2)) & 0x7;
+    out[i * 8 + 3] = (in[i * 3 + 1] >> 1) & 0x7;
+    out[i * 8 + 4] = (in[i * 3 + 1] >> 4) & 0x7;
+    out[i * 8 + 5] = ((in[i * 3 + 1] >> 7) | (in[i * 3 + 2] << 1)) & 0x7;
+    out[i * 8 + 6] = (in[i * 3 + 2] >> 2) & 0x7;
   }
-  else if(n_remainder == 2)
-  {
-    out[i*8]   = in[i*3] & 0x7;
-    out[i*8+1]  = (in[i*3] >> 3) & 0x7;
-  }
-  else if(n_remainder == 3)
-  {
-    out[i*8]   = in[i*3] & 0x7;
-    out[i*8+1]  = (in[i*3] >> 3) & 0x7;
-    out[i*8+2]  = ((in[i*3] >> 6) | (in[i*3+1] << 2)) & 0x7;
-  }
-  else if(n_remainder == 4)
-  {
-    out[i*8]   = in[i*3] & 0x7;
-    out[i*8+1]  = (in[i*3] >> 3) & 0x7;
-    out[i*8+2]  = ((in[i*3] >> 6) | (in[i*3+1] << 2)) & 0x7;
-    out[i*8+3]  = (in[i*3+1] >> 1) & 0x7;
-  }
-  else if(n_remainder == 5)
-  {
-    out[i*8]   = in[i*3] & 0x7;
-    out[i*8+1]  = (in[i*3] >> 3) & 0x7;
-    out[i*8+2]  = ((in[i*3] >> 6) | (in[i*3+1] << 2)) & 0x7;
-    out[i*8+3]  = (in[i*3+1] >> 1) & 0x7;
-    out[i*8+4]  = (in[i*3+1] >> 4) & 0x7;
-  }
-  else if(n_remainder == 6)
-  {
-    out[i*8]   = in[i*3] & 0x7;
-    out[i*8+1]  = (in[i*3] >> 3) & 0x7;
-    out[i*8+2]  = ((in[i*3] >> 6) | (in[i*3+1] << 2)) & 0x7;
-    out[i*8+3]  = (in[i*3+1] >> 1) & 0x7;
-    out[i*8+4]  = (in[i*3+1] >> 4) & 0x7;
-    out[i*8+5]  = ((in[i*3+1] >> 7) | (in[i*3+2] << 1)) & 0x7;
-  }
-  else if(n_remainder == 7)
-  {
-    out[i*8]   = in[i*3] & 0x7;
-    out[i*8+1]  = (in[i*3] >> 3) & 0x7;
-    out[i*8+2]  = ((in[i*3] >> 6) | (in[i*3+1] << 2)) & 0x7;
-    out[i*8+3]  = (in[i*3+1] >> 1) & 0x7;
-    out[i*8+4]  = (in[i*3+1] >> 4) & 0x7;
-    out[i*8+5]  = ((in[i*3+1] >> 7) | (in[i*3+2] << 1)) & 0x7;
-    out[i*8+6]  = (in[i*3+2] >> 2) & 0x7;
-  }
-  if (n_remainder > 0)
-  {
-    is_packed_padd_ok = ((in[inlen - 1] & (0xFF << (n_remainder * 3) & 0x7)) == 0);
+  if (n_remainder > 0) {
+    is_packed_padd_ok =
+        ((in[inlen - 1] & (0xFF << (n_remainder * 3) & 0x7)) == 0);
   }
 
   return is_packed_padd_ok;
@@ -422,82 +358,65 @@ uint8_t generic_unpack_3_bit(uint8_t *out, const uint8_t *in,
  * size_t outlen      :    Length of out
  * size_t in          :    Length of in
  *
- * This function handles the packing of an vector of uint8_t elements with 7 bit of information
- * of arbitrary length
+ * This function handles the packing of an vector of uint8_t elements with 7 bit
+ * of information of arbitrary length
  */
-static inline
-uint8_t generic_unpack_7_bit(uint8_t *out, const uint8_t *in,
-                        const size_t outlen, const size_t inlen)
-{
+static inline uint8_t generic_unpack_7_bit(uint8_t *out, const uint8_t *in,
+                                           const size_t outlen,
+                                           const size_t inlen) {
   uint8_t is_packed_padd_ok = 1;
   size_t i;
-  for(i = 0; i < outlen; i++)
-  {
+  for (i = 0; i < outlen; i++) {
     out[i] = 0;
   }
-  for(i = 0; i < outlen/8; i++)
-  {
-    out[i*8]   = in[i*7] & 0x7F;
-    out[i*8+1]  = (in[i*7] >> 7) | ((in[i*7+1] << 1) & 0x7F);
-    out[i*8+2]  = (in[i*7+1] >> 6) | ((in[i*7+2] << 2) & 0x7F);
-    out[i*8+3]  = (in[i*7+2] >> 5) | ((in[i*7+3] << 3) & 0x7F);
-    out[i*8+4]  = (in[i*7+3] >> 4) | ((in[i*7+4] << 4) & 0x7F);
-    out[i*8+5]  = (in[i*7+4] >> 3) | ((in[i*7+5] << 5) & 0x7F);
-    out[i*8+6]  = (in[i*7+5] >> 2) | ((in[i*7+6] << 6) & 0x7F);
-    out[i*8+7]  = in[i*7+6] >> 1;
+  for (i = 0; i < outlen / 8; i++) {
+    out[i * 8] = in[i * 7] & 0x7F;
+    out[i * 8 + 1] = (in[i * 7] >> 7) | ((in[i * 7 + 1] << 1) & 0x7F);
+    out[i * 8 + 2] = (in[i * 7 + 1] >> 6) | ((in[i * 7 + 2] << 2) & 0x7F);
+    out[i * 8 + 3] = (in[i * 7 + 2] >> 5) | ((in[i * 7 + 3] << 3) & 0x7F);
+    out[i * 8 + 4] = (in[i * 7 + 3] >> 4) | ((in[i * 7 + 4] << 4) & 0x7F);
+    out[i * 8 + 5] = (in[i * 7 + 4] >> 3) | ((in[i * 7 + 5] << 5) & 0x7F);
+    out[i * 8 + 6] = (in[i * 7 + 5] >> 2) | ((in[i * 7 + 6] << 6) & 0x7F);
+    out[i * 8 + 7] = in[i * 7 + 6] >> 1;
   }
   const uint8_t n_remainder = outlen & 0x7;
-  if(n_remainder == 1)
-  {
-    out[i*8]   = in[i*7] & 0x7F;
+  if (n_remainder == 1) {
+    out[i * 8] = in[i * 7] & 0x7F;
+  } else if (n_remainder == 2) {
+    out[i * 8] = in[i * 7] & 0x7F;
+    out[i * 8 + 1] = (in[i * 7] >> 7) | ((in[i * 7 + 1] << 1) & 0x7F);
+  } else if (n_remainder == 3) {
+    out[i * 8] = in[i * 7] & 0x7F;
+    out[i * 8 + 1] = (in[i * 7] >> 7) | ((in[i * 7 + 1] << 1) & 0x7F);
+    out[i * 8 + 2] = (in[i * 7 + 1] >> 6) | ((in[i * 7 + 2] << 2) & 0x7F);
+  } else if (n_remainder == 4) {
+    out[i * 8] = in[i * 7] & 0x7F;
+    out[i * 8 + 1] = (in[i * 7] >> 7) | ((in[i * 7 + 1] << 1) & 0x7F);
+    out[i * 8 + 2] = (in[i * 7 + 1] >> 6) | ((in[i * 7 + 2] << 2) & 0x7F);
+    out[i * 8 + 3] = (in[i * 7 + 2] >> 5) | ((in[i * 7 + 3] << 3) & 0x7F);
+  } else if (n_remainder == 5) {
+    out[i * 8] = in[i * 7] & 0x7F;
+    out[i * 8 + 1] = (in[i * 7] >> 7) | ((in[i * 7 + 1] << 1) & 0x7F);
+    out[i * 8 + 2] = (in[i * 7 + 1] >> 6) | ((in[i * 7 + 2] << 2) & 0x7F);
+    out[i * 8 + 3] = (in[i * 7 + 2] >> 5) | ((in[i * 7 + 3] << 3) & 0x7F);
+    out[i * 8 + 4] = (in[i * 7 + 3] >> 4) | ((in[i * 7 + 4] << 4) & 0x7F);
+  } else if (n_remainder == 6) {
+    out[i * 8] = in[i * 7] & 0x7F;
+    out[i * 8 + 1] = (in[i * 7] >> 7) | ((in[i * 7 + 1] << 1) & 0x7F);
+    out[i * 8 + 2] = (in[i * 7 + 1] >> 6) | ((in[i * 7 + 2] << 2) & 0x7F);
+    out[i * 8 + 3] = (in[i * 7 + 2] >> 5) | ((in[i * 7 + 3] << 3) & 0x7F);
+    out[i * 8 + 4] = (in[i * 7 + 3] >> 4) | ((in[i * 7 + 4] << 4) & 0x7F);
+    out[i * 8 + 5] = (in[i * 7 + 4] >> 3) | ((in[i * 7 + 5] << 5) & 0x7F);
+  } else if (n_remainder == 7) {
+    out[i * 8] = in[i * 7] & 0x7F;
+    out[i * 8 + 1] = (in[i * 7] >> 7) | ((in[i * 7 + 1] << 1) & 0x7F);
+    out[i * 8 + 2] = (in[i * 7 + 1] >> 6) | ((in[i * 7 + 2] << 2) & 0x7F);
+    out[i * 8 + 3] = (in[i * 7 + 2] >> 5) | ((in[i * 7 + 3] << 3) & 0x7F);
+    out[i * 8 + 4] = (in[i * 7 + 3] >> 4) | ((in[i * 7 + 4] << 4) & 0x7F);
+    out[i * 8 + 5] = (in[i * 7 + 4] >> 3) | ((in[i * 7 + 5] << 5) & 0x7F);
+    out[i * 8 + 6] = (in[i * 7 + 5] >> 2) | ((in[i * 7 + 6] << 6) & 0x7F);
   }
-  else if(n_remainder == 2)
-  {
-    out[i*8]   = in[i*7] & 0x7F;
-    out[i*8+1]  = (in[i*7] >> 7) | ((in[i*7+1] << 1) & 0x7F);
-  }
-  else if(n_remainder == 3)
-  {
-    out[i*8]   = in[i*7] & 0x7F;
-    out[i*8+1]  = (in[i*7] >> 7) | ((in[i*7+1] << 1) & 0x7F);
-    out[i*8+2]  = (in[i*7+1] >> 6) | ((in[i*7+2] << 2) & 0x7F);
-  }
-  else if(n_remainder == 4)
-  {
-    out[i*8]   = in[i*7] & 0x7F;
-    out[i*8+1]  = (in[i*7] >> 7) | ((in[i*7+1] << 1) & 0x7F);
-    out[i*8+2]  = (in[i*7+1] >> 6) | ((in[i*7+2] << 2) & 0x7F);
-    out[i*8+3]  = (in[i*7+2] >> 5) | ((in[i*7+3] << 3) & 0x7F);
-  }
-  else if(n_remainder == 5)
-  {
-    out[i*8]   = in[i*7] & 0x7F;
-    out[i*8+1]  = (in[i*7] >> 7) | ((in[i*7+1] << 1) & 0x7F);
-    out[i*8+2]  = (in[i*7+1] >> 6) | ((in[i*7+2] << 2) & 0x7F);
-    out[i*8+3]  = (in[i*7+2] >> 5) | ((in[i*7+3] << 3) & 0x7F);
-    out[i*8+4]  = (in[i*7+3] >> 4) | ((in[i*7+4] << 4) & 0x7F);
-  }
-  else if(n_remainder == 6)
-  {
-    out[i*8]   = in[i*7] & 0x7F;
-    out[i*8+1]  = (in[i*7] >> 7) | ((in[i*7+1] << 1) & 0x7F);
-    out[i*8+2]  = (in[i*7+1] >> 6) | ((in[i*7+2] << 2) & 0x7F);
-    out[i*8+3]  = (in[i*7+2] >> 5) | ((in[i*7+3] << 3) & 0x7F);
-    out[i*8+4]  = (in[i*7+3] >> 4) | ((in[i*7+4] << 4) & 0x7F);
-    out[i*8+5]  = (in[i*7+4] >> 3) | ((in[i*7+5] << 5) & 0x7F);
-  }
-  else if(n_remainder == 7)
-  {
-    out[i*8]   = in[i*7] & 0x7F;
-    out[i*8+1]  = (in[i*7] >> 7) | ((in[i*7+1] << 1) & 0x7F);
-    out[i*8+2]  = (in[i*7+1] >> 6) | ((in[i*7+2] << 2) & 0x7F);
-    out[i*8+3]  = (in[i*7+2] >> 5) | ((in[i*7+3] << 3) & 0x7F);
-    out[i*8+4]  = (in[i*7+3] >> 4) | ((in[i*7+4] << 4) & 0x7F);
-    out[i*8+5]  = (in[i*7+4] >> 3) | ((in[i*7+5] << 5) & 0x7F);
-    out[i*8+6]  = (in[i*7+5] >> 2) | ((in[i*7+6] << 6) & 0x7F);
-  }
-  if (n_remainder > 0)
-  {
+  if (n_remainder > 0) {
     is_packed_padd_ok = ((in[inlen - 1] & (0xFF << (8 - n_remainder))) == 0);
   }
 
@@ -512,82 +431,65 @@ uint8_t generic_unpack_7_bit(uint8_t *out, const uint8_t *in,
  * size_t outlen      :    Length of out
  * size_t in          :    Length of in
  *
- * This function handles the packing of an vector of uint8_t elements with 7 bit of information
- * of arbitrary length
+ * This function handles the packing of an vector of uint8_t elements with 7 bit
+ * of information of arbitrary length
  */
-static inline
-uint8_t generic_unpack_9_bit(uint16_t *out, const uint8_t *in,
-                        const size_t outlen, const size_t inlen)
-{
+static inline uint8_t generic_unpack_9_bit(uint16_t *out, const uint8_t *in,
+                                           const size_t outlen,
+                                           const size_t inlen) {
   uint8_t is_packed_padd_ok = 1;
   size_t i;
-  for(i = 0; i < outlen; i++)
-  {
+  for (i = 0; i < outlen; i++) {
     out[i] = 0;
   }
-  for(i = 0; i < inlen/9; i++)
-  {
-    out[i*8]   = (in[i*9] | (in[i*9+1] << 8)) & 0x1FF;
-    out[i*8+1]  = ((in[i*9+1] >> 1) | (in[i*9+2] << 7)) & 0x1FF;
-    out[i*8+2]  = ((in[i*9+2] >> 2) | (in[i*9+3] << 6)) & 0x1FF;
-    out[i*8+3]  = ((in[i*9+3] >> 3) | (in[i*9+4] << 5)) & 0x1FF;
-    out[i*8+4]  = ((in[i*9+4] >> 4) | (in[i*9+5] << 4)) & 0x1FF;
-    out[i*8+5]  = ((in[i*9+5] >> 5) | (in[i*9+6] << 3)) & 0x1FF;
-    out[i*8+6]  = ((in[i*9+6] >> 6) | (in[i*9+7] << 2)) & 0x1FF;
-    out[i*8+7]  = ((in[i*9+7] >> 7) | (in[i*9+8] << 1)) & 0x1FF;
+  for (i = 0; i < inlen / 9; i++) {
+    out[i * 8] = (in[i * 9] | (in[i * 9 + 1] << 8)) & 0x1FF;
+    out[i * 8 + 1] = ((in[i * 9 + 1] >> 1) | (in[i * 9 + 2] << 7)) & 0x1FF;
+    out[i * 8 + 2] = ((in[i * 9 + 2] >> 2) | (in[i * 9 + 3] << 6)) & 0x1FF;
+    out[i * 8 + 3] = ((in[i * 9 + 3] >> 3) | (in[i * 9 + 4] << 5)) & 0x1FF;
+    out[i * 8 + 4] = ((in[i * 9 + 4] >> 4) | (in[i * 9 + 5] << 4)) & 0x1FF;
+    out[i * 8 + 5] = ((in[i * 9 + 5] >> 5) | (in[i * 9 + 6] << 3)) & 0x1FF;
+    out[i * 8 + 6] = ((in[i * 9 + 6] >> 6) | (in[i * 9 + 7] << 2)) & 0x1FF;
+    out[i * 8 + 7] = ((in[i * 9 + 7] >> 7) | (in[i * 9 + 8] << 1)) & 0x1FF;
   }
   const uint8_t n_remainder = outlen & 0x7;
-  if(n_remainder == 1)
-  {
-    out[i*8]   = (in[i*9] | (in[i*9+1] << 8)) & 0x1FF;
+  if (n_remainder == 1) {
+    out[i * 8] = (in[i * 9] | (in[i * 9 + 1] << 8)) & 0x1FF;
+  } else if (n_remainder == 2) {
+    out[i * 8] = (in[i * 9] | (in[i * 9 + 1] << 8)) & 0x1FF;
+    out[i * 8 + 1] = ((in[i * 9 + 1] >> 1) | (in[i * 9 + 2] << 7)) & 0x1FF;
+  } else if (n_remainder == 3) {
+    out[i * 8] = (in[i * 9] | (in[i * 9 + 1] << 8)) & 0x1FF;
+    out[i * 8 + 1] = ((in[i * 9 + 1] >> 1) | (in[i * 9 + 2] << 7)) & 0x1FF;
+    out[i * 8 + 2] = ((in[i * 9 + 2] >> 2) | (in[i * 9 + 3] << 6)) & 0x1FF;
+  } else if (n_remainder == 4) {
+    out[i * 8] = (in[i * 9] | (in[i * 9 + 1] << 8)) & 0x1FF;
+    out[i * 8 + 1] = ((in[i * 9 + 1] >> 1) | (in[i * 9 + 2] << 7)) & 0x1FF;
+    out[i * 8 + 2] = ((in[i * 9 + 2] >> 2) | (in[i * 9 + 3] << 6)) & 0x1FF;
+    out[i * 8 + 3] = ((in[i * 9 + 3] >> 3) | (in[i * 9 + 4] << 5)) & 0x1FF;
+  } else if (n_remainder == 5) {
+    out[i * 8] = (in[i * 9] | (in[i * 9 + 1] << 8)) & 0x1FF;
+    out[i * 8 + 1] = ((in[i * 9 + 1] >> 1) | (in[i * 9 + 2] << 7)) & 0x1FF;
+    out[i * 8 + 2] = ((in[i * 9 + 2] >> 2) | (in[i * 9 + 3] << 6)) & 0x1FF;
+    out[i * 8 + 3] = ((in[i * 9 + 3] >> 3) | (in[i * 9 + 4] << 5)) & 0x1FF;
+    out[i * 8 + 4] = ((in[i * 9 + 4] >> 4) | (in[i * 9 + 5] << 4)) & 0x1FF;
+  } else if (n_remainder == 6) {
+    out[i * 8] = (in[i * 9] | (in[i * 9 + 1] << 8)) & 0x1FF;
+    out[i * 8 + 1] = ((in[i * 9 + 1] >> 1) | (in[i * 9 + 2] << 7)) & 0x1FF;
+    out[i * 8 + 2] = ((in[i * 9 + 2] >> 2) | (in[i * 9 + 3] << 6)) & 0x1FF;
+    out[i * 8 + 3] = ((in[i * 9 + 3] >> 3) | (in[i * 9 + 4] << 5)) & 0x1FF;
+    out[i * 8 + 4] = ((in[i * 9 + 4] >> 4) | (in[i * 9 + 5] << 4)) & 0x1FF;
+    out[i * 8 + 5] = ((in[i * 9 + 5] >> 5) | (in[i * 9 + 6] << 3)) & 0x1FF;
+  } else if (n_remainder == 7) {
+    out[i * 8] = (in[i * 9] | (in[i * 9 + 1] << 8)) & 0x1FF;
+    out[i * 8 + 1] = ((in[i * 9 + 1] >> 1) | (in[i * 9 + 2] << 7)) & 0x1FF;
+    out[i * 8 + 2] = ((in[i * 9 + 2] >> 2) | (in[i * 9 + 3] << 6)) & 0x1FF;
+    out[i * 8 + 3] = ((in[i * 9 + 3] >> 3) | (in[i * 9 + 4] << 5)) & 0x1FF;
+    out[i * 8 + 4] = ((in[i * 9 + 4] >> 4) | (in[i * 9 + 5] << 4)) & 0x1FF;
+    out[i * 8 + 5] = ((in[i * 9 + 5] >> 5) | (in[i * 9 + 6] << 3)) & 0x1FF;
+    out[i * 8 + 6] = ((in[i * 9 + 6] >> 6) | (in[i * 9 + 7] << 2)) & 0x1FF;
   }
-  else if(n_remainder == 2)
-  {
-    out[i*8]   = (in[i*9] | (in[i*9+1] << 8)) & 0x1FF;
-    out[i*8+1]  = ((in[i*9+1] >> 1) | (in[i*9+2] << 7)) & 0x1FF;
-  }
-  else if(n_remainder == 3)
-  {
-    out[i*8]   = (in[i*9] | (in[i*9+1] << 8)) & 0x1FF;
-    out[i*8+1]  = ((in[i*9+1] >> 1) | (in[i*9+2] << 7)) & 0x1FF;
-    out[i*8+2]  = ((in[i*9+2] >> 2) | (in[i*9+3] << 6)) & 0x1FF;
-  }
-  else if(n_remainder == 4)
-  {
-    out[i*8]   = (in[i*9] | (in[i*9+1] << 8)) & 0x1FF;
-    out[i*8+1]  = ((in[i*9+1] >> 1) | (in[i*9+2] << 7)) & 0x1FF;
-    out[i*8+2]  = ((in[i*9+2] >> 2) | (in[i*9+3] << 6)) & 0x1FF;
-    out[i*8+3]  = ((in[i*9+3] >> 3) | (in[i*9+4] << 5)) & 0x1FF;
-  }
-  else if(n_remainder == 5)
-  {
-    out[i*8]   = (in[i*9] | (in[i*9+1] << 8)) & 0x1FF;
-    out[i*8+1]  = ((in[i*9+1] >> 1) | (in[i*9+2] << 7)) & 0x1FF;
-    out[i*8+2]  = ((in[i*9+2] >> 2) | (in[i*9+3] << 6)) & 0x1FF;
-    out[i*8+3]  = ((in[i*9+3] >> 3) | (in[i*9+4] << 5)) & 0x1FF;
-    out[i*8+4]  = ((in[i*9+4] >> 4) | (in[i*9+5] << 4)) & 0x1FF;
-  }
-  else if(n_remainder == 6)
-  {
-    out[i*8]   = (in[i*9] | (in[i*9+1] << 8)) & 0x1FF;
-    out[i*8+1]  = ((in[i*9+1] >> 1) | (in[i*9+2] << 7)) & 0x1FF;
-    out[i*8+2]  = ((in[i*9+2] >> 2) | (in[i*9+3] << 6)) & 0x1FF;
-    out[i*8+3]  = ((in[i*9+3] >> 3) | (in[i*9+4] << 5)) & 0x1FF;
-    out[i*8+4]  = ((in[i*9+4] >> 4) | (in[i*9+5] << 4)) & 0x1FF;
-    out[i*8+5]  = ((in[i*9+5] >> 5) | (in[i*9+6] << 3)) & 0x1FF;
-  }
-  else if(n_remainder == 7)
-  {
-    out[i*8]   = (in[i*9] | (in[i*9+1] << 8)) & 0x1FF;
-    out[i*8+1]  = ((in[i*9+1] >> 1) | (in[i*9+2] << 7)) & 0x1FF;
-    out[i*8+2]  = ((in[i*9+2] >> 2) | (in[i*9+3] << 6)) & 0x1FF;
-    out[i*8+3]  = ((in[i*9+3] >> 3) | (in[i*9+4] << 5)) & 0x1FF;
-    out[i*8+4]  = ((in[i*9+4] >> 4) | (in[i*9+5] << 4)) & 0x1FF;
-    out[i*8+5]  = ((in[i*9+5] >> 5) | (in[i*9+6] << 3)) & 0x1FF;
-    out[i*8+6]  = ((in[i*9+6] >> 6) | (in[i*9+7] << 2)) & 0x1FF;
-  }
-  if (n_remainder > 0)
-  {
+  if (n_remainder > 0) {
     is_packed_padd_ok = ((in[inlen - 1] & (0xFF << n_remainder)) == 0);
   }
 
@@ -604,10 +506,8 @@ uint8_t generic_unpack_9_bit(uint16_t *out, const uint8_t *in,
  *
  * This function unpacks an vector of el. in FP of arbit. length
  */
-static inline
-uint8_t generic_unpack_fp(FP_ELEM *out, const uint8_t *in,
-                size_t outlen, size_t inlen)
-{
+static inline uint8_t generic_unpack_fp(FP_ELEM *out, const uint8_t *in,
+                                        size_t outlen, size_t inlen) {
   uint8_t is_packed_padd_ok = 1;
 #if P == 127
   is_packed_padd_ok = generic_unpack_7_bit(out, in, outlen, inlen);
@@ -616,7 +516,7 @@ uint8_t generic_unpack_fp(FP_ELEM *out, const uint8_t *in,
   is_packed_padd_ok = generic_unpack_9_bit(out, in, outlen, inlen);
 
 #else
-  #error not implemented
+#error not implemented
 
 #endif
   return is_packed_padd_ok;
@@ -632,10 +532,8 @@ uint8_t generic_unpack_fp(FP_ELEM *out, const uint8_t *in,
  *
  * This function unpacks an vector of el. in FZ of arbit. length
  */
-static inline
-uint8_t generic_unpack_fz(FZ_ELEM *out, const uint8_t *in,
-                size_t outlen, size_t inlen)
-{
+static inline uint8_t generic_unpack_fz(FZ_ELEM *out, const uint8_t *in,
+                                        size_t outlen, size_t inlen) {
   uint8_t is_packed_padd_ok = 1;
 #if Z == 127
   is_packed_padd_ok = generic_unpack_7_bit(out, in, outlen, inlen);
@@ -644,7 +542,7 @@ uint8_t generic_unpack_fz(FZ_ELEM *out, const uint8_t *in,
   is_packed_padd_ok = generic_unpack_3_bit(out, in, outlen, inlen);
 
 #else
-  #error not implemented
+#error not implemented
 #endif
   return is_packed_padd_ok;
 }
@@ -657,9 +555,7 @@ uint8_t generic_unpack_fz(FZ_ELEM *out, const uint8_t *in,
  *
  * This function handles the packing of FP
  */
-void pack_fp_vec(uint8_t out[DENSELY_PACKED_FP_VEC_SIZE],
-             const FP_ELEM in[N])
-{
+void pack_fp_vec(uint8_t out[DENSELY_PACKED_FP_VEC_SIZE], const FP_ELEM in[N]) {
   generic_pack_fp(out, in, DENSELY_PACKED_FP_VEC_SIZE, N);
 }
 
@@ -672,9 +568,8 @@ void pack_fp_vec(uint8_t out[DENSELY_PACKED_FP_VEC_SIZE],
  * This function handles the packing of FP
  */
 void pack_fp_syn(uint8_t out[DENSELY_PACKED_FP_SYN_SIZE],
-             const FP_ELEM in[N-K])
-{
-  generic_pack_fp(out, in, DENSELY_PACKED_FP_SYN_SIZE, N-K);
+                 const FP_ELEM in[N - K]) {
+  generic_pack_fp(out, in, DENSELY_PACKED_FP_SYN_SIZE, N - K);
 }
 
 /*
@@ -685,9 +580,7 @@ void pack_fp_syn(uint8_t out[DENSELY_PACKED_FP_SYN_SIZE],
  *
  * This function handles the packing of FP
  */
-void pack_fz_vec(uint8_t out[DENSELY_PACKED_FZ_VEC_SIZE],
-             const FZ_ELEM in[N])
-{
+void pack_fz_vec(uint8_t out[DENSELY_PACKED_FZ_VEC_SIZE], const FZ_ELEM in[N]) {
   generic_pack_fz(out, in, DENSELY_PACKED_FZ_VEC_SIZE, N);
 }
 
@@ -695,15 +588,15 @@ void pack_fz_vec(uint8_t out[DENSELY_PACKED_FZ_VEC_SIZE],
  * pack_fz_rsdp_g_vec()
  *
  * uint8_t out[DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE]    :    FZ packed in bytes
- * const FZ_ELEM in[M]                               :    FZ Vec input, to be packed
+ * const FZ_ELEM in[M]                               :    FZ Vec input, to be
+ * packed
  *
  * This function handles the packing of the add. rdsp(g) vector in FZ
  */
 #ifdef RSDPG
 void pack_fz_rsdp_g_vec(uint8_t out[DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE],
-             const FZ_ELEM in[M])
-{
-  generic_pack_fz(out, in, DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE, M);
+                        const FZ_ELEM in[RSDPG_M]) {
+  generic_pack_fz(out, in, DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE, RSDPG_M);
 }
 #endif
 
@@ -716,8 +609,7 @@ void pack_fz_rsdp_g_vec(uint8_t out[DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE],
  * This function handles the unpacking of FP
  */
 uint8_t unpack_fp_vec(FP_ELEM out[N],
-             const uint8_t in[DENSELY_PACKED_FP_VEC_SIZE])
-{
+                      const uint8_t in[DENSELY_PACKED_FP_VEC_SIZE]) {
   return generic_unpack_fp(out, in, N, DENSELY_PACKED_FP_VEC_SIZE);
 }
 
@@ -729,10 +621,9 @@ uint8_t unpack_fp_vec(FP_ELEM out[N],
  *
  * This function handles the unpacking of FP
  */
-uint8_t unpack_fp_syn(FP_ELEM out[N-K],
-             const uint8_t in[DENSELY_PACKED_FP_SYN_SIZE])
-{
-  return generic_unpack_fp(out, in, N-K, DENSELY_PACKED_FP_SYN_SIZE);
+uint8_t unpack_fp_syn(FP_ELEM out[N - K],
+                      const uint8_t in[DENSELY_PACKED_FP_SYN_SIZE]) {
+  return generic_unpack_fp(out, in, N - K, DENSELY_PACKED_FP_SYN_SIZE);
 }
 
 /*
@@ -744,8 +635,7 @@ uint8_t unpack_fp_syn(FP_ELEM out[N-K],
  * This function handles the unpacking of FP
  */
 uint8_t unpack_fz_vec(FZ_ELEM out[N],
-             const uint8_t in[DENSELY_PACKED_FZ_VEC_SIZE])
-{
+                      const uint8_t in[DENSELY_PACKED_FZ_VEC_SIZE]) {
   return generic_unpack_fz(out, in, N, DENSELY_PACKED_FZ_VEC_SIZE);
 }
 
@@ -758,9 +648,9 @@ uint8_t unpack_fz_vec(FZ_ELEM out[N],
  * This function handles the unpacking of FP
  */
 #ifdef RSDPG
-uint8_t unpack_fz_rsdp_g_vec(FZ_ELEM out[M],
-             const uint8_t in[DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE])
-{
-  return generic_unpack_fz(out, in, M, DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE);
+uint8_t
+unpack_fz_rsdp_g_vec(FZ_ELEM out[RSDPG_M],
+                     const uint8_t in[DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE]) {
+  return generic_unpack_fz(out, in, RSDPG_M, DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE);
 }
 #endif

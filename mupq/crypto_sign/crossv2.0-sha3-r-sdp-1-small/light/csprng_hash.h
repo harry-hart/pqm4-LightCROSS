@@ -209,7 +209,9 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
    * discarded shifting them out to the right , shifting fresh ones
    * in from the left end */
   csprng_randombytes(CSPRNG_buffer, sizeof(CSPRNG_buffer), csprng_state);
+#if !defined(OPT_DSP)
   int placed = 0;
+#endif
   // Our "window" into the random buffer, 8 bytes at a time
   uint64_t sub_buffer = 0;
   for (int i = 0; i < 8; i++) {
@@ -372,7 +374,7 @@ static inline void csprng_fz_vec(FZ_ELEM res[N],
   }
 }
 #elif defined(RSDPG)
-static inline void csprng_fz_inf_w(FZ_ELEM res[M],
+static inline void csprng_fz_inf_w(FZ_ELEM res[RSDPG_M],
                                    CSPRNG_STATE_T *const csprng_state) {
   const FZ_ELEM mask = ((FZ_ELEM)1 << BITS_TO_REPRESENT(Z - 1)) - 1;
   uint8_t CSPRNG_buffer[ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8];
@@ -391,7 +393,7 @@ static inline void csprng_fz_inf_w(FZ_ELEM res[M],
   int bits_in_sub_buf = 64;
   int pos_in_buf = 8;
   int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
-  while (placed < M) {
+  while (placed < RSDPG_M) {
     if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
       /* get at most 4 bytes from buffer */
       int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
@@ -413,7 +415,7 @@ static inline void csprng_fz_inf_w(FZ_ELEM res[M],
   }
 }
 
-static inline void csprng_fz_mat(FZ_ELEM res[M][N - M],
+static inline void csprng_fz_mat(FZ_ELEM res[RSDPG_M][N - RSDPG_M],
                                  CSPRNG_STATE_T *const csprng_state) {
   const FZ_ELEM mask = ((FZ_ELEM)1 << BITS_TO_REPRESENT(Z - 1)) - 1;
   uint8_t CSPRNG_buffer[ROUND_UP(BITS_W_CT_RNG, 8) / 8];
@@ -433,7 +435,7 @@ static inline void csprng_fz_mat(FZ_ELEM res[M][N - M],
   int bits_in_sub_buf = 64;
   int pos_in_buf = 8;
   int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
-  while (placed < M * (N - M)) {
+  while (placed < RSDPG_M * (N - RSDPG_M)) {
     if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
       /* get at most 4 bytes from buffer */
       int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;

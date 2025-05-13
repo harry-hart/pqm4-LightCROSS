@@ -115,6 +115,7 @@ static inline void fp_dz_norm(FP_ELEM v[N]) {
  * V, is provided, transposed, hence linearized by columns so that syndrome
  * computation is vectorizable. */
 
+#if !defined(OPT_KEYGEN)
 #if defined(OPT_DSP)
 #if defined(RSDP)
 static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
@@ -145,6 +146,7 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
   }
 #endif
 }
+#endif
 
 #if defined(OPT_DSP)
 #if defined(RSDP)
@@ -153,7 +155,6 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
   memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
   // Reverse order for optimal access
   for (int j = 0; j < N - K; j++) {
-    // Can we improve this with accumulator?
     uint64_t col_accum = 0;
     int i = 0;
     for (; i < K; i += 4) {
@@ -179,6 +180,32 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
     res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
   }
 #elif defined(RSDPG)
+static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
+                                FP_ELEM V_tr[N - K][K]) {
+  memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
+  for (int j = 0; j < N - K; j++) {
+    uint64_t col_accum = 0;
+    int i = 0;
+    for (; i < K; i += 2) {
+      uint32_t e_val = *((uint32_t *)&e[i]);
+      uint32_t V_tr_val = *((uint32_t *)&V_tr[j][i]);
+      // res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
+      //                       (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]);
+      //  TODO: CHECK THE PRECISION, does the 64 bit accumulator mean we don't
+      //  need double precision.
+      //   What if there is overflow from 16 bit in the multiply, will it
+      //   overflow, saturate, or accumulate correctly?
+      //  Calculate
+      col_accum = __SMLALD(e_val, V_tr_val, col_accum);
+      col_accum = FPRED_DOUBLE(col_accum);
+    }
+    // finish remaining
+    for (; i < K; i++) {
+      col_accum += FPRED_DOUBLE((uint32_t)e[i] * (uint32_t)V_tr[j][i]);
+    }
+    // Store and reduce modulo P
+    res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
+  }
 #endif
 #else
 static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
