@@ -36,14 +36,14 @@
 #define CATEGORY_1
 #define SIG_SIZE
 #define SKIP_ASSERT
-#define LIGHTCROSS
 #define OPT_KEYGEN
 #define OPT_MERKLE
 #define OPT_HASH_CMT1
 #define OPT_HASH_Y
 #define OPT_E_BAR_PRIME
 #define OPT_OTF_MERKLE
-// #define OPT_GGM
+#define OPT_GGM
+// #define DEBUG
 #define OPT_DSP
 
 /******************************************************************************/

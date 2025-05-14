@@ -43,6 +43,11 @@
 #include "parameters.h"
 #include "seedtree.h"
 
+#if defined(DEBUG)
+#include "hal.h"
+#include "sendfn.h"
+#endif
+
 #if defined(RSDP)
 #if defined(OPT_DSP)
 // Column major ordering
@@ -406,13 +411,15 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
                    uint8_t *hash_storage, unsigned char *round_seeds,
                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
-                   FP_ELEM *u_prime) {
+                   FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
+                   FZ_ELEM *e_bar_prime) {
 #elif defined(RSDPG)
 int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
                    uint8_t *hash_storage, unsigned char *round_seeds,
                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
-                   FP_ELEM *u_prime, FZ_ELEM *v_G_bar) {
+                   FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
+                   uint8_t *cmt_1, FZ_ELEM *e_bar_prime) {
 #endif
   // NOTES:
   // - hash_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
@@ -432,6 +439,11 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   unsigned char csprng_input[csprng_input_len];
   CSPRNG_STATE_T tree_csprng_state;
   memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
+
+  // Helper constants
+  size_t FZN_vec = N * sizeof(FZ_ELEM);
+  size_t FZM_vec = RSDPG_M * sizeof(FZ_ELEM);
+  size_t FPN_vec = N * sizeof(FP_ELEM);
 
   // TODO: Bitmap optimisation
 #if defined(OPT_GGM_BIT_CHAL)
@@ -639,8 +651,6 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         uint8_t base_index = level_index - hidden_nodes;
         for (int k = child_partition_start; k < child_partition_end; k++) {
           assert(published_rsps < T - W);
-          size_t FZ_vec = N * sizeof(FZ_ELEM);
-          size_t FP_vec = N * sizeof(FP_ELEM);
           // The index of the
           uint8_t rsp_index = base_index + (k - child_partition_start);
 #if defined(OPT_HASH_Y)
@@ -648,32 +658,32 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           FP_ELEM y_k[N];
           // Calculate y
 #if defined(OPT_E_BAR_PRIME)
-          fz_vec_sub_n(e_bar_prime_k, e_bar, v_bar + k * FZ_vec);
+          fz_vec_sub_n(e_bar_prime_k, e_bar, &v_bar[k * N]);
           // Calculate l
           fp_vec_by_restr_vec_scaled(y_k, e_bar_prime_k, chall_1[k],
-                                     u_prime + k * FP_vec);
+                                     &u_prime[k * N]);
 #else
           // Calculate y
-              fp_vec_by_restr_vec_scaled(y_k, e_bar_prime + k * FZ_vec,
+          fp_vec_by_restr_vec_scaled(y_k, &e_bar_prime[k * N], chall_1[k],
+                                     &u_prime[k * N]);
 
 #endif
           fp_dz_norm(y_k);
           pack_fp_vec(sig->resp_0[rsp_index].y, y_k);
 #else
-          pack_fp_vec(sig->resp_0[rsp_index].y, y[k]);
+          pack_fp_vec(sig->resp_0[rsp_index].y, &y[k * N]);
 #endif
 
 #if defined(RSDP)
 #if defined(OPT_V_BAR)
-          fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime + k * FZ_vec);
+          fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime + k * FZN_vec);
           pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #else
-              pack_fz_vec(sig->resp_0[rsp_index].v_bar,
-                          v_bar + k * FZ_vec);
+          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar + k * FZN_vec);
 #endif
 #elif defined(RSDPG)
           pack_fz_rsdp_g_vec(sig->resp_0[rsp_index].v_G_bar,
-                             v_G_bar + k * FZ_vec);
+                             &v_G_bar[k * RSDPG_M]);
 #endif
 
 #if defined(OPT_HASH_CMT1)
@@ -698,7 +708,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       }
     }
   }
-  return published_nodes;
+  return published_rsps;
 }
 
 /*****************************************************************************/
@@ -736,13 +746,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
   // Limit scope for seed_tree
 #if defined(OPT_GGM)
-  {
+  //{
 #endif
-    uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
-    gen_seed_tree(seed_tree, root_seed, sig->salt);
-    seed_leaves(round_seeds, seed_tree);
+  uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
+  gen_seed_tree(seed_tree, root_seed, sig->salt);
+  seed_leaves(round_seeds, seed_tree);
 #if defined(OPT_GGM)
-  }
+  //}
 #endif
 #endif
 
@@ -1098,13 +1108,30 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(OPT_GGM)
+
+// Placeholders for compatability with different combinations of optimisations
+#if defined(OPT_HASH_Y)
+  FP_ELEM *y[1] = {0};
+#endif
+#if defined(OPT_HASH_CMT1)
+  uint8_t *cmt_1 = NULL;
+#endif
+#if defined(OPT_MERKLE) && !defined(OPT_OTF_MERKLE)
+  uint8_t *seed_storage = merkle_tree_0;
+#else
+  uint8_t *seed_storage = cmt_0[0];
+#endif
+#if defined(OPT_E_BAR_PRIME)
+  FZ_ELEM *e_bar_prime[1] = {0};
+#endif
+
 #if defined(RSDP)
-  build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime[0]);
+  build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
+                 v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0]);
 #elif defined(RSDPG)
-  int published_test =
-      build_response(sig, root_seed, chall_2, cmt_0[0], round_seeds, e_bar,
-                     v_bar[0], chall_1, u_prime[0], v_G_bar[0]);
+  int published_rsps = build_response(
+      sig, root_seed, chall_2, seed_storage, round_seeds, e_bar, v_bar[0],
+      chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1, e_bar_prime[0]);
 #endif
 #else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
