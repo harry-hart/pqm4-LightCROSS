@@ -344,65 +344,6 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
 /*****************************************************************************/
 
-/*
-#if defined(OPT_E_BAR_PRIME)
-void compute_response(resp_0_t *rsp_0, uint8_t *rsp_1, FZ_ELEM *e_bar,
-                      FZ_ELEM *v_bar_i, FP_ELEM *chall_1_i, FP_ELEM *u_prime_i,
-                      unsigned char *round_seeds_i, uint16_t *domain_sep_hash) {
-#else
-void compute_response(uint8_t *rsp, FZ_ELEM *e_bar, FZ_ELEM *e_bar_prime,
-                      FZ_ELEM *v_bar_i, FP_ELEM *chall_1_i, FP_ELEM *u_prime_i,
-                      unsigned char *round_seeds) {
-#endif
-  FZ_ELEM e_bar_prime_i[N] = {0};
-  uint8_t cmt_1_i_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
-
-#if defined(OPT_HASH_Y)
-  // Have to recalculate y
-  FP_ELEM y_i[N];
-  // Calculate y
-#if defined(OPT_E_BAR_PRIME)
-  fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar_i);
-  // Calculate y
-  fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, *chall_1_i, u_prime_i);
-#else
-  // Calculate y
-  fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1_i, u_prime_i);
-#endif
-  fp_dz_norm(y_i);
-  pack_fp_vec(rsp_0->y, y_i);
-#else
-  pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
-#endif
-
-#if defined(RSDP)
-#if defined(OPT_V_BAR)
-  fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
-  pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
-#else
-  pack_fz_vec(rsp_0->v_bar, v_bar_i);
-#endif
-#elif defined(RSDPG)
-  pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
-#endif
-
-#if defined(OPT_HASH_CMT1)
-  // Calculate the cmt_1_i hash value again to avoid storing it
-  // First make the input (Seed[i] | Salt | i + c)
-  // N.B. i + c should already be at the end because of init
-  memcpy(cmt_1_i_input, round_seeds_i, SEED_LENGTH_BYTES);
-  // Temp storage for our cmt_1_i hash
-  uint8_t cmt_1_i[HASH_DIGEST_LENGTH] = {0};
-  // Our cmt_1_i hash
-  hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
-  memcpy(rsp_1, &cmt_1_i, HASH_DIGEST_LENGTH);
-#else
-  memcpy(sig->resp_1[published_rsps], &cmt_1[i * HASH_DIGEST_LENGTH],
-         HASH_DIGEST_LENGTH);
-#endif
-}
-*/
-
 #define REVEAL_VALUE 1
 #define CHALLENGE_REVEAL_VALUE 1
 
@@ -670,7 +611,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #endif
 
 #if defined(RSDP)
-#if defined(OPT_V_BAR)
+#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
           fz_vec_sub_n(v_bar_k, e_bar, &e_bar_prime[k * N]);
           pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #else
@@ -755,12 +696,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   FZ_ELEM e_bar_prime_i[N] = {0};
 #else
   FZ_ELEM e_bar_prime[T][N];
-#endif
 #if defined(OPT_V_BAR)
   FZ_ELEM v_bar_i[N] = {0};
 #else
   FZ_ELEM v_bar[T][N];
 #endif
+#endif
+
   FP_ELEM u_prime[T][N];
   FP_ELEM s_prime[N - K];
 
@@ -899,7 +841,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
         FP_ELEM v[N];
-#if defined(OPT_V_BAR)
+#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
         convert_restr_vec_to_fp(v, v_bar_i);
         fz_dz_norm_n(v_bar_i);
 /* expand u_prime */
@@ -919,7 +861,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         pack_fp_syn(cmt_0_i_input, s_prime);
 
 #if defined(RSDP)
-#if defined(OPT_V_BAR)
+#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
         pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar_i);
 #else
         pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar[i]);
@@ -1157,7 +1099,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(RSDP)
-#if defined(OPT_V_BAR)
+#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
       fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
       pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
 #else
