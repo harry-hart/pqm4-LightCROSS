@@ -741,13 +741,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
   // Limit scope for seed_tree
 #if defined(OPT_GGM)
-  //{
+  {
 #endif
-  uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
-  gen_seed_tree(seed_tree, root_seed, sig->salt);
-  seed_leaves(round_seeds, seed_tree);
+    uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
+    gen_seed_tree(seed_tree, root_seed, sig->salt);
+    seed_leaves(round_seeds, seed_tree);
 #if defined(OPT_GGM)
-  //}
+  }
 #endif
 #endif
 
