@@ -440,11 +440,6 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   CSPRNG_STATE_T tree_csprng_state;
   memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
-  // Helper constants
-  size_t FZN_vec = N * sizeof(FZ_ELEM);
-  size_t FZM_vec = RSDPG_M * sizeof(FZ_ELEM);
-  size_t FPN_vec = N * sizeof(FP_ELEM);
-
   // TODO: Bitmap optimisation
 #if defined(OPT_GGM_BIT_CHAL)
   // First compute the challenge bitmap
@@ -676,10 +671,10 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
 #if defined(RSDP)
 #if defined(OPT_V_BAR)
-          fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime + k * FZN_vec);
+          fz_vec_sub_n(v_bar_k, e_bar, &e_bar_prime[k * N]);
           pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #else
-          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar + k * FZN_vec);
+          pack_fz_vec(sig->resp_0[rsp_index].v_bar, &v_bar[k * N]);
 #endif
 #elif defined(RSDPG)
           pack_fz_rsdp_g_vec(sig->resp_0[rsp_index].v_G_bar,
