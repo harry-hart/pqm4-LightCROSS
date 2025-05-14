@@ -32,11 +32,10 @@
 #pragma once
 #include <stdint.h>
 
-#define RSDP
-#define CATEGORY_1
-#define SIG_SIZE
+#include "variant.h"
+
+// Shared optimisations
 #define SKIP_ASSERT
-#define LIGHTCROSS
 #define OPT_KEYGEN
 #define OPT_MERKLE
 #define OPT_HASH_CMT1
@@ -169,7 +168,7 @@
 #define SEC_MARGIN_LAMBDA (128)
 #define N (55)
 #define K (36)
-#define M (25)
+#define RSDPG_M (25)
 
 #if defined(SPEED)
 #define T (147)
@@ -193,7 +192,7 @@
 #define SEC_MARGIN_LAMBDA (192)
 #define N (79)
 #define K (48)
-#define M (40)
+#define RSDPG_M (40)
 
 #if defined(SPEED)
 #define T (224)
@@ -217,7 +216,7 @@
 #define SEC_MARGIN_LAMBDA (256)
 #define N (106)
 #define K (69)
-#define M (48)
+#define RSDPG_M (48)
 
 #if defined(SPEED)
 #define T (300)
@@ -309,8 +308,8 @@
    ROUND_UP(((N % 8) * BITS_TO_REPRESENT(Z - 1)), 8) / 8)
 #ifdef RSDPG
 #define DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE                                      \
-  ((M / 8) * BITS_TO_REPRESENT(Z - 1) +                                        \
-   ROUND_UP(((M % 8) * BITS_TO_REPRESENT(Z - 1)), 8) / 8)
+  ((RSDPG_M / 8) * BITS_TO_REPRESENT(Z - 1) +                                  \
+   ROUND_UP(((RSDPG_M % 8) * BITS_TO_REPRESENT(Z - 1)), 8) / 8)
 #endif
 
 /* Derived parameters computed via compute_derived_parameters.py */

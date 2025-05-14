@@ -32,10 +32,7 @@
 #pragma once
 #include <stdint.h>
 
-#define RSDP
-#define CATEGORY_1
-#define SIG_SIZE
-#define SKIP_ASSERT
+#include "variant.h"
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/
