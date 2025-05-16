@@ -193,14 +193,8 @@ static inline void csprng_fp_vec_chall_1(FP_ELEM res[T],
  * Used for:
  * - Expanding the public key from seed
  */
-#if defined(OPT_DSP)
-// Column major for DSP
-static inline void csprng_fp_mat(FP_ELEM res[N - K][K],
-                                 CSPRNG_STATE_T *const csprng_state) {
-#else
 static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
                                  CSPRNG_STATE_T *const csprng_state) {
-#endif
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
   uint8_t CSPRNG_buffer[ROUND_UP(BITS_V_CT_RNG, 8) / 8];
   /* To facilitate hardware implementations, the uint64_t
@@ -209,9 +203,7 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
    * discarded shifting them out to the right , shifting fresh ones
    * in from the left end */
   csprng_randombytes(CSPRNG_buffer, sizeof(CSPRNG_buffer), csprng_state);
-#if !defined(OPT_DSP)
   int placed = 0;
-#endif
   // Our "window" into the random buffer, 8 bytes at a time
   uint64_t sub_buffer = 0;
   for (int i = 0; i < 8; i++) {
@@ -223,12 +215,7 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
   // Remaining bits of randomness left
   int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
 // Size of the matrix
-#if defined(OPT_DSP)
-  for (int r = 0; r < K; r++) {
-    for (int c = 0; c < N - K; c++) {
-#else
   while (placed < K * (N - K)) {
-#endif
       // If we have less than half left in window and
       // some remaining in random buffer
       if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
@@ -249,31 +236,17 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
         pos_remaining -= refresh_amount;
       }
       // Temporarily place value (may be overwritten)
-#if defined(OPT_DSP)
-      res[c][r] = sub_buffer & mask;
-#else
     *((FP_ELEM *)res + placed) = sub_buffer & mask;
-#endif
       // Check if the value is in the field
-#if defined(OPT_DSP)
-      if (res[c][r] >= P) {
-        // If it isn't, go back one
-        c -= 1;
-      }
-#else
     if (*((FP_ELEM *)res + placed) < P) {
       // If it is, keep it
       placed++;
     }
-#endif
       // Shift window to the right
       sub_buffer = sub_buffer >> BITS_FOR_P;
       // Keep track of how many bits left in window
       bits_in_sub_buf -= BITS_FOR_P;
     }
-#if defined(OPT_DSP)
-  }
-#endif
 }
 
 static inline void csprng_fp_mat_check(FP_ELEM res[K][N - K],

@@ -1,10 +1,5 @@
 # LightCROSS
 
-TODO:
-  - [ ] Fix GGM optimisation for SDPG
-  - [ ] Port DSP matrix mult optimisation for restricted version
-  - [ ] Re-run all benchmarks
-
 # pqm4
 Collection of post-quantum cryptographic alrogithms for the ARM Cortex-M4
 

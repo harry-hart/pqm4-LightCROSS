@@ -47,15 +47,6 @@
 #define OPT_MERKLE
 #define OPT_HASH_CMT1
 #define OPT_HASH_Y
-/*
- * New Optimisations
- */
-// Note this is overidden if OPT_E_BAR_PRIME is defined
-// #define OPT_V_BAR
-// #define OPT_E_BAR_PRIME
-// #define OPT_OTF_MERKLE
-// #define OPT_GGM
-// #define OPT_DSP
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/
