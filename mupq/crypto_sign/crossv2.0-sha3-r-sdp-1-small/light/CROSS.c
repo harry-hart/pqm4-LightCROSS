@@ -319,9 +319,6 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
 /*****************************************************************************/
 
-
-/*****************************************************************************/
-
 /* sign cannot fail */
 void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                 CROSS_sig_t *sig) {
@@ -349,10 +346,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   seed_leaves(round_seeds, root_seed, sig->salt);
 #else
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
-  // Limit scope for seed_tree
-    uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
-    gen_seed_tree(seed_tree, root_seed, sig->salt);
-    seed_leaves(round_seeds, seed_tree);
+  uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
+  gen_seed_tree(seed_tree, root_seed, sig->salt);
+  seed_leaves(round_seeds, seed_tree);
 #endif
 
   FZ_ELEM e_bar_prime[T][N];
@@ -413,24 +409,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   uint8_t dsc_ordered[2];
 #endif
 
-  //  // SHAKE Sponge Optimisation
-  //  // Define our spong block size
-  // #if defined(CATEGORY_1)
-  //  uint8_t r = SHAKE128_RATE;
-  //  uint8_t hash_sub[SHAKE128_RATE + HASH_DIGEST_LENGTH] = {0};
-  // #else
-  //  uint8_t r = SHAKE256_RATE;
-  //  uint8_t hash_sub[SHAKE256_RATE + HASH_DIGEST_LENGTH] = {0};
-  // #endif
-  //  // Our hash sub_buffer
-  //  size_t hash_sub_i = 0;
-  //
-  // #else
-  // #endif
-
   CSPRNG_STATE_T csprng_state;
 
-#if defined(OPT_MERKLE) && !defined(OPT_OTF_MERKLE)
+#if defined(OPT_MERKLE)
   // Contain scope of loop vars
   {
     // Double loop so that we can track merkle_tree_0
@@ -461,7 +442,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         /* expand e_bar_prime */
 
 #if defined(RSDP)
-    csprng_fz_vec(e_bar_prime[i], &csprng_state);
+        csprng_fz_vec(e_bar_prime[i], &csprng_state);
 #elif defined(RSDPG)
     csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
     fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
@@ -469,12 +450,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     fz_inf_w_by_fz_matrix(e_bar_prime[i], e_G_bar_prime, W_mat);
     fz_dz_norm_n(e_bar_prime[i]);
 #endif
-    fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime[i]);
+        fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime[i]);
 
         FP_ELEM v[N];
-    convert_restr_vec_to_fp(v, v_bar[i]);
-    fz_dz_norm_n(v_bar[i]);
-/* expand u_prime */
+        convert_restr_vec_to_fp(v, v_bar[i]);
+        fz_dz_norm_n(v_bar[i]);
+        /* expand u_prime */
         csprng_fp_vec(u_prime[i], &csprng_state);
 
         FP_ELEM u[N];
@@ -517,7 +498,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
          domain_sep_hash);
 #endif
 
-#if defined(OPT_MERKLE) && !defined(OPT_OTF_MERKLE)
+#if defined(OPT_MERKLE)
         // Because of double loop
         // Remove if single loop returns
         i++;
@@ -585,7 +566,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     FP_ELEM y_i[N];
     uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE];
 
-// Recalculate e_bar_prime from v_bar
     // Calculate y
     fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
     fp_dz_norm(y_i);
@@ -647,7 +627,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_HASH_Y)
       // Have to recalculate y
       FP_ELEM y_i[N];
-      // Calculate y
       // Calculate y
       fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
       fp_dz_norm(y_i);
