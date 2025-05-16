@@ -344,6 +344,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
 /*****************************************************************************/
 
+#if defined(OPT_GGM)
 #define REVEAL_VALUE 1
 #define CHALLENGE_REVEAL_VALUE 1
 
@@ -646,6 +647,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   }
   return published_rsps;
 }
+#endif
 
 /*****************************************************************************/
 

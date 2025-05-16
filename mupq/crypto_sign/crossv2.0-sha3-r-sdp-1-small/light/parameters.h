@@ -34,13 +34,22 @@
 
 #include "variant.h"
 
-// Shared optimisations
+/******************************************************************************/
+/**************************** Shared Optimisations ****************************/
+/******************************************************************************/
+//
 #define SKIP_ASSERT
+/*
+ * Original Optimisations
+ */
 #define OPT_KEYGEN
 // Note this is overidden if OPT_OTF_MERKLE is defined
 #define OPT_MERKLE
 #define OPT_HASH_CMT1
 #define OPT_HASH_Y
+/*
+ * New Optimisations
+ */
 // Note this is overidden if OPT_E_BAR_PRIME is defined
 // #define OPT_V_BAR
 // #define OPT_E_BAR_PRIME
