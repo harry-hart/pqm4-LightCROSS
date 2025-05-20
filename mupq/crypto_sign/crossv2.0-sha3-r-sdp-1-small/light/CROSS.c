@@ -696,6 +696,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM e_bar_prime_i[N] = {0};
+  FZ_ELEM v_bar[T][N];
 #else
   FZ_ELEM e_bar_prime[T][N];
 #if defined(OPT_V_BAR)

@@ -31,6 +31,7 @@ def parse_arguments():
     parser.add_argument("-u", "--uart", default="/dev/ttyACM0", help="Path to UART output")
     parser.add_argument("-i", "--iterations", type=int, default=1, help="Number of iterations for benchmarks")
     parser.add_argument("-t", "--timeout", type=int, default=1, help="Read timeout in seconds")
+    parser.add_argument("-s", "--scheme", default="", help="Scheme filter, only test schemes which match pattern")
     return parser.parse_known_args()
 
 
