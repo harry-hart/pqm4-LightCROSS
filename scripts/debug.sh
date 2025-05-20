@@ -8,7 +8,7 @@ if [[ $# -ne 1 ]]; then
 fi
 
 # Compile the hex file
-#make -j`nproc` PLATFORM=nucleo-l4r5zi DEBUG=1 $1
+make -j`nproc` PLATFORM=nucleo-l4r5zi DEBUG=1 $1
 #make -j`nproc` PLATFORM=nucleo-l4r5zi $1
 
 # Program the board

@@ -41,7 +41,11 @@
 #if defined(OPT_DSP)
 // #include "arm_math.h"
 #include "cmsis_gcc.h"
+#endif
+
+#if defined(OPT_DEBUG)
 #include "hal.h"
+#include "sendfn.h"
 #endif
 
 #define NUM_BITS_P (BITS_TO_REPRESENT(P))
@@ -158,7 +162,7 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
   for (int j = 0; j < N - K; j++) {
     uint64_t col_accum = 0;
     int i = 0;
-    for (; i < K; i += 4) {
+    for (; i < K - 3; i += 4) {
       uint32_t e_val = *((uint32_t *)&e[i]);
       uint32_t V_tr_val = *((uint32_t *)&V_tr[j][i]);
       // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
@@ -173,9 +177,10 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
       col_accum = FPRED_DOUBLE(col_accum);
     }
     // finish remaining
+    // send_unsigned("i = ", i);
     for (; i < K; i++) {
-      col_accum +=
-          FPRED_DOUBLE((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]);
+      col_accum = FPRED_DOUBLE(
+          col_accum + ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]));
     }
     // Store and reduce modulo P
     res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
@@ -187,7 +192,7 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
   for (int j = 0; j < N - K; j++) {
     uint64_t col_accum = 0;
     int i = 0;
-    for (; i < K; i += 2) {
+    for (; i < K - 3; i += 2) {
       uint32_t e_val = *((uint32_t *)&e[i]);
       uint32_t V_tr_val = *((uint32_t *)&V_tr[j][i]);
       // res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
@@ -202,7 +207,8 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
     }
     // finish remaining
     for (; i < K; i++) {
-      col_accum += FPRED_DOUBLE((uint32_t)e[i] * (uint32_t)V_tr[j][i]);
+      col_accum = FPRED_DOUBLE(
+          col_accum + ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]));
     }
     // Store and reduce modulo P
     res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
