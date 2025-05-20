@@ -372,8 +372,10 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   int published_rsps = 0;
   // Keep track of how many path nodes published
   int published_nodes = 0;
-  // Tracking for
-  FZ_ELEM e_bar_prime_k[N] = {0};
+#if defined(OPT_E_BAR_PRIME) || defined(OPT_V_BAR)
+  // For OPT_E_BAR_PRIME and OPT_V_BAR (reuse variable because mutex)
+  FZ_ELEM v_e_bar_prime_k[N] = {0};
+#endif
   uint8_t cmt_1_k_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_k_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
   // Node computation csprng vars
@@ -595,9 +597,9 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           FP_ELEM y_k[N];
           // Calculate y
 #if defined(OPT_E_BAR_PRIME)
-          fz_vec_sub_n(e_bar_prime_k, e_bar, &v_bar[k * N]);
+          fz_vec_sub_n(v_e_bar_prime_k, e_bar, &v_bar[k * N]);
           // Calculate l
-          fp_vec_by_restr_vec_scaled(y_k, e_bar_prime_k, chall_1[k],
+          fp_vec_by_restr_vec_scaled(y_k, v_e_bar_prime_k, chall_1[k],
                                      &u_prime[k * N]);
 #else
           // Calculate y
@@ -613,8 +615,9 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
 #if defined(RSDP)
 #if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
-          fz_vec_sub_n(v_bar_k, e_bar, &e_bar_prime[k * N]);
-          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
+          fz_vec_sub_n(v_e_bar_prime_k, e_bar, &e_bar_prime[k * N]);
+          fz_dz_norm_n(v_e_bar_prime_k);
+          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_e_bar_prime_k);
 #else
           pack_fz_vec(sig->resp_0[rsp_index].v_bar, &v_bar[k * N]);
 #endif
@@ -1063,6 +1066,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM *e_bar_prime[1] = {0};
+#elif defined(OPT_V_BAR)
+  FZ_ELEM *v_bar[1] = {0};
 #endif
 
 #if defined(RSDP)
@@ -1078,7 +1083,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #endif
 
-#if !defined(OPT_GGM)
+#if !defined(OPT_GGM) || defined(NO_TREES)
   int published_rsps = 0;
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
@@ -1104,6 +1109,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(RSDP)
 #if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
       fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
+      fz_dz_norm_n(v_bar_i);
       pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
 #else
       pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
