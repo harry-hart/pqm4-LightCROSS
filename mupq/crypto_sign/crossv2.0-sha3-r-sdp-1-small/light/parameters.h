@@ -55,6 +55,7 @@
 #define OPT_E_BAR_PRIME
 #define OPT_OTF_MERKLE
 #define OPT_GGM
+// The only ARM specific optimisation
 #define OPT_DSP
 
 /******************************************************************************/

@@ -51,7 +51,7 @@ def get_platform(args):
         platform = platforms.Qemu('qemu-system-arm', 'mps2-an386')
     else:
         raise NotImplementedError("Unsupported Platform")
-    settings = M4Settings(args.platform, args.opt, args.lto, not args.no_aio, args.iterations, bin_type)
+    settings = M4Settings(args.platform, args.opt, args.lto, not args.no_aio, args.iterations, bin_type, args.scheme)
     return platform, settings
 
 
@@ -75,12 +75,12 @@ class M4Settings(mupq.PlatformSettings):
         'nucleo-l4r5zi': 640*1024
     }
 
-    def __init__(self, platform, opt="speed", lto=False, aio=False, iterations=1, binary_type='bin'):
+    def __init__(self, platform, opt="speed", lto=False, aio=False, iterations=1, binary_type='bin', scheme_prefix=""):
         """Initialize with a specific platform"""
         import skiplist
         self.skip_list = []
         for impl in skiplist.skip_list:
-            if impl['estmemory'] > self.platform_memory[platform]:
+            if impl['estmemory'] > self.platform_memory[platform] or not impl["scheme"].startswith(scheme_prefix):
                 impl = impl.copy()
                 del impl['estmemory']
                 self.skip_list.append(impl)

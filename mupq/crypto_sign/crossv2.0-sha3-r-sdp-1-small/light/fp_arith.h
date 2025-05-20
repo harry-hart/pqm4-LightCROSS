@@ -39,7 +39,8 @@
 #include "restr_arith.h"
 
 #if defined(OPT_DSP)
-#include "arm_math.h"
+// #include "arm_math.h"
+#include "cmsis_gcc.h"
 #include "hal.h"
 #endif
 

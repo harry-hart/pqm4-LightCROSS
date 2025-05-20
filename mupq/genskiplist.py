@@ -105,7 +105,7 @@ def parse_filename(filename):
     match = re.match(
         r"elf/(?P<project>|mupq|mupq_pqclean)_?"
         r"crypto_(?P<type>kem|sign)_"
-        r"(?P<scheme>[a-zA-Z0-9_\-]+)_"
+        r"(?P<scheme>[a-zA-Z0-9_\-\.]+)_"
         r"(?P<impl>[a-zA-Z0-9_\-]+)"
         r"_stack\.elf",
         filename,
