@@ -42,8 +42,8 @@
 /*
  * Original Optimisations
  */
-#define OPT_KEYGEN
-// Note this is overidden if OPT_OTF_MERKLE is defined
+// #define OPT_KEYGEN
+//  Note this is overidden if OPT_OTF_MERKLE is defined
 #define OPT_MERKLE
 #define OPT_HASH_CMT1
 #define OPT_HASH_Y

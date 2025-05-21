@@ -445,30 +445,30 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
     }
     // Set the current hash and level
     uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
-    memcpy(curr_hash, leaf_value, HASH_DIGEST_LENGTH);
+    memcpy(curr_hash, leaves[i], HASH_DIGEST_LENGTH);
     // Adjust for 0-index
     uint8_t curr_level = level - 1;
     // Look for an empty spot to insert hash
     while ((flag & (1 << curr_level)) > 0) {
       // When we encounter a hash at our level, hash with it
       // 1. First concatenate
-      memcpy(&tree_state[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+      memcpy(&hash_buffer[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
              HASH_DIGEST_LENGTH);
       // 2. Then hash
-      hash(curr_hash, &tree_state[curr_level * HASH_DIGEST_LENGTH],
+      hash(curr_hash, &hash_buffer[curr_level * HASH_DIGEST_LENGTH],
            2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
       // 3. Then clear flag because the hash has been used
       flag -= (1 << curr_level);
       // If we hit the top of the tree, return the digest in leaf_value
       if (curr_level == 0) {
-        memcpy(leaf_value, &curr_hash, HASH_DIGEST_LENGTH);
+        memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
         return;
       }
       // 4. Go up a level
       curr_level--;
     }
     // After finding a place to insert, put in state
-    memcpy(&tree_state[curr_level * HASH_DIGEST_LENGTH], curr_hash,
+    memcpy(&hash_buffer[curr_level * HASH_DIGEST_LENGTH], curr_hash,
            HASH_DIGEST_LENGTH);
     flag += (1 << curr_level);
     leaves_seen++;

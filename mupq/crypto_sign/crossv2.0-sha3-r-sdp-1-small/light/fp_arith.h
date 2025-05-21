@@ -115,6 +115,7 @@ static inline void fp_dz_norm(FP_ELEM v[N]) {
     v[i] = FP_DOUBLE_ZERO_NORM(v[i]);
   }
 }
+
 /* Computes the product e*H of an n-element restricted vector by a (n-k)*n
  * FP H is in systematic form. Only the non systematic portion of H =[V I],
  * V, is provided, transposed, hence linearized by columns so that syndrome
@@ -123,17 +124,73 @@ static inline void fp_dz_norm(FP_ELEM v[N]) {
 #if !defined(OPT_KEYGEN)
 #if defined(OPT_DSP)
 #if defined(RSDP)
-static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
+static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e_bar[N],
                                    FP_ELEM V_tr[N - K][K]) {
-  for (int i = K; i < N; i++) {
-    res[i - K] = RESTR_TO_VAL(e[i]);
+  FP_ELEM e[N] = {0};
+  for (int i = 0; i < N; i++) {
+    e[i] = RESTR_TO_VAL(e_bar[i]);
+    if (i >= K)
+      res[i - K] = e[i];
   }
-  for (int i = 0; i < K; i++) {
-    for (int j = 0; j < N - K; j++) {
-      res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
-                            (FP_DOUBLEPREC)RESTR_TO_VAL(e[i]) *
-                                (FP_DOUBLEPREC)V_tr[j][i]);
+  for (int j = 0; j < N - K; j++) {
+    uint64_t col_accum = 0;
+    int i = 0;
+    for (; i < K - 3; i += 4) {
+      uint32_t e_val = *((uint32_t *)&e[i]);
+      uint32_t V_tr_val = *((uint32_t *)&V_tr[j][i]);
+      // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
+      uint32_t bottom_e = __UXTB16(e_val);
+      uint32_t bottom_V_tr = __UXTB16(V_tr_val);
+      // Extract value e[i], e[i+2], V_tr[i], V_tr[i+2]
+      uint32_t top_e = __UXTB16(__ROR(e_val, 8));
+      uint32_t top_V_tr = __UXTB16(__ROR(V_tr_val, 8));
+      // Calculate
+      col_accum = __SMLALD(bottom_e, bottom_V_tr, col_accum);
+      col_accum = __SMLALD(top_e, top_V_tr, col_accum);
+      col_accum = FPRED_DOUBLE(col_accum);
     }
+    // finish remaining
+    // send_unsigned("i = ", i);
+    for (; i < K; i++) {
+      col_accum = FPRED_DOUBLE(
+          col_accum + ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]));
+    }
+    // Store and reduce modulo P
+    res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
+  }
+#else
+static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e_bar[N],
+                                   FP_ELEM V_tr[N - K][K]) {
+  FP_ELEM e[N] = {0};
+  for (int i = 0; i < N; i++) {
+    e[i] = RESTR_TO_VAL(e_bar[i]);
+    if (i >= K)
+      res[i - K] = e[i];
+  }
+  for (int j = 0; j < N - K; j++) {
+    uint64_t col_accum = 0;
+    int i = 0;
+    for (; i < K - 3; i += 2) {
+      uint32_t e_val = *((uint32_t *)&e[i]);
+      uint32_t V_tr_val = *((uint32_t *)&V_tr[j][i]);
+      // res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
+      //                       (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]);
+      //  TODO: CHECK THE PRECISION, does the 64 bit accumulator mean we don't
+      //  need double precision.
+      //   What if there is overflow from 16 bit in the multiply, will it
+      //   overflow, saturate, or accumulate correctly?
+      //  Calculate
+      col_accum = __SMLALD(e_val, V_tr_val, col_accum);
+      col_accum = FPRED_DOUBLE(col_accum);
+    }
+    // finish remaining
+    // send_unsigned("i = ", i);
+    for (; i < K; i++) {
+      col_accum = FPRED_DOUBLE(
+          col_accum + ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]));
+    }
+    // Store and reduce modulo P
+    res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
   }
 #endif
 #else
