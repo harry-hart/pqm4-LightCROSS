@@ -415,8 +415,13 @@ static inline void csprng_fz_inf_w(FZ_ELEM res[RSDPG_M],
   }
 }
 
+#if defined(OPT_DSP)
+static inline void csprng_fz_mat(FZ_ELEM res[N - RSDPG_M][RSDPG_M],
+                                 CSPRNG_STATE_T *const csprng_state) {
+#else
 static inline void csprng_fz_mat(FZ_ELEM res[RSDPG_M][N - RSDPG_M],
                                  CSPRNG_STATE_T *const csprng_state) {
+#endif
   const FZ_ELEM mask = ((FZ_ELEM)1 << BITS_TO_REPRESENT(Z - 1)) - 1;
   uint8_t CSPRNG_buffer[ROUND_UP(BITS_W_CT_RNG, 8) / 8];
   /* To facilitate hardware implementations, the uint64_t
@@ -425,8 +430,9 @@ static inline void csprng_fz_mat(FZ_ELEM res[RSDPG_M][N - RSDPG_M],
    * discarded shifting them out to the right , shifting fresh ones
    * in from the left end */
   csprng_randombytes(CSPRNG_buffer, sizeof(CSPRNG_buffer), csprng_state);
-
+#if !defined(OPT_DSP)
   int placed = 0;
+#endif
   uint64_t sub_buffer = 0;
   for (int i = 0; i < 8; i++) {
     sub_buffer |= ((uint64_t)CSPRNG_buffer[i]) << 8 * i;
@@ -435,26 +441,49 @@ static inline void csprng_fz_mat(FZ_ELEM res[RSDPG_M][N - RSDPG_M],
   int bits_in_sub_buf = 64;
   int pos_in_buf = 8;
   int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
+
+// Size of the matrix
+#if defined(OPT_DSP)
+  for (int r = 0; r < RSDPG_M; r++) {
+    for (int c = 0; c < N - RSDPG_M; c++) {
+#else
   while (placed < RSDPG_M * (N - RSDPG_M)) {
-    if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
-      /* get at most 4 bytes from buffer */
-      int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
-      uint32_t refresh_buf = 0;
-      for (int i = 0; i < refresh_amount; i++) {
-        refresh_buf |= ((uint32_t)CSPRNG_buffer[pos_in_buf + i]) << 8 * i;
+#endif
+      if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
+        /* get at most 4 bytes from buffer */
+        int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
+        uint32_t refresh_buf = 0;
+        for (int i = 0; i < refresh_amount; i++) {
+          refresh_buf |= ((uint32_t)CSPRNG_buffer[pos_in_buf + i]) << 8 * i;
+        }
+        pos_in_buf += refresh_amount;
+        sub_buffer |= ((uint64_t)refresh_buf) << bits_in_sub_buf;
+        bits_in_sub_buf += 8 * refresh_amount;
+        pos_remaining -= refresh_amount;
       }
-      pos_in_buf += refresh_amount;
-      sub_buffer |= ((uint64_t)refresh_buf) << bits_in_sub_buf;
-      bits_in_sub_buf += 8 * refresh_amount;
-      pos_remaining -= refresh_amount;
-    }
+
+#if defined(OPT_DSP)
+      res[c][r] = sub_buffer & mask;
+#else
     *((FZ_ELEM *)res + placed) = sub_buffer & mask;
+#endif
+      // Check if the value is in the field
+#if defined(OPT_DSP)
+      if (res[c][r] >= P) {
+        // If it isn't, go back one
+        c -= 1;
+      }
+#else
     if (*((FZ_ELEM *)res + placed) < Z) {
       placed++;
     }
-    sub_buffer = sub_buffer >> BITS_FOR_Z;
-    bits_in_sub_buf -= BITS_FOR_Z;
+#endif
+      sub_buffer = sub_buffer >> BITS_FOR_Z;
+      bits_in_sub_buf -= BITS_FOR_Z;
+    }
+#if defined(OPT_DSP)
   }
+#endif
 }
 #endif
 

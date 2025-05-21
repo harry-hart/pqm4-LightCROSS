@@ -70,7 +70,7 @@ static void expand_pk(FP_ELEM V_tr[K][N - K],
 #elif defined(RSDPG)
 #if defined(OPT_DSP)
 static void expand_pk(FP_ELEM V_tr[N - K][K],
-                      FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M],
+                      FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M],
                       const uint8_t seed_pk[KEYPAIR_SEED_LENGTH_BYTES]) {
 #else
 static void expand_pk(FP_ELEM V_tr[K][N - K],
@@ -127,7 +127,7 @@ static void expand_sk(FZ_ELEM e_bar[N], FP_ELEM V_tr[K][N - K],
 #if defined(OPT_DSP)
 static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
                       FP_ELEM V_tr[N - K][K],
-                      FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M],
+                      FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M],
                       const uint8_t seed_sk[KEYPAIR_SEED_LENGTH_BYTES]) {
 #else
 static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
@@ -162,6 +162,7 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 }
 #endif
 
+#if defined(OPT_KEYGEN)
 // Calculate the syndrome from the public key seed. The syndrome
 // pointer `s` should already be loaded with the values of e[k+j]. That
 // way we may compute:
@@ -185,7 +186,11 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
 
 // Generate W_mat matrix first
 #if defined(RSDPG)
+#if defined(OPT_DSP)
+  FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M];
+#else
   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
+#endif
   csprng_fz_mat(W_mat, &csprng_state_mat);
 #endif
   /* The on the fly element. */
@@ -250,6 +255,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
     }
   }
 }
+#endif
 
 void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
@@ -297,8 +303,8 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   //   - s_e_bar[K..N] := s
   //   - s_e_bar[0..K] := e[0..K]
   //  The full thing is calculated as e, then because we only need e[0..K] for
-  //  the rest of the syndrome calculation, we can overlap the end of the vector
-  //  with the new s values in the computation.
+  //  the rest of the syndrome calculation, we can overlap the end of the
+  //  vector with the new s values in the computation.
   FZ_ELEM s_e_bar[N];
 #if defined(RSDP)
   // This only works because sizeof(FZ_ELEM) == sizeof(FP_ELEM) in RSDP
@@ -672,7 +678,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   expand_sk(e_bar, V_tr, SK->seed_sk);
 #elif defined(RSDPG)
   FZ_ELEM e_G_bar[RSDPG_M];
+#if defined(OPT_DSP)
+  FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M];
+#else
   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
+#endif
   expand_sk(e_bar, e_G_bar, V_tr, W_mat, SK->seed_sk);
 #endif
 
@@ -738,8 +748,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
 #if defined(OPT_OTF_MERKLE)
   // This requires at most log(T) hashes to be held
-  struct MerkleState merkle_state;
-  merkle_init_state(&merkle_state);
+  // struct MerkleState merkle_state;
+  // merkle_init_state(&merkle_state);
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #else
 #if defined(OPT_MERKLE)
@@ -887,14 +897,14 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     // Make hash and record in cmt_0 for tree proof
     hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 
-    /* ON THE FLY MERKLE TREE HASH */
-    if (i < T - 1) {
-      merkle_add_leaf(&merkle_state, cmt_0[i]);
-    } else {
-      // The final will be the digest
-      memcpy(digest_cmt0_cmt1, cmt_0[i], HASH_DIGEST_LENGTH);
-      merkle_add_leaf(&merkle_state, digest_cmt0_cmt1);
-    }
+    ///* ON THE FLY MERKLE TREE HASH */
+    // if (i < T - 1) {
+    //   merkle_add_leaf(&merkle_state, cmt_0[i]);
+    // } else {
+    //   // The final will be the digest
+    //   memcpy(digest_cmt0_cmt1, cmt_0[i], HASH_DIGEST_LENGTH);
+    //   merkle_add_leaf(&merkle_state, digest_cmt0_cmt1);
+    // }
 
 #else
 #if defined(OPT_MERKLE)
@@ -930,12 +940,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(NO_TREES)
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
-#if !defined(OPT_OTF_MERKLE)
-#if defined(OPT_MERKLE)
+#if defined(OPT_OTF_MERKLE)
+  tree_root(digest_cmt0_cmt1, cmt_0);
+#elif defined(OPT_MERKLE)
   tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
   tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
-#endif
 #endif
 #endif
 
@@ -1154,7 +1164,11 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #if defined(RSDP)
   expand_pk(V_tr, PK->seed_pk);
 #elif defined(RSDPG)
+#if defined(OPT_DSP)
+  FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M];
+#else
   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
+#endif
   expand_pk(V_tr, W_mat, PK->seed_pk);
 #endif
 

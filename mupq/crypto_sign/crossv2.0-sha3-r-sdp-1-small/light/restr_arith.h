@@ -33,6 +33,11 @@
 
 #include "parameters.h"
 
+#if defined(OPT_DSP)
+// #include "arm_math.h"
+#include "cmsis_gcc.h"
+#endif
+
 #if defined(RSDP)
 #define FZRED_SINGLE(x) (((x) & 0x07) + ((x) >> 3))
 #define FZRED_OPPOSITE(x) ((x) ^ 0x07)
@@ -72,6 +77,37 @@ static inline int is_fz_vec_in_restr_group_n(const FZ_ELEM in[N]) {
 /* computes the information word * M_G product to obtain an element of G
  * only non systematic portion of M_G = [W I] is used, transposed to improve
  * cache friendliness */
+#if defined(OPT_DSP)
+static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
+                                  FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M]) {
+  memset(res, 0, (N - RSDPG_M) * sizeof(FZ_ELEM));
+  memcpy(res + (N - RSDPG_M), e, RSDPG_M * sizeof(FZ_ELEM));
+  for (int j = 0; j < N - RSDPG_M; j++) {
+    uint64_t col_accum = 0;
+    int i = 0;
+    for (; i < RSDPG_M - 3; i += 2) {
+      uint32_t e_val = *((uint32_t *)&e[i]);
+      uint32_t W_mat_val = *((uint32_t *)&W_mat[j][i]);
+      // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
+      uint32_t bottom_e = __UXTB16(e_val);
+      uint32_t bottom_W_mat = __UXTB16(W_mat_val);
+      // Extract value e[i], e[i+2], V_tr[i], V_tr[i+2]
+      uint32_t top_e = __UXTB16(__ROR(e_val, 8));
+      uint32_t top_W_mat = __UXTB16(__ROR(W_mat_val, 8));
+      // Calculate
+      col_accum = __SMLALD(bottom_e, bottom_W_mat, col_accum);
+      col_accum = __SMLALD(top_e, top_W_mat, col_accum);
+      col_accum = FZRED_DOUBLE(col_accum);
+    }
+    // finish remaining
+    for (; i < RSDPG_M; i++) {
+      col_accum = FZRED_DOUBLE(
+          col_accum + ((FZ_DOUBLEPREC)e[i] * (FZ_DOUBLEPREC)W_mat[j][i]));
+    }
+    // Store and reduce modulo P
+    res[j] = FZRED_DOUBLE(((uint64_t)res[j] + col_accum));
+  }
+#else
 static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
                                   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M]) {
 
@@ -83,6 +119,7 @@ static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
                             (FZ_DOUBLEPREC)e[i] * (FZ_DOUBLEPREC)W_mat[i][j]);
     }
   }
+#endif
 }
 
 static inline void fz_vec_sub_m(FZ_ELEM res[RSDPG_M], const FZ_ELEM a[RSDPG_M],
