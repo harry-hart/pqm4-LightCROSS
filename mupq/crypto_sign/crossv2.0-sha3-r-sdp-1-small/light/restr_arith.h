@@ -97,13 +97,17 @@ static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
       // Calculate
       col_accum = __SMLALD(bottom_e, bottom_W_mat, col_accum);
       col_accum = __SMLALD(top_e, top_W_mat, col_accum);
-      col_accum = FZRED_DOUBLE(col_accum);
     }
-    // finish remaining
+    //  finish remaining
     for (; i < RSDPG_M; i++) {
-      col_accum = FZRED_DOUBLE(
-          col_accum + ((FZ_DOUBLEPREC)e[i] * (FZ_DOUBLEPREC)W_mat[j][i]));
+      // col_accum = FZRED_DOUBLE(
+      //     col_accum + ((FZ_DOUBLEPREC)e[i] * (FZ_DOUBLEPREC)W_mat[j][i]));
+      col_accum += ((FZ_DOUBLEPREC)e[i] * (FZ_DOUBLEPREC)W_mat[j][i]);
     }
+    // This should work because the max value of M * FZ_ELEM x FZ_ELEM
+    // multiplications is 0xBD030 or 20 bits. So 3 reductions covers
+    // 3 bytes.
+    col_accum = FZRED_SINGLE(FZRED_DOUBLE(col_accum));
     // Store and reduce modulo P
     res[j] = FZRED_DOUBLE(((uint64_t)res[j] + col_accum));
   }

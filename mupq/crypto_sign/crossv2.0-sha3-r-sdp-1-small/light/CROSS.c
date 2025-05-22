@@ -277,13 +277,21 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   memcpy(PK->seed_pk, seed_e_seed_pk[1], KEYPAIR_SEED_LENGTH_BYTES);
 
 #if !defined(OPT_KEYGEN)
-  /******* Sample V (transposed) *******/
-  /* expansion of matrix/matrices */
+/******* Sample V (transposed) *******/
+/* expansion of matrix/matrices */
+#if defined(OPT_DSP)
+  FP_ELEM V_tr[N - K][K];
+#else
   FP_ELEM V_tr[K][N - K];
+#endif
 #if defined(RSDP)
   expand_pk(V_tr, PK->seed_pk);
 #elif defined(RSDPG)
+#if defined(OPT_DSP)
+  FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M];
+#else
   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
+#endif
   expand_pk(V_tr, W_mat, PK->seed_pk);
 #endif
 #endif

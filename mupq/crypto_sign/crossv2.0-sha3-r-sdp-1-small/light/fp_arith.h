@@ -231,14 +231,14 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
       // Calculate
       col_accum = __SMLALD(bottom_e, bottom_V_tr, col_accum);
       col_accum = __SMLALD(top_e, top_V_tr, col_accum);
-      col_accum = FPRED_DOUBLE(col_accum);
     }
     // finish remaining
     // send_unsigned("i = ", i);
     for (; i < K; i++) {
-      col_accum = FPRED_DOUBLE(
-          col_accum + ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]));
+      col_accum += ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]);
     }
+    // Max value of K * FP_ELEM * FP_ELEM = 0x24EA96, 3 bytes
+    col_accum = FPRED_SINGLE(FPRED_DOUBLE(col_accum));
     // Store and reduce modulo P
     res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
   }
@@ -260,13 +260,13 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
       //   overflow, saturate, or accumulate correctly?
       //  Calculate
       col_accum = __SMLALD(e_val, V_tr_val, col_accum);
-      col_accum = FPRED_DOUBLE(col_accum);
     }
     // finish remaining
     for (; i < K; i++) {
-      col_accum = FPRED_DOUBLE(
-          col_accum + ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]));
+      col_accum += ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]);
     }
+    // Max value of K * FP_ELEM * FP_ELEM = 0x10FB450, 4 bytes
+    col_accum = FPRED_DOUBLE(FPRED_DOUBLE(col_accum));
     // Store and reduce modulo P
     res[j] = FPRED_DOUBLE(((uint64_t)res[j] + col_accum));
   }
