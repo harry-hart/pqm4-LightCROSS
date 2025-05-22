@@ -469,7 +469,7 @@ static inline void csprng_fz_mat(FZ_ELEM res[RSDPG_M][N - RSDPG_M],
 #endif
       // Check if the value is in the field
 #if defined(OPT_DSP)
-      if (res[c][r] >= P) {
+      if (res[c][r] >= Z) {
         // If it isn't, go back one
         c -= 1;
       }

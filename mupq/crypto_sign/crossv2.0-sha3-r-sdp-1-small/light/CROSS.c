@@ -43,7 +43,7 @@
 #include "parameters.h"
 #include "seedtree.h"
 
-#if defined(DEBUG)
+#if defined(OPT_DEBUG)
 #include "hal.h"
 #include "sendfn.h"
 #endif
@@ -362,23 +362,86 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #define REVEAL_VALUE 1
 #define CHALLENGE_REVEAL_VALUE 1
 
+struct SeedFreeNode {
+  // Next ptr
+  struct SeedFreeNode *next;
+  // Free index
+  uint8_t free_i;
+};
+
+struct SeedFreeList {
+  // Head
+  struct SeedFreeNode *head;
+  // Tail
+  struct SeedFreeNode *tail;
+};
+
+void SeedFreeList_append(struct SeedFreeList *list, struct SeedFreeNode *val) {
+  list->tail->next = val;
+}
+
+void SeedFreeList_pop(struct SeedFreeList *list, struct SeedFreeNode **val) {
+  *val = list->head;
+  list->head = list->head->next;
+}
+
+struct GGMNode {
+  // Next ptr
+  uint16_t next;
+  // Data
+  //  Partition
+  uint16_t partition_start;
+  uint16_t partition_end;
+  //  Seed
+  //    Index into the seed_storage for the seed value.
+  uint8_t seed_i;
+  //  Node Index
+  uint16_t node_i;
+};
+
+struct GGMList {
+  // List
+  struct GGMNode list[T >> 1];
+  // Head
+  uint16_t head;
+  // Tail
+  uint16_t tail;
+  // Len
+  uint16_t len;
+};
+
+void GGMList_append(struct GGMList *list, struct GGMNode val) {
+  // Wrap around
+  struct GGMNode tail = list->list[list->tail];
+  val.next = tail.next == (T >> 1) ? 0 : tail.next + 1;
+  list->list[tail.next] = val;
+  list->tail = tail.next;
+  list->len++;
+}
+
+void GGMList_pop(struct GGMList *list, struct GGMNode *val) {
+  *val = list->list[list->head];
+  list->head = val->next;
+  list->len--;
+}
+
 #if defined(RSDP)
 int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
-                   uint8_t *hash_storage, unsigned char *round_seeds,
+                   uint8_t *seed_storage, unsigned char *round_seeds,
                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                    FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
                    FZ_ELEM *e_bar_prime) {
 #elif defined(RSDPG)
 int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
-                   uint8_t *hash_storage, unsigned char *round_seeds,
+                   uint8_t *seed_storage, unsigned char *round_seeds,
                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                    FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
                    uint8_t *cmt_1, FZ_ELEM *e_bar_prime) {
 #endif
   // NOTES:
-  // - hash_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
+  // - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
 
   //// Track current level
   uint8_t curr_level = 0;
@@ -418,33 +481,44 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #endif
 
   // THIS IS BFS, DO BFS
-  size_t head = 0;
-  size_t tail = 0;
-  size_t ring_max = T >> 1;
-  // Still need to track the global node index for proper domain separation
+  // size_t head = 0;
+  // size_t tail = 0;
+  // size_t ring_max = T >> 1;
+  //// Still need to track the global node index for proper domain separation
   uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
   uint16_t npl_cum = 0;
-  // TWO MAIN RINGS:
-  // - hash_storage: stores the hash for node i at i * SEED_LENGTH_BYTES
-  // - partitions: stores the partition start and end for node i at i * 2
-  // - node_i: Because we need to track the global node index, but still want
-  // to skip nodes. Node index is at i
-  //    to speed up processing. We need to store which nodes are empty
-  // Set up first node on queue
-  memcpy(hash_storage, root_seed, SEED_LENGTH_BYTES);
-  //  Partition boundaries
-  uint16_t partitions[T] = {0};
-  partitions[1] = T;
-  // Node index ring
-  uint16_t node_indices[(T >> 1)] = {0};
-  // Temporary loop vars corresponding to current node
-  uint16_t *node_i = node_indices;
-  uint8_t *node_hash = hash_storage;
-  uint16_t *partition_start = partitions;
-  uint16_t *partition_end = &partitions[1];
-  uint16_t partition_size = *partition_end - *partition_start;
-  uint16_t domain_sep = CSPRNG_DOMAIN_SEP_CONST + 0;
-  tail++;
+  //// TWO MAIN RINGS:
+  //// - seed_storage: stores the hash for node i at i * SEED_LENGTH_BYTES
+  //// - partitions: stores the partition start and end for node i at i * 2
+  //// - node_i: Because we need to track the global node index, but still want
+  //// to skip nodes. Node index is at i
+  ////    to speed up processing. We need to store which nodes are empty
+  //// Set up first node on queue
+  // memcpy(seed_storage, root_seed, SEED_LENGTH_BYTES);
+  ////  Partition boundaries
+  // uint16_t partitions[T] = {0};
+  // partitions[1] = T;
+  //// Node index ring
+  // uint16_t node_indices[(T >> 1)] = {0};
+  //// Temporary loop vars corresponding to current node
+  // uint16_t *node_i = node_indices;
+  // uint8_t *node_hash = seed_storage;
+  // uint16_t *partition_start = partitions;
+  // uint16_t *partition_end = &partitions[1];
+  uint16_t partition_size;
+  uint16_t domain_sep;
+  // tail++;
+  //  SWITCH TO LINKED LIST
+  //  Set up first node on queue
+  memcpy(seed_storage, root_seed, SEED_LENGTH_BYTES);
+  // Track free hash_spots with a free list maybe? Array for now
+  // 1 = Taken, 0 = Free
+  uint8_t free_seed[LOG2(T) + 1] = {0};
+  free_seed[0] = 1;
+  // Populate free list
+  struct GGMNode root = {0, 0, T, 0, 0};
+  struct GGMList queue = {.head = 0, .tail = 0, .len = 0};
+  GGMList_append(&queue, root);
 
   // Build index map
   // Because we want to remove pruned indices from the list in the middle...
@@ -462,19 +536,22 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   uint8_t level_index = 0;
 
   // While queue not empty
-  while (head != tail) {
+  while (queue.len != 0) {
     // Pop top element
     // Set up node specific vars
-    node_i = &node_indices[head];
-    node_hash = &hash_storage[head * SEED_LENGTH_BYTES];
-    partition_start = &partitions[2 * head];
-    partition_end = &partitions[2 * head + 1];
-    partition_size = *partition_end - *partition_start;
-    domain_sep = CSPRNG_DOMAIN_SEP_CONST + *node_i;
-    head = (head + 1) % ring_max;
+    struct GGMNode node;
+    GGMList_pop(&queue, &node);
+    // node_i = &node_indices[head];
+    // node_hash = &seed_storage[head * SEED_LENGTH_BYTES];
+    // partition_start = &partitions[2 * head];
+    // partition_end = &partitions[2 * head + 1];
+    partition_size = node.partition_end - node.partition_start;
+    domain_sep = CSPRNG_DOMAIN_SEP_CONST + node.node_i;
+    // head = (head + 1) % ring_max;
 
     // If we have moved to the next level
-    if ((*node_i + 1) - npl_cum > npl[curr_level]) {
+    // if ((*node_i + 1) - npl_cum > npl[curr_level]) {
+    if ((node.node_i + 1) - npl_cum > npl[curr_level]) {
       npl_cum += npl[curr_level];
       level_index = 0;
       curr_level++;
@@ -498,13 +575,14 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       partition = 1 << (31 - msb);
     }
 
-    partition += *partition_start;
+    partition += node.partition_start;
     uint8_t left_calculated = 0;
     // Check both partitions for hidden nodes
     for (int i = 0; i < 2; i++) {
       uint8_t hidden_nodes = 0;
-      uint16_t child_partition_start = i == 0 ? *partition_start : partition;
-      uint16_t child_partition_end = i == 0 ? partition : *partition_end;
+      uint16_t child_partition_start =
+          i == 0 ? node.partition_start : partition;
+      uint16_t child_partition_end = i == 0 ? partition : node.partition_end;
       uint16_t child_partition_size =
           child_partition_end - child_partition_start;
       // Skip any responses that have already been published
@@ -521,53 +599,64 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       // Mixed
       if (0 < hidden_nodes && hidden_nodes < child_partition_size) {
         // This means we calculate seed, add to queue, move to next node
+        struct GGMNode child_node = {
+            0, child_partition_start, child_partition_end, queue.tail + 1,
+            npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2)};
+        // Calculate seed
         if (i == 0) {
           // ADD THE LEFT NODE TO THE PROCESSING QUEUE
           // Add partition to ring
-          partitions[2 * tail] = *partition_start;
-          partitions[(2 * tail) + 1] = partition;
+          // partitions[2 * tail] = *partition_start;
+          // partitions[(2 * tail) + 1] = partition;
           // Add seed to ring
-          /* prepare the CSPRNG input to expand the father node */
-          memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+          /* prepare the CSPRseed_storage input to expand the father node */
+          memcpy(csprng_input, &seed_storage[node.seed_i * SEED_LENGTH_BYTES],
+                 SEED_LENGTH_BYTES);
           /* Generate the children (stored contiguously).
            * By construction, the tree has always two children */
           csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
                             domain_sep);
-          csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+          csprng_randombytes(seed_storage +
+                                 (child_node.seed_i * SEED_LENGTH_BYTES),
                              SEED_LENGTH_BYTES, &tree_csprng_state);
           left_calculated = 1;
           // Add node index to ring
-          uint16_t child_offset = (*node_i - npl_cum) * 2;
-          node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
+          // uint16_t child_offset = (*node_i - npl_cum) * 2;
+          // node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
         } else {
           // ADD THE RIGHT NODE TO THE PROCESSING QUEUE
           // Add partition to ring
-          partitions[2 * tail] = partition;
-          partitions[(2 * tail) + 1] = *partition_end;
+          // partitions[2 * tail] = partition;
+          // partitions[(2 * tail) + 1] = *partition_end;
           // Add seed to ring
           if (left_calculated) {
             // State has already been initialised and first part taken
-            csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+            csprng_randombytes(seed_storage +
+                                   (child_node.seed_i * SEED_LENGTH_BYTES),
                                SEED_LENGTH_BYTES, &tree_csprng_state);
           } else {
             /* prepare the CSPRNG input to expand the father node */
-            memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+            memcpy(csprng_input, &seed_storage[node.seed_i * SEED_LENGTH_BYTES],
+                   SEED_LENGTH_BYTES);
             /* Generate the children (stored contiguously).
              * By construction, the tree has always two children */
             csprng_initialize(&tree_csprng_state, csprng_input,
                               csprng_input_len, domain_sep);
             // NOTE: Have to call it twice because of the left node
-            csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+            csprng_randombytes(seed_storage +
+                                   (child_node.seed_i * SEED_LENGTH_BYTES),
                                SEED_LENGTH_BYTES, &tree_csprng_state);
-            csprng_randombytes(hash_storage + (tail * SEED_LENGTH_BYTES),
+            csprng_randombytes(seed_storage +
+                                   (child_node.seed_i * SEED_LENGTH_BYTES),
                                SEED_LENGTH_BYTES, &tree_csprng_state);
           }
           // Add node index to ring
-          uint16_t child_offset = (*node_i - npl_cum) * 2 + 1;
-          node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
+          // uint16_t child_offset = (*node_i - npl_cum) * 2 + 1;
+          // node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
         }
         // Add to ring
-        tail = (tail + 1) % ring_max;
+        // tail = (tail + 1) % ring_max;
+        GGMList_append(&queue, child_node);
       }
       // All reveal, publish seed
       else if (hidden_nodes == 0) {
@@ -579,7 +668,8 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                  SEED_LENGTH_BYTES);
         } else {
           /* prepare the CSPRNG input to expand the father node */
-          memcpy(csprng_input, node_hash, SEED_LENGTH_BYTES);
+          memcpy(csprng_input, &seed_storage[node.seed_i * SEED_LENGTH_BYTES],
+                 SEED_LENGTH_BYTES);
           /* Generate the children (stored contiguously).
            * By construction, the tree has always two children */
           csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
