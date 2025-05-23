@@ -513,8 +513,8 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   memcpy(seed_storage, root_seed, SEED_LENGTH_BYTES);
   // Track free hash_spots with a free list maybe? Array for now
   // 1 = Taken, 0 = Free
-  uint8_t free_seed[LOG2(T) + 1] = {0};
-  free_seed[0] = 1;
+  // uint8_t free_seed[LOG2(T) + 1] = {0};
+  // free_seed[0] = 1;
   // Populate free list
   struct GGMNode root = {0, 0, T, 0, 0};
   struct GGMList queue = {.head = 0, .tail = 0, .len = 0};
@@ -600,8 +600,12 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       if (0 < hidden_nodes && hidden_nodes < child_partition_size) {
         // This means we calculate seed, add to queue, move to next node
         struct GGMNode child_node = {
-            0, child_partition_start, child_partition_end, queue.tail + 1,
-            npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2)};
+            .next = 0,
+            .partition_start = child_partition_start,
+            .partition_end = child_partition_end,
+            .seed_i = queue.tail == (T >> 1) ? 0 : queue.tail + 1,
+            .node_i =
+                npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2)};
         // Calculate seed
         if (i == 0) {
           // ADD THE LEFT NODE TO THE PROCESSING QUEUE
@@ -624,6 +628,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           // uint16_t child_offset = (*node_i - npl_cum) * 2;
           // node_indices[tail] = npl_cum + npl[curr_level] + child_offset;
         } else {
+          child_node.node_i += 1;
           // ADD THE RIGHT NODE TO THE PROCESSING QUEUE
           // Add partition to ring
           // partitions[2 * tail] = partition;
@@ -752,7 +757,8 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       }
     }
   }
-  return published_rsps;
+  // return published_rsps;
+  return published_nodes;
 }
 #endif
 
@@ -795,13 +801,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
   // Limit scope for seed_tree
 #if defined(OPT_GGM)
-  {
+  //{
 #endif
-    uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
-    gen_seed_tree(seed_tree, root_seed, sig->salt);
-    seed_leaves(round_seeds, seed_tree);
+  uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
+  gen_seed_tree(seed_tree, root_seed, sig->salt);
+  seed_leaves(round_seeds, seed_tree);
 #if defined(OPT_GGM)
-  }
+  //}
 #endif
 #endif
 
@@ -1179,8 +1185,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(RSDP)
-  build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0]);
+  int published_nodes = build_response(sig, root_seed, chall_2, seed_storage,
+                                       round_seeds, e_bar, v_bar[0], chall_1,
+                                       u_prime[0], y[0], cmt_1, e_bar_prime[0]);
 #elif defined(RSDPG)
   int published_rsps = build_response(
       sig, root_seed, chall_2, seed_storage, round_seeds, e_bar, v_bar[0],
