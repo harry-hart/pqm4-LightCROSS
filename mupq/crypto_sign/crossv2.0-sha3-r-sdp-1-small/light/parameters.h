@@ -57,7 +57,7 @@
 #define OPT_GGM
 //  The only ARM specific optimisation
 #define OPT_DSP
-#define OPT_DEBUG
+// #define OPT_DEBUG
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/
