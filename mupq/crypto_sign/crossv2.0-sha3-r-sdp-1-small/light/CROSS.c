@@ -371,6 +371,7 @@ struct FlagNode {
   uint16_t pos;
 };
 
+#if 0
 struct FlagList {
   // internal list
   struct FlagNode list[T - W];
@@ -401,6 +402,7 @@ void FlagList_drop(struct FlagList *list) {
   list->head = list->list[list->head].next;
   list->len--;
 }
+#endif
 
 // void FlagList_push(struct FlagList *list, struct FlagNode val) {
 //   struct FlagNode old_h = list->list[list->head];
@@ -424,6 +426,7 @@ struct GGMNode {
   uint16_t node_i;
 };
 
+#if 0
 struct GGMList {
   // List
   struct GGMNode list[T >> 1];
@@ -449,6 +452,7 @@ void GGMList_pop(struct GGMList *list, struct GGMNode *val) {
   list->head = val->next;
   list->len--;
 }
+#endif
 
 #if defined(RSDP)
 int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
@@ -517,8 +521,13 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
   // Populate queue
   struct GGMNode root = {0, 0, T, 0, 0};
-  struct GGMList queue = {.head = 0, .tail = 0, .len = 0};
-  GGMList_append(&queue, root);
+  struct GGMNode queue[T - W];
+  queue[0] = root;
+  uint16_t head = 0;
+  uint16_t tail = 1;
+  // struct GGMList queue = {.head = 0, .tail = 0, .len = 0};
+  // GGMList_append(&queue, root);
+  uint16_t ring_max = T >> 1;
 
   // Build index map
   // Because we want to remove pruned indices from the list in the middle...
@@ -533,13 +542,17 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   //  }
   //}
   // uint8_t level_index = 0;
-  struct FlagList flags = {.head = 0, .tail = 0, .len = 0};
+  // struct FlagList flags = {.head = 0, .tail = 0, .len = 0};
+  struct FlagNode flags[T - W];
+  uint8_t flag_index = 0;
   uint8_t highest_streak = 0;
   uint8_t int_streak = 0;
   for (int i = 0; i < T; i++) {
     if (indices_to_publish[i] != CHALLENGE_REVEAL_VALUE) {
-      struct FlagNode flag = {.next = 0, .index = flags.len, .pos = i};
-      FlagList_append(&flags, flag);
+      struct FlagNode flag = {.next = 0, .index = flag_index, .pos = i};
+      // FlagList_append(&flags, flag);
+      flags[flag_index] = flag;
+      flag_index++;
       int_streak++;
     } else {
       if (int_streak > highest_streak)
@@ -547,26 +560,29 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       int_streak = 0;
     }
   }
+  uint8_t flag_len = flag_index;
+  flag_index = 0;
 
   // While queue not empty
-  while (queue.len != 0) {
+  while (head != tail) {
     // Pop top element
     // Set up node specific vars
-    struct GGMNode node;
-    GGMList_pop(&queue, &node);
-    // node_i = &node_indices[head];
-    // node_hash = &seed_storage[head * SEED_LENGTH_BYTES];
-    // partition_start = &partitions[2 * head];
-    // partition_end = &partitions[2 * head + 1];
+    struct GGMNode node = queue[head];
+    // GGMList_pop(&queue, &node);
+    //  node_i = &node_indices[head];
+    //  node_hash = &seed_storage[head * SEED_LENGTH_BYTES];
+    //  partition_start = &partitions[2 * head];
+    //  partition_end = &partitions[2 * head + 1];
     partition_size = node.partition_end - node.partition_start;
     domain_sep = CSPRNG_DOMAIN_SEP_CONST + node.node_i;
-    // head = (head + 1) % ring_max;
+    head = head == (T - W) ? 0 : (head + 1);
 
     // If we have moved to the next level
     // if ((*node_i + 1) - npl_cum > npl[curr_level]) {
     if ((node.node_i + 1) - npl_cum > npl[curr_level]) {
       npl_cum += npl[curr_level];
       // level_index = 0;
+      flag_index = 0;
       curr_level++;
     }
 
@@ -603,21 +619,28 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       //       indices_order[level_index] < child_partition_start) {
       //  level_index++;
       //}
-      while (flags.len > 0 &&
-             flags.list[flags.head].pos < child_partition_start) {
-        FlagList_drop(&flags);
+      // while (flags.len > 0 &&
+      //       flags.list[flags.head].pos < child_partition_start) {
+      while (flag_index < flag_len &&
+             flags[flag_index].pos < child_partition_start) {
+        // FlagList_drop(&flags);
+        flag_index++;
       }
       // Count the hidden nodes in this partition
       // while (level_index < index_len &&
       //       indices_order[level_index] < child_partition_end) {
       //  level_index++;
-      struct FlagNode temp_flags[T - W];
-      while (flags.len > 0 &&
-             child_partition_start <= flags.list[flags.head].pos &&
-             flags.list[flags.head].pos < child_partition_end) {
-        struct FlagNode hidden_leaf;
-        FlagList_pop(&flags, &hidden_leaf);
-        temp_flags[hidden_nodes] = hidden_leaf;
+      // struct FlagNode temp_flags[T - W];
+      // while (flags.len > 0 &&
+      //       child_partition_start <= flags.list[flags.head].pos &&
+      //       flags.list[flags.head].pos < child_partition_end) {
+      while (flag_index < flag_len &&
+             child_partition_start <= flags[flag_index].pos &&
+             flags[flag_index].pos < child_partition_end) {
+        // struct FlagNode hidden_leaf;
+        // FlagList_pop(&flags, &hidden_leaf);
+        // temp_flags[hidden_nodes] = hidden_leaf;
+        flag_index++;
         hidden_nodes++;
         if (highest_streak < child_partition_size) {
           break;
@@ -630,7 +653,8 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
             .next = 0,
             .partition_start = child_partition_start,
             .partition_end = child_partition_end,
-            .seed_i = queue.tail == (T >> 1) ? 0 : queue.tail + 1,
+            //.seed_i = queue.tail == (T >> 1) ? 0 : queue.tail + 1,
+            .seed_i = tail,
             .node_i =
                 npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2)};
         // Calculate seed
@@ -689,11 +713,14 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         // Add to ring
         // tail = (tail + 1) % ring_max;
         // Add child nodes to processing queue
-        GGMList_append(&queue, child_node);
+        // GGMList_append(&queue, child_node);
         // Add un-processed flags back
-        for (int f = 0; f < hidden_nodes; f++) {
-          FlagList_append(&flags, temp_flags[f]);
-        }
+        // tail = (tail + 1) % ring_max;
+        queue[tail] = child_node;
+        tail = tail == (T - W) ? 0 : (tail + 1);
+        // for (int f = 0; f < hidden_nodes; f++) {
+        //   FlagList_append(&flags, temp_flags[f]);
+        // }
       }
       // All reveal, publish seed
       else if (hidden_nodes == 0) {
@@ -728,8 +755,8 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         // If they are all hidden in the partition
         // Add all requisite response values
         // To add them in the correct order
-        // uint8_t base_index = level_index - hidden_nodes;
-        uint8_t base_index = temp_flags[0].index;
+        uint8_t base_index = flag_index - hidden_nodes;
+        // uint8_t base_index = temp_flags[0].index;
         for (int k = child_partition_start; k < child_partition_end; k++) {
           assert(published_rsps < T - W);
           // The index of the
