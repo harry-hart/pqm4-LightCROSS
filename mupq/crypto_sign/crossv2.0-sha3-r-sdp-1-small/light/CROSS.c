@@ -399,7 +399,8 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    uint8_t *seed_storage, unsigned char *round_seeds,
                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                    FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
-                   uint8_t *cmt_1, FZ_ELEM *e_bar_prime) {
+                   uint8_t *cmt_1, FZ_ELEM *e_bar_prime,
+                   uint16_t *nodes_to_reveal, uint8_t nodes_revealed) {
 #endif
   // NOTES:
   // - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
@@ -510,21 +511,10 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         child_node_i++;
       }
 
-      //// Skip any flags that have already been published
-      // while (flag_index < flag_len &&
-      //        flags[flag_index].pos < child_partition_start) {
-      //   flag_index++;
-      // }
-      //// Count the hidden nodes in this partition
-      // while (flag_index < flag_len &&
-      //        child_partition_start <= flags[flag_index].pos &&
-      //        flags[flag_index].pos < child_partition_end) {
-      //   flag_index++;
-      //   hidden_nodes++;
-      //   if (highest_streak < child_partition_size) {
-      //     break;
-      //   }
-      // }
+      // 0 = mixed, 1 = reveal, 2 = publish rsps
+      uint8_t node_state =
+          child_node_i == nodes_to_reveal[nodes_revealed - 1 - published_nodes];
+
       //  If there is a chance of publishing responses
       if (highest_streak >= child_partition_size) {
         while (flag_index < flag_len &&
@@ -537,6 +527,8 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           flag_index++;
           hidden_nodes++;
         }
+        if (hidden_nodes == child_partition_size)
+          node_state = 2;
       }
 
       /* Deal with the three possible cases:
@@ -551,10 +543,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       */
 
       // Mixed
-      // if (0 < hidden_nodes && hidden_nodes < child_partition_size) {
-      if (child_node_i !=
-              nodes_to_reveal[nodes_revealed - 1 - published_nodes] &&
-          hidden_nodes != child_partition_size) {
+      if (node_state == 0) {
         // This means we calculate seed, add to queue, move to next node
         struct GGMNode child_node = {.next = 0,
                                      .partition_start = child_partition_start,
@@ -606,9 +595,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         tail = tail == ring_max ? 0 : (tail + 1);
       }
       // All reveal, publish seed
-      // else if (hidden_nodes == 0) {
-      else if (child_node_i ==
-               nodes_to_reveal[nodes_revealed - 1 - published_nodes]) {
+      else if (node_state == 1) {
         // TEMP: check compatibility
         // published_nodes_index[published_nodes] =
         //    npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
@@ -644,7 +631,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         published_nodes++;
       }
       // All hidden publish response
-      else if (hidden_nodes == child_partition_size) {
+      else if (node_state == 2) {
         // If they are all hidden in the partition
         // Add all requisite response values
 
@@ -959,6 +946,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         xof_shake_update(&csprng_state_cmt_1, cmt_1_i, HASH_DIGEST_LENGTH);
 #else
     hash(&cmt_1[i * HASH_DIGEST_LENGTH], cmt_1_i_input, sizeof(cmt_1_i_input),
+
          domain_sep_hash);
 #endif
 
@@ -1121,24 +1109,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
                      v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
                      nodes_published, nodes_to_reveal);
-
-#if 0
-  if (merkle_pubs != published_nodes) {
-    hal_send_str("published diff number");
-  }
-  for (int i = 0; i < merkle_pubs; i++) {
-    if (nodes_published[merkle_pubs - i - 1] != published_nodes_ggm[i]) {
-      hal_send_str("Node mismatch");
-      send_unsigned("Published merkle node:",
-                    nodes_published[merkle_pubs - 1 - i]);
-      send_unsigned("Published ggm node:", published_nodes_ggm[i]);
-    }
-  }
-#endif
 #elif defined(RSDPG)
-  int published_rsps = build_response(
-      sig, root_seed, chall_2, seed_storage, round_seeds, e_bar, v_bar[0],
-      chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1, e_bar_prime[0]);
+  int published_rsps =
+      build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
+                     v_bar[0], chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1,
+                     e_bar_prime[0], nodes_published, nodes_to_reveal);
 #endif
 #else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
