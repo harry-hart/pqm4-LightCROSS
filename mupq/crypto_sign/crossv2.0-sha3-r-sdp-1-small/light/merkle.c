@@ -377,54 +377,55 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 /*****************************************************************************/
 
 // Initialise the state with 0's
-void merkle_init_state(struct MerkleState *state) {
-  memset(state->tree_state, 0, (LOG2(T) + 1) * HASH_DIGEST_LENGTH);
-  state->flag = 0;
-  state->level = LOG2(T);
-  state->leaves_seen = 0;
-  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
-  memcpy(state->lpl, lpl, sizeof(lpl));
-}
-
-void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
-  // If we have done all the leaves on this level.
-  // Find the next level with leaves
-  // We can do this because from left to right the tree leaves should have
-  // monotonically descending depths.
-  while (state->leaves_seen == state->lpl[state->level]) {
-    state->level--;
-    state->leaves_seen = 0;
-  }
-  // Set the current hash and level
-  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
-  memcpy(curr_hash, leaf_value, HASH_DIGEST_LENGTH);
-  // Adjust for 0-index
-  uint8_t curr_level = state->level - 1;
-  // Look for an empty spot to insert hash
-  while ((state->flag & (1 << curr_level)) > 0) {
-    // When we encounter a hash at our level, hash with it
-    // 1. First concatenate
-    memcpy(&state->tree_state[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
-           HASH_DIGEST_LENGTH);
-    // 2. Then hash
-    hash(curr_hash, &state->tree_state[curr_level * HASH_DIGEST_LENGTH],
-         2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
-    // 3. Then clear flag because the hash has been used
-    state->flag -= (1 << curr_level);
-    // If we hit the top of the tree, return the digest in leaf_value
-    if (curr_level == 0) {
-      memcpy(leaf_value, &curr_hash, HASH_DIGEST_LENGTH);
-      return;
-    }
-    // 4. Go up a level
-    curr_level--;
-  }
-  // After finding a place to insert, put in state
-  memcpy(&state->tree_state[curr_level * HASH_DIGEST_LENGTH], curr_hash,
-         HASH_DIGEST_LENGTH);
-  state->flag += (1 << curr_level);
-  state->leaves_seen++;
-}
+// void merkle_init_state(struct MerkleState *state) {
+//  memset(state->tree_state, 0, (LOG2(T) + 1) * HASH_DIGEST_LENGTH);
+//  state->flag = 0;
+//  state->level = LOG2(T);
+//  state->leaves_seen = 0;
+//  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+//  memcpy(state->lpl, lpl, sizeof(lpl));
+//}
+//
+// void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
+//  // If we have done all the leaves on this level.
+//  // Find the next level with leaves
+//  // We can do this because from left to right the tree leaves should have
+//  // monotonically descending depths.
+//  while (state->leaves_seen == state->lpl[state->level]) {
+//    state->level--;
+//    state->leaves_seen = 0;
+//  }
+//  // Set the current hash and level
+//  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+//  memcpy(curr_hash, leaf_value, HASH_DIGEST_LENGTH);
+//  // Adjust for 0-index
+//  uint8_t curr_level = state->level - 1;
+//  // Look for an empty spot to insert hash
+//  while ((state->flag & (1 << curr_level)) > 0) {
+//    // When we encounter a hash at our level, hash with it
+//    // 1. First concatenate
+//    memcpy(&state->tree_state[(curr_level + 1) * HASH_DIGEST_LENGTH],
+//    curr_hash,
+//           HASH_DIGEST_LENGTH);
+//    // 2. Then hash
+//    hash(curr_hash, &state->tree_state[curr_level * HASH_DIGEST_LENGTH],
+//         2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+//    // 3. Then clear flag because the hash has been used
+//    state->flag -= (1 << curr_level);
+//    // If we hit the top of the tree, return the digest in leaf_value
+//    if (curr_level == 0) {
+//      memcpy(leaf_value, &curr_hash, HASH_DIGEST_LENGTH);
+//      return;
+//    }
+//    // 4. Go up a level
+//    curr_level--;
+//  }
+//  // After finding a place to insert, put in state
+//  memcpy(&state->tree_state[curr_level * HASH_DIGEST_LENGTH], curr_hash,
+//         HASH_DIGEST_LENGTH);
+//  state->flag += (1 << curr_level);
+//  state->leaves_seen++;
+//}
 
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
                unsigned char leaves[T][HASH_DIGEST_LENGTH]) {
@@ -475,7 +476,8 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
   }
 }
 
-void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
+uint16_t merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
+                      uint16_t *nodes_published) {
   // Notes:
   // - Can overwrite cmt_0 as it is never used again
   // - COMPUTED = 1, NOT_COMPUTED = 0
@@ -487,6 +489,13 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
   uint16_t published = 0;
   uint16_t leaves_left = T;
 
+  // TEMP: For testing ggm compatibility
+  uint8_t node_i = 0;
+  uint16_t tot_nodes = 0;
+  for (int l = 0; l < level + 1; l++) {
+    tot_nodes += npl[l];
+  }
+
   // Set the first level of flags
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == CHALLENGE_PROOF_VALUE) {
@@ -495,6 +504,9 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
   }
 
   while (level > 0) {
+    // TEMP:
+    tot_nodes -= npl[level];
+
     // How many leaves to not touch in the cmt_0 buffer
     leaves_left = leaves_left - lpl[level];
     // The length of the remaining left buffer
@@ -513,11 +525,19 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
         memcpy(mtp + published * HASH_DIGEST_LENGTH,
                cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
         published++;
+        // TEMP: for ggm compatibility testing
+        nodes_published[node_i] =
+            (tot_nodes - 1) + (i - (T - leaves_left - npl[level] - 1)) - 1;
+        node_i++;
       }
       if (!flags[i] && flags[i - 1]) {
         memcpy(mtp + published * HASH_DIGEST_LENGTH,
                cmt_0 + i * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
         published++;
+        // TEMP: for ggm compatibility testing
+        nodes_published[node_i] =
+            (tot_nodes - 1) + (i - (T - leaves_left - npl[level] - 1));
+        node_i++;
       }
 
       // Set parent flag to the right
@@ -529,6 +549,8 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
       } else {
         // If we can already compute parent given info, don't bother hashing,
         // otherwise
+        // NOTE: We use the cmt_0 as hash storage because it is not reused after
+        // this function.
         flags[i + parent_offset] = NOT_COMPUTED;
         hash(cmt_0 + (i + parent_offset) * HASH_DIGEST_LENGTH,
              cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, 2 * HASH_DIGEST_LENGTH,
@@ -539,6 +561,7 @@ void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2) {
     }
     level--;
   }
+  return published;
 }
 
 #if 0

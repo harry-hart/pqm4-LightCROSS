@@ -87,15 +87,6 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 #if defined(OPT_OTF_MERKLE)
 /**** On the fly merkle ****/
 
-struct MerkleState {
-  uint8_t tree_state[(LOG2(T) + 1) * HASH_DIGEST_LENGTH];
-  // At most ~10 bits will be used
-  uint16_t flag;
-  uint8_t level;
-  uint16_t leaves_seen;
-  uint16_t lpl[LOG2(T) + 1];
-};
-void merkle_init_state(struct MerkleState *state);
-void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value);
-void merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2);
+uint16_t merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
+                      uint16_t *nodes_published);
 #endif

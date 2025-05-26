@@ -391,7 +391,8 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    uint8_t *seed_storage, unsigned char *round_seeds,
                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                    FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
-                   FZ_ELEM *e_bar_prime) {
+                   FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
+                   uint8_t nodes_revealed) {
 #elif defined(RSDPG)
 int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                    const unsigned char *indices_to_publish,
@@ -503,20 +504,38 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       uint16_t child_partition_end = i == 0 ? partition : node.partition_end;
       uint16_t child_partition_size =
           child_partition_end - child_partition_start;
-
-      // Skip any flags that have already been published
-      while (flag_index < flag_len &&
-             flags[flag_index].pos < child_partition_start) {
-        flag_index++;
+      uint16_t child_node_i =
+          npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
+      if (i == 1) {
+        child_node_i++;
       }
-      // Count the hidden nodes in this partition
-      while (flag_index < flag_len &&
-             child_partition_start <= flags[flag_index].pos &&
-             flags[flag_index].pos < child_partition_end) {
-        flag_index++;
-        hidden_nodes++;
-        if (highest_streak < child_partition_size) {
-          break;
+
+      //// Skip any flags that have already been published
+      // while (flag_index < flag_len &&
+      //        flags[flag_index].pos < child_partition_start) {
+      //   flag_index++;
+      // }
+      //// Count the hidden nodes in this partition
+      // while (flag_index < flag_len &&
+      //        child_partition_start <= flags[flag_index].pos &&
+      //        flags[flag_index].pos < child_partition_end) {
+      //   flag_index++;
+      //   hidden_nodes++;
+      //   if (highest_streak < child_partition_size) {
+      //     break;
+      //   }
+      // }
+      //  If there is a chance of publishing responses
+      if (highest_streak >= child_partition_size) {
+        while (flag_index < flag_len &&
+               flags[flag_index].pos < child_partition_start) {
+          flag_index++;
+        }
+        while (flag_index < flag_len &&
+               child_partition_start <= flags[flag_index].pos &&
+               flags[flag_index].pos < child_partition_end) {
+          flag_index++;
+          hidden_nodes++;
         }
       }
 
@@ -532,7 +551,10 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       */
 
       // Mixed
-      if (0 < hidden_nodes && hidden_nodes < child_partition_size) {
+      // if (0 < hidden_nodes && hidden_nodes < child_partition_size) {
+      if (child_node_i !=
+              nodes_to_reveal[nodes_revealed - 1 - published_nodes] &&
+          hidden_nodes != child_partition_size) {
         // This means we calculate seed, add to queue, move to next node
         struct GGMNode child_node = {.next = 0,
                                      .partition_start = child_partition_start,
@@ -584,25 +606,35 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         tail = tail == ring_max ? 0 : (tail + 1);
       }
       // All reveal, publish seed
-      else if (hidden_nodes == 0) {
-        // If all the leaves are to be revealed
-        // If it is leaf level
+      // else if (hidden_nodes == 0) {
+      else if (child_node_i ==
+               nodes_to_reveal[nodes_revealed - 1 - published_nodes]) {
+        // TEMP: check compatibility
+        // published_nodes_index[published_nodes] =
+        //    npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
+        // if (i == 1)
+        //  published_nodes_index[published_nodes] += 1;
+
+        // If all the leaves are to be
+        // revealed If it is leaf level
         if (partition_size == 2) {
           memcpy(sig->path + published_nodes * SEED_LENGTH_BYTES,
                  round_seeds + child_partition_start * SEED_LENGTH_BYTES,
                  SEED_LENGTH_BYTES);
         } else {
-          /* prepare the CSPRNG input to expand the father node */
-          memcpy(csprng_input, &seed_storage[node.seed_i * SEED_LENGTH_BYTES],
-                 SEED_LENGTH_BYTES);
-          /* Generate the children (stored contiguously).
-           * By construction, the tree has always two children */
-          csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
-                            domain_sep);
-          // Publish node
-          // Always have to calculate left
-          csprng_randombytes(sig->path + published_nodes * SEED_LENGTH_BYTES,
-                             SEED_LENGTH_BYTES, &tree_csprng_state);
+          if (i == 0 || !left_calculated) {
+            /* prepare the CSPRNG input to expand the father node */
+            memcpy(csprng_input, &seed_storage[node.seed_i * SEED_LENGTH_BYTES],
+                   SEED_LENGTH_BYTES);
+            /* Generate the children (stored contiguously).
+             * By construction, the tree has always two children */
+            csprng_initialize(&tree_csprng_state, csprng_input,
+                              csprng_input_len, domain_sep);
+            // Publish node
+            // Always have to calculate left
+            csprng_randombytes(sig->path + published_nodes * SEED_LENGTH_BYTES,
+                               SEED_LENGTH_BYTES, &tree_csprng_state);
+          }
           if (i == 1) {
             // overwrite right node if in right partition
             csprng_randombytes(sig->path + published_nodes * SEED_LENGTH_BYTES,
@@ -1057,7 +1089,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   seed_path(sig->path, round_seeds, chall_2);
 #else
 #if defined(OPT_OTF_MERKLE)
-  merkle_proof(sig->proof, cmt_0[0], chall_2);
+  uint16_t nodes_published[W] = {0};
+  uint16_t nodes_to_reveal =
+      merkle_proof(sig->proof, cmt_0[0], chall_2, nodes_published);
 #else
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
@@ -1083,9 +1117,24 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(RSDP)
-  int published_nodes = build_response(sig, root_seed, chall_2, seed_storage,
-                                       round_seeds, e_bar, v_bar[0], chall_1,
-                                       u_prime[0], y[0], cmt_1, e_bar_prime[0]);
+  int published_nodes =
+      build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
+                     v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
+                     nodes_published, nodes_to_reveal);
+
+#if 0
+  if (merkle_pubs != published_nodes) {
+    hal_send_str("published diff number");
+  }
+  for (int i = 0; i < merkle_pubs; i++) {
+    if (nodes_published[merkle_pubs - i - 1] != published_nodes_ggm[i]) {
+      hal_send_str("Node mismatch");
+      send_unsigned("Published merkle node:",
+                    nodes_published[merkle_pubs - 1 - i]);
+      send_unsigned("Published ggm node:", published_nodes_ggm[i]);
+    }
+  }
+#endif
 #elif defined(RSDPG)
   int published_rsps = build_response(
       sig, root_seed, chall_2, seed_storage, round_seeds, e_bar, v_bar[0],
