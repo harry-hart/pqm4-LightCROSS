@@ -642,7 +642,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           assert(published_rsps < T - W);
           // The index of the
           uint8_t rsp_index = base_index + (k - child_partition_start);
-#if defined(OPT_HASH_Y)
+#if defined(OPT_HASH_Y) && !defined(OPT_Y_U_OVERLAP)
           // Have to recalculate y
           FP_ELEM y_k[N];
           // Calculate y
@@ -659,8 +659,10 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #endif
           fp_dz_norm(y_k);
           pack_fp_vec(sig->resp_0[rsp_index].y, y_k);
+#elif defined(OPT_Y_U_OVERLAP)
+          pack_fp_vec(sig->resp_0[rsp_index].y, &u_prime[k * N]);
 #else
-          pack_fp_vec(sig->resp_0[rsp_index].y, &y[k * N]);
+        pack_fp_vec(sig->resp_0[rsp_index].y, &y[k * N]);
 #endif
 
 #if defined(RSDP)
@@ -1016,10 +1018,29 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   xof_shake_init(&csprng_state_y, SEED_LENGTH_BYTES * 8);
 
   for (int i = 0; i < T; i++) {
-    // Temp vars
+// Temp vars
+#if !defined(OPT_Y_U_OVERLAP)
     FP_ELEM y_i[N];
+#endif
     uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE];
 
+#if defined(OPT_Y_U_OVERLAP)
+// Recalculate e_bar_prime from v_bar
+#if defined(OPT_E_BAR_PRIME)
+    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
+    // Calculate y
+    fp_vec_by_restr_vec_scaled(u_prime[i], e_bar_prime_i, chall_1[i],
+                               u_prime[i]);
+#else
+    // Calculate y
+    fp_vec_by_restr_vec_scaled(u_prime[i], e_bar_prime[i], chall_1[i],
+                               u_prime[i]);
+#endif
+    fp_dz_norm(u_prime[i]);
+
+    // Pack it
+    pack_fp_vec(packed_y_i, u_prime[i]);
+#else
 // Recalculate e_bar_prime from v_bar
 #if defined(OPT_E_BAR_PRIME)
     fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
@@ -1033,6 +1054,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
     // Pack it
     pack_fp_vec(packed_y_i, y_i);
+#endif
 
     // Add it to hash
     xof_shake_update(&csprng_state_y, packed_y_i, DENSELY_PACKED_FP_VEC_SIZE);
@@ -1046,7 +1068,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   xof_shake_update(&csprng_state_y, dsc_ordered, 2);
   xof_shake_final(&csprng_state_y);
   xof_shake_extract(&csprng_state_y, sig->digest_chall_2, HASH_DIGEST_LENGTH);
-
 #else
   FP_ELEM y[T][N];
   for (int i = 0; i < T; i++) {
@@ -1125,7 +1146,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
       assert(published_rsps < T - W);
-#if defined(OPT_HASH_Y)
+#if defined(OPT_HASH_Y) && !defined(OPT_Y_U_OVERLAP)
       // Have to recalculate y
       FP_ELEM y_i[N];
       // Calculate y
@@ -1139,6 +1160,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
       fp_dz_norm(y_i);
       pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
+#elif defined(OPT_Y_U_OVERLAP)
+      pack_fp_vec(sig->resp_0[published_rsps].y, u_prime[i]);
 #else
       pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
 #endif
