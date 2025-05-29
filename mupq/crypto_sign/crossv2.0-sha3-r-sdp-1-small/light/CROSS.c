@@ -735,7 +735,15 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   uint8_t root_seed[SEED_LENGTH_BYTES];
   randombytes(root_seed, SEED_LENGTH_BYTES);
+#if defined(DETERMINISTIC)
+  // WARNING: NOT FOR CORRECT USE, INSECURE, ONLY FOR DEBUGGING
+  // Fix the random elements for constant time debugging
+  memcpy(sig->salt,
+         "Jb&sJW5StV~2v35VUuP2ivZ$2yshJYXYiHAx^PPdrqcjdhvqz@&7HyJgS&tn5yjK",
+         SALT_LENGTH_BYTES);
+#else
   randombytes(sig->salt, SALT_LENGTH_BYTES);
+#endif
 
 #if defined(NO_TREES)
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
