@@ -222,6 +222,12 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   // Compute
   for (int i = 0; i < K; i++) {
     for (int j = 0; j < N - K; j++) {
+      /*
+       * CONSTANT TIME NOTE:
+       *  This loop will not be constant time because of rejection
+       *  sampling of possible random values to finds one in field.
+       *  Part of original CROSS spec.
+       */
       // Try generate random value
       // Are they generated column first or row first?
       // If we have less than 32 remaining
@@ -405,7 +411,7 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   // NOTES:
   // - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
 
-  //// Track current level
+  // Track current level
   uint8_t curr_level = 0;
   //  Keep track of how many rsps published
   int published_rsps = 0;
@@ -429,14 +435,14 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   uint16_t npl_cum = 0;
   uint16_t partition_size;
   uint16_t domain_sep;
-  //  Set up first node on queue
-  memcpy(seed_storage, root_seed, SEED_LENGTH_BYTES);
 
   // Populate queue
   struct GGMNode root = {0, 0, T, 0, 0};
   // struct GGMNode queue[T - W];
   struct GGMNode queue[T >> 1];
   queue[0] = root;
+  //  Set up first node seed
+  memcpy(seed_storage, root_seed, SEED_LENGTH_BYTES);
   uint16_t head = 0;
   uint16_t tail = 1;
   uint16_t ring_max = T >> 1;
@@ -736,8 +742,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   uint8_t root_seed[SEED_LENGTH_BYTES];
   randombytes(root_seed, SEED_LENGTH_BYTES);
 #if defined(DETERMINISTIC)
-  // WARNING: NOT FOR CORRECT USE, INSECURE, ONLY FOR DEBUGGING
-  // Fix the random elements for constant time debugging
+  // WARNING: NOT SECURE, ONLY FOR DEBUGGING USE
+  // Fix the random salt for constant time debugging
   memcpy(sig->salt,
          "Jb&sJW5StV~2v35VUuP2ivZ$2yshJYXYiHAx^PPdrqcjdhvqz@&7HyJgS&tn5yjK",
          SALT_LENGTH_BYTES);
@@ -745,6 +751,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   randombytes(sig->salt, SALT_LENGTH_BYTES);
 #endif
 
+#if defined(OPT_DEBUG)
+  unsigned long long t0, t1;
+  t0 = hal_get_time();
+#endif
 #if defined(NO_TREES)
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
   seed_leaves(round_seeds, root_seed, sig->salt);
@@ -760,6 +770,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_GGM)
   }
 #endif
+#endif
+#if defined(OPT_DEBUG)
+  t1 = hal_get_time();
+  send_unsignedll("seed tree generation cycles:", (t1 - t0));
 #endif
 
 #if defined(OPT_E_BAR_PRIME)
@@ -838,6 +852,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   CSPRNG_STATE_T csprng_state;
 
+#if defined(OPT_DEBUG)
+  t0 = hal_get_time();
+#endif
 #if defined(OPT_MERKLE) && !defined(OPT_OTF_MERKLE)
   // Contain scope of loop vars
   {
@@ -968,7 +985,14 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     }
 #endif
   }
+#if defined(OPT_DEBUG)
+  t1 = hal_get_time();
+  send_unsignedll("main commitment computation cycles:", (t1 - t0));
+#endif
 
+#if defined(OPT_DEBUG)
+  t0 = hal_get_time();
+#endif
 #if defined(NO_TREES)
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
@@ -979,6 +1003,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
 #endif
+#endif
+#if defined(OPT_DEBUG)
+  t1 = hal_get_time();
+  send_unsignedll("tree root cycles:", (t1 - t0));
 #endif
 
 #if defined(OPT_HASH_CMT1)
@@ -1020,6 +1048,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                     dsc_csprng_chall_1);
   csprng_fp_vec_chall_1(chall_1, &csprng_state);
 
+#if defined(OPT_DEBUG)
+  t0 = hal_get_time();
+#endif
 /* Computation of the first round of responses */
 #if defined(OPT_HASH_Y)
 
@@ -1096,10 +1127,23 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   hash(sig->digest_chall_2, y_digest_chall_1, sizeof(y_digest_chall_1),
        HASH_DOMAIN_SEP_CONST);
 #endif
+#if defined(OPT_DEBUG)
+  t1 = hal_get_time();
+  send_unsignedll("computing first response and digest cycles:", (t1 - t0));
+#endif
 
   uint8_t chall_2[T] = {0};
+#if defined(DETERMINISTIC)
+  // WARNING: NOT SECURE, ONLY FOR DEBUGGING USE
+  // Fix the challenge 2 value
+  memset(chall_2 + (T - W), 1, W);
+#else
   expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
+#endif
 
+#if defined(OPT_DEBUG)
+  t0 = hal_get_time();
+#endif
 /* Computation of the second round of responses */
 #if defined(NO_TREES)
   tree_proof(sig->proof, cmt_0, chall_2);
@@ -1112,9 +1156,15 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
+#if defined(OPT_DEBUG)
+  t1 = hal_get_time();
+  send_unsignedll("merkle proof cycles:", (t1 - t0));
+#endif
 
+#if defined(OPT_DEBUG)
+  t0 = hal_get_time();
+#endif
 #if defined(OPT_GGM)
-
 // Placeholders for compatability with different combinations of optimisations
 #if defined(OPT_HASH_Y)
   FP_ELEM *y[1] = {0};
@@ -1207,6 +1257,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     }
   }
 #endif
+#if defined(OPT_DEBUG)
+  t1 = hal_get_time();
+  send_unsignedll("GGM and response cycles:", (t1 - t0));
+#endif
 }
 
 /* verify returns 1 if signature is ok, 0 otherwise */
@@ -1254,7 +1308,13 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   csprng_fp_vec_chall_1(chall_1, &csprng_state);
 
   uint8_t chall_2[T] = {0};
+#if defined(DETERMINISTIC)
+  // WARNING: NOT SECURE, ONLY FOR DEBUGGING USE
+  // Fix the challenge 2 value
+  memset(chall_2 + T - W, 1, W);
+#else
   expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
+#endif
 
   uint8_t is_stree_padding_ok = 0;
 #if defined(NO_TREES)
