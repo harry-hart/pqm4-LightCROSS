@@ -61,8 +61,8 @@
 /*
  * Debugging Flags
  */
-// #define OPT_DEBUG
-// #define DETERMINISTIC
+#define OPT_DEBUG
+#define DETERMINISTIC
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/

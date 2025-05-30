@@ -1,9 +1,11 @@
 import argparse
 import csv
-import string
+import jinja2
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pathlib
-import matplotlib.pyplot as plt
+import string
 
 
 def process_table(test: str, cat: str, table: pd.DataFrame):
@@ -79,6 +81,59 @@ def load_data(path: pathlib.Path) -> dict:
                 table_sec = True
     return tables
 
+def create_table(df):
+    # Drop pointless columns
+    new_table = df.drop(['Scheme', 'Version'], axis=1)
+    # Group by Problem -> Level -> Variant
+    grouped_df = new_table.set_index(['Problem', 'Level', 'Variant', 'Implementation'])
+    # Group implementations in the columns
+    grouped_df = grouped_df.unstack('Implementation')
+    # Get the top-level column names (keygen, sign, verify)
+    metrics = grouped_df.columns.levels[0].unique().tolist()
+    # Add difference column
+    print(grouped_df)
+    for metric in metrics:
+        light_values = grouped_df[(metric, 'light')]
+        ref_values = grouped_df[(metric, 'ref')]
+
+        # Calculate percentage difference: ((light - ref) / ref) * 100
+        # np.divide handles division by zero by producing inf or nan, with a warning
+        with np.errstate(divide='ignore', invalid='ignore'): # Suppress runtime warnings for division
+            diff_pct = np.divide(light_values - ref_values, ref_values) * 100
+        
+        # Replace infinite values (from division by zero where ref is 0 and light is non-zero) with NaN
+        # NaN values (e.g. 0/0) are already NaN
+        diff_pct = diff_pct.replace([float('inf'), float('-inf')], np.nan)
+
+        # Add this as a new column to df_reshaped under the current metric
+        grouped_df[(metric, 'diff [%]')] = diff_pct
+
+    # Reorder columns to have 'light', 'ref', 'Diff [%]' for each metric
+    desired_sub_order = ['ref', 'light', 'diff [%]']
+    new_column_tuples = []
+    for metric in metrics:
+        for sub_col_type in desired_sub_order:
+            # Check if the column exists (it should if added correctly)
+            if (metric, sub_col_type) in grouped_df.columns:
+                new_column_tuples.append((metric, sub_col_type))
+
+    return grouped_df[new_column_tuples]
+
+def create_latex(df, fname):
+    styler = df.style
+    styler.format_index(escape="latex", axis=1).format_index(escape="latex", axis=0)
+    #styler.background_gradient()
+    print(df.index)
+    styler = styler.highlight_max(subset=["Implementation"], axis=1, props='cellcolor:{red}; bfseries: ;')
+    table_lat = styler.to_latex(
+        clines="skip-last;data",
+        convert_css=True,
+        multicol_align="|c|",
+        hrules=True,
+    )
+    with open(fname, 'w') as f:
+        f.write(table_lat)
+
 
 def main():
     #TODO: fix formatting of description in output
@@ -103,9 +158,17 @@ def main():
         for cat, table, in value.items():
             if len(table) == 0:
                 continue
-            #print(f"\t{cat}:\n{table.head()}")
+            # Give the basic table as csv
             new_table = process_table(test, cat, table)
-            new_table.to_csv(f"{"_".join(test.split())}-{"_".join(cat.split())}.csv")
+            new_table.to_csv(f"RAW-{"_".join(test.split())}-{"_".join(cat.split())}.csv")
+            # Create the grouped and pivoted table
+            pretty_table = create_table(new_table)
+            print(pretty_table)
+            pretty_table.to_csv(f"{"_".join(test.split())}-{"_".join(cat.split())}.csv")
+            create_latex(pretty_table, f"{"_".join(test.split())}-{"_".join(cat.split())}.tex")
+
+
+            # Create the graph
 
 
 if __name__ == "__main__":
