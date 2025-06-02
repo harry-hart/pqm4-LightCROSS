@@ -123,7 +123,6 @@ def create_latex(df, fname):
     styler = df.style
     styler.format_index(escape="latex", axis=1).format_index(escape="latex", axis=0)
     #styler.background_gradient()
-    print(df.index)
     styler = styler.highlight_max(subset=["Implementation"], axis=1, props='cellcolor:{red}; bfseries: ;')
     table_lat = styler.to_latex(
         clines="skip-last;data",
