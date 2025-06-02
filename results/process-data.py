@@ -90,6 +90,12 @@ def create_table(df):
     grouped_df = grouped_df.unstack('Implementation')
     # Get the top-level column names (keygen, sign, verify)
     metrics = grouped_df.columns.levels[0].unique().tolist()
+    # Filter out speed max and min
+    new_m = []
+    for m in metrics:
+        if "(max)" not in m and "(min)" not in m:
+            new_m.append(m)
+    metrics = new_m
     # Add difference column
     print(grouped_df)
     for metric in metrics:
@@ -99,7 +105,7 @@ def create_table(df):
         # Calculate percentage difference: ((light - ref) / ref) * 100
         # np.divide handles division by zero by producing inf or nan, with a warning
         with np.errstate(divide='ignore', invalid='ignore'): # Suppress runtime warnings for division
-            diff_pct = np.divide(light_values - ref_values, ref_values) * 100
+            diff_pct = np.round(np.divide(light_values - ref_values, ref_values) * 100, 2)
         
         # Replace infinite values (from division by zero where ref is 0 and light is non-zero) with NaN
         # NaN values (e.g. 0/0) are already NaN
@@ -122,12 +128,18 @@ def create_table(df):
 def create_latex(df, fname):
     styler = df.style
     styler.format_index(escape="latex", axis=1).format_index(escape="latex", axis=0)
+    styler.format(
+        precision=2,
+        thousands=",",
+        na_rep="-",
+    )
     #styler.background_gradient()
-    styler = styler.highlight_max(subset=["Implementation"], axis=1, props='cellcolor:{red}; bfseries: ;')
+    #styler = styler.highlight_max(subset=["Implementation"], axis=1, props='cellcolor:{red}; bfseries: ;')
     table_lat = styler.to_latex(
         clines="skip-last;data",
         convert_css=True,
-        multicol_align="|c|",
+        multicol_align="c",
+        column_format="lll|r|r|r|r|r|r|r|r|r|",
         hrules=True,
     )
     with open(fname, 'w') as f:
