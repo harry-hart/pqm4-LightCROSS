@@ -197,6 +197,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
   int elem_size = BITS_TO_REPRESENT(P - 1);
   FP_ELEM v;
+  // TODO: Make window r long
   uint64_t v_window = 0;
   int remaining_window = 0;
 
@@ -215,19 +216,66 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   // Restrict the values
   // Note: We don't do the restriction in the computation, because
   // it should only be done once.
-  for (int j = K; j < N; j++) {
-    s[j - K] = RESTR_TO_VAL(e_bar[j]);
+  // for (int j = K; j < N; j++) {
+  //  s[j - K] = RESTR_TO_VAL(e_bar[j]);
+  //}
+  for (int j = 0; j < N; j++) {
+    e_bar[j] = RESTR_TO_VAL(e_bar[j]);
   }
+
+#if defined(OPT_DSP)
+#if defined(RSDP)
+  // The four rows we are currently processing
+  FP_ELEM V_rows[N - K][4];
+#elif defined(RSDPG)
+  // The two rows we are currently processing
+  FP_ELEM V_rows[N - K][2];
+#endif
+  uint8_t rows_gen = 0;
+#endif
 
   // Compute
   for (int i = 0; i < K; i++) {
     for (int j = 0; j < N - K; j++) {
-      /*
-       * CONSTANT TIME NOTE:
-       *  This loop will not be constant time because of rejection
-       *  sampling of possible random values to finds one in field.
-       *  Part of original CROSS spec.
-       */
+/*
+ * NOTE: CONSTANT TIME
+ *  This loop will not be constant time because of rejection
+ *  sampling of possible random values to finds one in field.
+ *  Part of original CROSS spec.
+ */
+#if defined(OPT_DSP)
+      // Use the same loop for computation
+      // Is this AND an issue for security/efficiency?
+      if (i != 0 && rows_gen == 0) {
+        // Do dsp over two/four rows
+        uint64_t col_accum = 0;
+#if defined(RSDP)
+        uint32_t e_val = *((uint32_t *)&e_bar[i - 4]);
+        uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
+#elif defined(RSDPG)
+        uint32_t e_val = *((uint32_t *)&e_bar[i - 2]);
+        uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
+#endif
+#if defined(RSDP)
+        // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
+        uint32_t bottom_e = __UXTB16(e_val);
+        uint32_t bottom_V_tr = __UXTB16(V_tr_val);
+        // Extract value e[i], e[i+2], V_tr[i], V_tr[i+2]
+        uint32_t top_e = __UXTB16(__ROR(e_val, 8));
+        uint32_t top_V_tr = __UXTB16(__ROR(V_tr_val, 8));
+#endif
+// Calculate
+#if defined(RSDP)
+        col_accum = __SMLALD(bottom_e, bottom_V_tr, col_accum);
+        col_accum = __SMLALD(top_e, top_V_tr, col_accum);
+#elif defined(RSDPG)
+        col_accum = __SMLALD(e_val, V_tr_val, col_accum);
+#endif
+        col_accum = FPRED_DOUBLE(col_accum);
+        // Store and reduce modulo P
+        s[j] = FPRED_DOUBLE(((uint64_t)s[j] + col_accum));
+      }
+#endif
       // Try generate random value
       // Are they generated column first or row first?
       // If we have less than 32 remaining
@@ -254,12 +302,68 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
         }
       } while (1);
 
+#if defined(OPT_DSP)
+      V_rows[j][rows_gen] = v;
+#else
       // Calculate s
       s[j] = FPRED_DOUBLE((FP_DOUBLEPREC)s[j] +
                           (FP_DOUBLEPREC)RESTR_TO_VAL(e_bar[i]) *
                               (FP_DOUBLEPREC)v);
+#endif
     }
+#if defined(OPT_DSP)
+    rows_gen += 1;
+#if defined(RSDP)
+    if (rows_gen == 4) {
+#elif defined(RSDPG)
+    if (rows_gen == 2) {
+#endif
+      rows_gen = 0;
+    }
+#endif
   }
+#if defined(OPT_DSP)
+  // TODO: Handle remaining
+  // Use the same loop for computation
+  for (int j = 0; j < N - K; j++) {
+    uint64_t col_accum = 0;
+    if (rows_gen == 0) {
+      // Do dsp over two/four rows
+#if defined(RSDP)
+      uint32_t e_val = *((uint32_t *)&e_bar[K - 4]);
+      uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
+#elif defined(RSDPG)
+      uint32_t e_val = *((uint32_t *)&e_bar[K - 2]);
+      uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
+#endif
+#if defined(RSDP)
+      // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
+      uint32_t bottom_e = __UXTB16(e_val);
+      uint32_t bottom_V_tr = __UXTB16(V_tr_val);
+      // Extract value e[i], e[i+2], V_tr[i], V_tr[i+2]
+      uint32_t top_e = __UXTB16(__ROR(e_val, 8));
+      uint32_t top_V_tr = __UXTB16(__ROR(V_tr_val, 8));
+#endif
+// Calculate
+#if defined(RSDP)
+      col_accum = __SMLALD(bottom_e, bottom_V_tr, col_accum);
+      col_accum = __SMLALD(top_e, top_V_tr, col_accum);
+#elif defined(RSDPG)
+      col_accum = __SMLALD(e_val, V_tr_val, col_accum);
+#endif
+      col_accum = FPRED_DOUBLE(col_accum);
+      // Store and reduce modulo P
+    } else {
+      int i_v = 0;
+      for (int i = K - rows_gen; i < K; i++) {
+        col_accum = FPRED_DOUBLE(col_accum + ((FP_DOUBLEPREC)e_bar[i] *
+                                              (FP_DOUBLEPREC)V_rows[j][i_v]));
+        i_v++;
+      }
+    }
+    s[j] = FPRED_DOUBLE(((uint64_t)s[j] + col_accum));
+  }
+#endif
 }
 #endif
 
@@ -313,7 +417,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 
 #if defined(OPT_KEYGEN)
   //  Optimised Implementation
-  //  This is an vector structured:
+  //  This is a vector structured:
   //   - s_e_bar[K..N] := s
   //   - s_e_bar[0..K] := e[0..K]
   //  The full thing is calculated as e, then because we only need e[0..K] for
