@@ -202,6 +202,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   int remaining_window = 0;
 
   FZ_ELEM *e_bar = s_e_bar;
+  FP_ELEM sparse_e_bar[N] = {0};
 #if defined(RSDP)
   // Once again this only works in RSDP because FZ_ELEM and FP_ELEM are same
   // size
@@ -220,7 +221,14 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   //  s[j - K] = RESTR_TO_VAL(e_bar[j]);
   //}
   for (int j = 0; j < N; j++) {
+#if defined(RSDP)
     e_bar[j] = RESTR_TO_VAL(e_bar[j]);
+#elif defined(RSDPG)
+    sparse_e_bar[j] = (FP_ELEM)RESTR_TO_VAL(e_bar[j]);
+    if (j >= K) {
+      s[j - K] = sparse_e_bar[j];
+    }
+#endif
   }
 
 #if defined(OPT_DSP)
@@ -253,7 +261,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
         uint32_t e_val = *((uint32_t *)&e_bar[i - 4]);
         uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
 #elif defined(RSDPG)
-        uint32_t e_val = *((uint32_t *)&e_bar[i - 2]);
+        uint32_t e_val = *((uint32_t *)&sparse_e_bar[i - 2]);
         uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
 #endif
 #if defined(RSDP)
@@ -333,7 +341,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
       uint32_t e_val = *((uint32_t *)&e_bar[K - 4]);
       uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
 #elif defined(RSDPG)
-      uint32_t e_val = *((uint32_t *)&e_bar[K - 2]);
+      uint32_t e_val = *((uint32_t *)&sparse_e_bar[K - 2]);
       uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
 #endif
 #if defined(RSDP)
@@ -352,7 +360,6 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
       col_accum = __SMLALD(e_val, V_tr_val, col_accum);
 #endif
       col_accum = FPRED_DOUBLE(col_accum);
-      // Store and reduce modulo P
     } else {
       int i_v = 0;
       for (int i = K - rows_gen; i < K; i++) {
