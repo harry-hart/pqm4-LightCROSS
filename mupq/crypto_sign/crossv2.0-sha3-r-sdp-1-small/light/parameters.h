@@ -58,11 +58,13 @@
 //  The only ARM specific optimisation
 #define OPT_DSP
 #define OPT_Y_U_OVERLAP
+#define OPT_KEYGEN_BLOCKS
 /*
  * Debugging Flags
  */
 #define OPT_DEBUG
-#define DETERMINISTIC
+#define OPT_PROFILE
+// #define DETERMINISTIC
 
 /******************************************************************************/
 /*************************** Base Fields Parameters ***************************/
