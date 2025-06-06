@@ -195,11 +195,39 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
 #endif
   /* The on the fly element. */
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
+  // This is either 9 or 7 depending on RSDPG vs RSDP
   int elem_size = BITS_TO_REPRESENT(P - 1);
   FP_ELEM v;
   // TODO: Make window r long
+#if defined(CATEGORY_1)
+  // SHAKE128 r size: 168 bytes
+#define R_SIZE 168
+#else
+#define R_SIZE 136
+#endif
+  // uint64_t v_window = 0;
+  // 2 byte buffer to allow for max 9 byte remaining
+  uint8_t rand_buflen = R_SIZE + 2;
+  uint8_t rand_buffer[R_SIZE + 2] = {0};
+  uint8_t rand_bufrem = csprng_state_mat.ctx[25];
+  uint8_t rand_pos = 0;
   uint64_t v_window = 0;
-  int remaining_window = 0;
+  int remaining_window_bits = 0;
+
+  // Put any remaining unsqueezed bytes into here for clean chunks later
+  if (rand_bufrem != 0) {
+    csprng_randombytes(rand_buffer, rand_bufrem, &csprng_state_mat);
+  }
+  // Init v_window
+  // Using remaining window bits to store bytes for now
+  remaining_window_bits = rand_bufrem < 8 ? rand_bufrem : 8;
+  for (int i = 0; i < remaining_window_bits; i++) {
+    v_window |= ((uint64_t)rand_buffer[i]) << 8 * i;
+    rand_pos++;
+    rand_bufrem--;
+  }
+  // Adjust to bits
+  remaining_window_bits *= 8;
 
   FZ_ELEM *e_bar = s_e_bar;
   FP_ELEM sparse_e_bar[N] = {0};
@@ -288,21 +316,39 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
       // Are they generated column first or row first?
       // If we have less than 32 remaining
       do {
-        if (remaining_window <= 32) {
-          uint32_t replace_window;
-          // Get new random bytes
-          csprng_randombytes((unsigned char *)&replace_window,
-                             sizeof(replace_window), &csprng_state_mat);
+        if (remaining_window_bits <= 32) {
+          // If we have run out of random buffer, generate more
+          if (rand_bufrem <= 4) {
+            // Copy the remaining bytes to the front
+            memcpy(rand_buffer, &rand_buffer[rand_pos], rand_bufrem);
+            rand_pos = 0;
+            // Generate another block
+            csprng_randombytes(&rand_buffer[rand_bufrem], R_SIZE,
+                               &csprng_state_mat);
+            // Update remaining
+            rand_bufrem += R_SIZE;
+          }
+          uint32_t replace_window = 0;
+          // Have to do this to flip it for right shift
+          for (uint8_t k = 0; k < 4; k++) {
+            replace_window |= ((uint32_t)rand_buffer[rand_pos]) << 8 * k;
+            rand_pos++;
+          }
+          //  Get new random bytes
+          // csprng_randombytes((unsigned char *)&replace_window,
+          //                    sizeof(replace_window), &csprng_state_mat);
           // put on sub buffer
-          v_window |= ((uint64_t)replace_window) << remaining_window;
+          v_window |= ((uint64_t)replace_window) << remaining_window_bits;
           // add to remaining window
-          remaining_window += 32;
+          remaining_window_bits += 32;
+          // Update remaining
+          rand_bufrem -= 4;
         }
         v = v_window & mask;
         // shift window
         v_window = v_window >> elem_size;
         // update counter
-        remaining_window -= elem_size;
+        remaining_window_bits -= elem_size;
         // Rejection sampling if not in field
         // If it is in the field
         if (v < P) {
