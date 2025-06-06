@@ -300,6 +300,9 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
                const uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
                const uint8_t leaves_to_reveal[T]) {
 #endif
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
 #if !defined(OPT_MERKLE)
   uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH];
 #endif
@@ -370,6 +373,10 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
        i < TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH; i++) {
     error |= mtp[i];
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  send_unsignedll("recompute_root:", t1 - t0);
+#endif
   return (error == 0);
 }
 
@@ -380,6 +387,9 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
                unsigned char leaves[T][HASH_DIGEST_LENGTH]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   // If we have done all the leaves on this level.
   // Find the next level with leaves
   // We can do this because from left to right the tree leaves should have
@@ -414,6 +424,10 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
       // If we hit the top of the tree, return the digest in leaf_value
       if (curr_level == 0) {
         memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
+#if defined(OPT_PROFILE)
+        uint64_t t1 = hal_get_time();
+        send_unsignedll("tree_root:", t1 - t0);
+#endif
         return;
       }
       // 4. Go up a level
@@ -427,12 +441,14 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
   }
 }
 
-uint16_t merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
-                      uint16_t *nodes_published) {
-  // Notes:
-  // - Can overwrite cmt_0 as it is never used again
-  // - COMPUTED = 1, NOT_COMPUTED = 0
-
+uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
+                    uint16_t *nodes_published) {
+// Notes:
+// - Can overwrite cmt_0 as it is never used again
+// - COMPUTED = 1, NOT_COMPUTED = 0
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   uint8_t flags[T + 1] = {NOT_COMPUTED};
   uint8_t level = LOG2(T);
   uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
@@ -512,6 +528,10 @@ uint16_t merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
     }
     level--;
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  send_unsignedll("tree_proof:", t1 - t0);
+#endif
   return published;
 }
 

@@ -63,10 +63,15 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
 /* Stub interface to the function computing the Merkle tree proof, storing
  * it in the signature. Returns the number of digests in the merkle tree
  * proof */
+#if defined(OPT_OTF_MERKLE)
+uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
+                    uint16_t *nodes_published);
+#else
 uint16_t
 tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
            const uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH],
            const uint8_t leaves_to_reveal[T]);
+#endif
 
 /* stub of the interface to Merkle tree recomputation given the proof and
  * the computed leaves */
@@ -82,11 +87,4 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
                const uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
                const uint8_t leaves_to_reveal[T]);
 #endif
-#endif
-
-#if defined(OPT_OTF_MERKLE)
-/**** On the fly merkle ****/
-
-uint16_t merkle_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
-                      uint16_t *nodes_published);
 #endif

@@ -22,6 +22,7 @@ ifeq ($(AIO),1)
 LDLIBS +=
 LIBDEPS += $(SYMCRYPTO_SRC)
 CPPFLAGS+=$(if $(PROFILE_HASHING),-DPROFILE_HASHING)
+CPPFLAGS+=$(if $(OPT_PROFILE),-DOPT_PROFILE)
 else
 LDLIBS += -lsymcrypto$(if $(PROFILE_HASHING),-hashprof)
 LIBDEPS += obj/libsymcrypto$(if $(PROFILE_HASHING),-hashprof).a

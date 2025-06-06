@@ -96,6 +96,7 @@ elf/$(2)_%.elf: CPPFLAGS+=-I$(1)
 elf/$(2)_%.elf: MUPQ_NAMESPACE=$(call namespace,$(2),$(3))
 elf/$(2)_%.elf: PROFILE_HASHING=$$(filter %_hashing.elf,$$@)
 elf/$(2)_%.elf: NO_RANDOMBYTES=$$(filter %_testvectors.elf,$$@)
+elf/$(2)_%.elf: OPT_PROFILE=$$(filter %_profile.elf,$$@)
 
 
 # The {test,stack,speed,...}.c file is compiled directly into the elf file,
@@ -117,13 +118,13 @@ elf/$(2)_%.elf: mupq/crypto_$(3)/%.c obj/lib$(2).a $$$$(LINKDEPS) $$(CONFIG)
 endif
 
 # Add the elf,bin and hex files to the tests target.
-tests: elf/$(2)_test.elf elf/$(2)_speed.elf elf/$(2)_hashing.elf elf/$(2)_stack.elf elf/$(2)_testvectors.elf elf/$(2)_profile-sign.elf
-tests-bin: bin/$(2)_test.bin bin/$(2)_speed.bin bin/$(2)_hashing.bin bin/$(2)_stack.bin bin/$(2)_testvectors.bin bin/$(2)_profile-sign.bin
-tests-hex: bin/$(2)_test.hex bin/$(2)_speed.hex bin/$(2)_hashing.hex bin/$(2)_stack.hex bin/$(2)_testvectors.hex bin/$(2)_profile-sign.hex
+tests: elf/$(2)_test.elf elf/$(2)_speed.elf elf/$(2)_hashing.elf elf/$(2)_stack.elf elf/$(2)_testvectors.elf elf/$(2)_profile.elf
+tests-bin: bin/$(2)_test.bin bin/$(2)_speed.bin bin/$(2)_hashing.bin bin/$(2)_stack.bin bin/$(2)_testvectors.bin bin/$(2)_profile.bin
+tests-hex: bin/$(2)_test.hex bin/$(2)_speed.hex bin/$(2)_hashing.hex bin/$(2)_stack.hex bin/$(2)_testvectors.hex bin/$(2)_profile.hex
 
-$(call schemename,$(1)): elf/$(2)_test.elf elf/$(2)_speed.elf elf/$(2)_hashing.elf elf/$(2)_stack.elf elf/$(2)_testvectors.elf elf/$(2)_profile-sign.elf
-$(call schemename,$(1))-bin: bin/$(2)_test.bin bin/$(2)_speed.bin bin/$(2)_hashing.bin bin/$(2)_stack.bin bin/$(2)_testvectors.bin bin/$(2)_profile-sign.bin
-$(call schemename,$(1))-hex: bin/$(2)_test.hex bin/$(2)_speed.hex bin/$(2)_hashing.hex bin/$(2)_stack.hex bin/$(2)_testvectors.hex bin/$(2)_profile-sign.hex
+$(call schemename,$(1)): elf/$(2)_test.elf elf/$(2)_speed.elf elf/$(2)_hashing.elf elf/$(2)_stack.elf elf/$(2)_testvectors.elf elf/$(2)_profile.elf
+$(call schemename,$(1))-bin: bin/$(2)_test.bin bin/$(2)_speed.bin bin/$(2)_hashing.bin bin/$(2)_stack.bin bin/$(2)_testvectors.bin bin/$(2)_profile.bin
+$(call schemename,$(1))-hex: bin/$(2)_test.hex bin/$(2)_speed.hex bin/$(2)_hashing.hex bin/$(2)_stack.hex bin/$(2)_testvectors.hex bin/$(2)_profile.hex
 
 ifneq ($(filter $(HOST_IMPLEMENTATIONS),$(2)),)
 bin-host/$(2)_testvectors: HOST_CPPFLAGS+=-I$(1)
@@ -170,7 +171,7 @@ run-$(4)-tests: benchmarks/$(4)/$(1)/frommake
 run-$(3)-$(4)-tests: benchmarks/$(4)/$(1)/frommake
 endef
 
-$(foreach test,speed stack hashing, \
+$(foreach test,speed stack hashing profile, \
 	$(foreach scheme,$(KEM_SCHEMES), \
 		$(eval $(call runtest,$(scheme),$(call implname,$(scheme)),$(call schemename,$(scheme)),$(test)))) \
 	$(foreach scheme,$(SIGN_SCHEMES), \

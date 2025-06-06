@@ -31,11 +31,16 @@
 
 #pragma once
 
+#include "hal.h"
 #include "parameters.h"
 
 #if defined(OPT_DSP)
 // #include "arm_math.h"
 #include "cmsis_gcc.h"
+#endif
+
+#if defined(OPT_PROFILE)
+extern uint64_t restr_arith_cycles;
 #endif
 
 #if defined(RSDP)
@@ -51,25 +56,46 @@
 #endif
 
 static inline void fz_dz_norm_n(FZ_ELEM v[N]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < N; i++) {
     v[i] = FZ_DOUBLE_ZERO_NORM(v[i]);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  restr_arith_cycles += t1 - t0;
+#endif
 }
 
 /* Elements of the restricted subgroups are represented as the exponents of
  * the generator */
 static inline void fz_vec_sub_n(FZ_ELEM res[N], const FZ_ELEM a[N],
                                 const FZ_ELEM b[N]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < N; i++) {
     res[i] = FZRED_SINGLE(a[i] + FZRED_OPPOSITE(b[i]));
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  restr_arith_cycles += t1 - t0;
+#endif
 }
 
 static inline int is_fz_vec_in_restr_group_n(const FZ_ELEM in[N]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   int is_in_ok = 1;
   for (int i = 0; i < N; i++) {
     is_in_ok = is_in_ok && (in[i] < Z);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  restr_arith_cycles += t1 - t0;
+#endif
   return is_in_ok;
 }
 
@@ -80,6 +106,9 @@ static inline int is_fz_vec_in_restr_group_n(const FZ_ELEM in[N]) {
 #if defined(OPT_DSP)
 static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
                                   FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   memset(res, 0, (N - RSDPG_M) * sizeof(FZ_ELEM));
   memcpy(res + (N - RSDPG_M), e, RSDPG_M * sizeof(FZ_ELEM));
   for (int j = 0; j < N - RSDPG_M; j++) {
@@ -115,6 +144,9 @@ static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
 static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
                                   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M]) {
 
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   memset(res, 0, (N - RSDPG_M) * sizeof(FZ_ELEM));
   memcpy(res + (N - RSDPG_M), e, RSDPG_M * sizeof(FZ_ELEM));
   for (int i = 0; i < RSDPG_M; i++) {
@@ -124,25 +156,50 @@ static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
     }
   }
 #endif
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  restr_arith_cycles += t1 - t0;
+#endif
 }
 
 static inline void fz_vec_sub_m(FZ_ELEM res[RSDPG_M], const FZ_ELEM a[RSDPG_M],
                                 const FZ_ELEM b[RSDPG_M]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < RSDPG_M; i++) {
     res[i] = FZRED_SINGLE(a[i] + FZRED_OPPOSITE(b[i]));
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  restr_arith_cycles += t1 - t0;
+#endif
 }
 
 static inline int is_fz_vec_in_restr_group_m(const FZ_ELEM in[RSDPG_M]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   int is_in_ok = 1;
   for (int i = 0; i < RSDPG_M; i++) {
     is_in_ok = is_in_ok && (in[i] < Z);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  restr_arith_cycles += t1 - t0;
+#endif
   return is_in_ok;
 }
 static inline void fz_dz_norm_m(FZ_ELEM v[RSDPG_M]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < RSDPG_M; i++) {
     v[i] = FZ_DOUBLE_ZERO_NORM(v[i]);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  restr_arith_cycles += t1 - t0;
+#endif
 }
 #endif

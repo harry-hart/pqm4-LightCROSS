@@ -43,9 +43,13 @@
 #include "cmsis_gcc.h"
 #endif
 
-#if defined(OPT_DEBUG)
+#if defined(OPT_DEBUG) || defined(OPT_PROFILE)
 #include "hal.h"
 #include "sendfn.h"
+#endif
+
+#if defined(OPT_PROFILE)
+extern uint64_t fp_arith_cycles;
 #endif
 
 #define NUM_BITS_P (BITS_TO_REPRESENT(P))
@@ -105,15 +109,29 @@ static inline FP_ELEM RESTR_TO_VAL(FP_ELEM x) {
 
 /* in-place normalization of redundant zero representation for syndromes*/
 static inline void fp_dz_norm_synd(FP_ELEM v[N - K]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < N - K; i++) {
     v[i] = FP_DOUBLE_ZERO_NORM(v[i]);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }
 
 static inline void fp_dz_norm(FP_ELEM v[N]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < N; i++) {
     v[i] = FP_DOUBLE_ZERO_NORM(v[i]);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }
 
 /* Computes the product e*H of an n-element restricted vector by a (n-k)*n
@@ -126,6 +144,9 @@ static inline void fp_dz_norm(FP_ELEM v[N]) {
 #if defined(RSDP)
 static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e_bar[N],
                                    FP_ELEM V_tr[N - K][K]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   FP_ELEM e[N] = {0};
   for (int i = 0; i < N; i++) {
     e[i] = RESTR_TO_VAL(e_bar[i]);
@@ -161,6 +182,9 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e_bar[N],
 #else
 static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e_bar[N],
                                    FP_ELEM V_tr[N - K][K]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   FP_ELEM e[N] = {0};
   for (int i = 0; i < N; i++) {
     e[i] = RESTR_TO_VAL(e_bar[i]);
@@ -196,6 +220,9 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e_bar[N],
 #else
 static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
                                    FP_ELEM V_tr[K][N - K]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = K; i < N; i++) {
     res[i - K] = RESTR_TO_VAL(e[i]);
   }
@@ -207,6 +234,10 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
     }
   }
 #endif
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }
 // #endif
 
@@ -214,6 +245,9 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
 #if defined(RSDP)
 static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
                                 FP_ELEM V_tr[N - K][K]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
   // Reverse order for optimal access
   for (int j = 0; j < N - K; j++) {
@@ -245,6 +279,9 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
 #elif defined(RSDPG)
 static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
                                 FP_ELEM V_tr[N - K][K]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
   for (int j = 0; j < N - K; j++) {
     uint64_t col_accum = 0;
@@ -274,6 +311,9 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
 #else
 static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
                                 FP_ELEM V_tr[K][N - K]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   memcpy(res, e + K, (N - K) * sizeof(FP_ELEM));
   for (int i = 0; i < K; i++) {
     for (int j = 0; j < N - K; j++) {
@@ -282,23 +322,41 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
     }
   }
 #endif
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }
 
 static inline void fp_vec_by_fp_vec_pointwise(FP_ELEM res[N],
                                               const FP_ELEM in1[N],
                                               const FP_ELEM in2[N]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < N; i++) {
     res[i] = FPRED_DOUBLE((FP_DOUBLEPREC)in1[i] * (FP_DOUBLEPREC)in2[i]);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }
 
 static inline void restr_by_fp_vec_pointwise(FP_ELEM res[N],
                                              const FZ_ELEM in1[N],
                                              const FP_ELEM in2[N]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < N; i++) {
     res[i] = FPRED_DOUBLE((FP_DOUBLEPREC)RESTR_TO_VAL(in1[i]) *
                           (FP_DOUBLEPREC)in2[i]);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }
 
 /* e*chall_1 + u_prime*/
@@ -306,27 +364,48 @@ static inline void fp_vec_by_restr_vec_scaled(FP_ELEM res[N],
                                               const FZ_ELEM e[N],
                                               const FP_ELEM chall_1,
                                               const FP_ELEM u_prime[N]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int i = 0; i < N; i++) {
     res[i] = FPRED_DOUBLE((FP_DOUBLEPREC)u_prime[i] +
                           (FP_DOUBLEPREC)RESTR_TO_VAL(e[i]) *
                               (FP_DOUBLEPREC)chall_1);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }
 
 static inline void fp_synd_minus_fp_vec_scaled(FP_ELEM res[N - K],
                                                const FP_ELEM synd[N - K],
                                                const FP_ELEM chall_1,
                                                const FP_ELEM s[N - K]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int j = 0; j < N - K; j++) {
     FP_ELEM tmp = FPRED_DOUBLE((FP_DOUBLEPREC)s[j] * (FP_DOUBLEPREC)chall_1);
     tmp = FP_DOUBLE_ZERO_NORM(tmp);
     res[j] = FPRED_SINGLE((FP_DOUBLEPREC)synd[j] + FPRED_OPPOSITE(tmp));
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }
 
 static inline void convert_restr_vec_to_fp(FP_ELEM res[N],
                                            const FZ_ELEM in[N]) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   for (int j = 0; j < N; j++) {
     res[j] = RESTR_TO_VAL(in[j]);
   }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  fp_arith_cycles += t1 - t0;
+#endif
 }

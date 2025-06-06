@@ -567,19 +567,21 @@ struct GGMNode {
 };
 
 #if defined(RSDP)
-build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
-               const unsigned char *indices_to_publish, uint8_t *seed_storage,
-               unsigned char *round_seeds, FZ_ELEM *e_bar, FZ_ELEM *v_bar,
-               FP_ELEM *chall_1, FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
-               FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
-               uint8_t nodes_revealed) {
+void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
+                    const unsigned char *indices_to_publish,
+                    uint8_t *seed_storage, unsigned char *round_seeds,
+                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
+                    FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
+                    FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
+                    uint8_t nodes_revealed) {
 #elif defined(RSDPG)
-build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
-               const unsigned char *indices_to_publish, uint8_t *seed_storage,
-               unsigned char *round_seeds, FZ_ELEM *e_bar, FZ_ELEM *v_bar,
-               FP_ELEM *chall_1, FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
-               uint8_t *cmt_1, FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
-               uint8_t nodes_revealed) {
+void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
+                    const unsigned char *indices_to_publish,
+                    uint8_t *seed_storage, unsigned char *round_seeds,
+                    FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
+                    FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
+                    uint8_t *cmt_1, FZ_ELEM *e_bar_prime,
+                    uint16_t *nodes_to_reveal, uint8_t nodes_revealed) {
 #endif
 // NOTES:
 // - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
@@ -1330,7 +1332,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_OTF_MERKLE)
   uint16_t nodes_published[W] = {0};
   uint16_t nodes_to_reveal =
-      merkle_proof(sig->proof, cmt_0[0], chall_2, nodes_published);
+      tree_proof(sig->proof, cmt_0[0], chall_2, nodes_published);
 #else
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
