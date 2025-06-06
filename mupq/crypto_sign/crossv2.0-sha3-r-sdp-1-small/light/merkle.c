@@ -238,6 +238,7 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
  * through the verification, the verifier will be able to know which hash
  * corresponds to which node.
  */
+#if !defined(OPT_OTF_MERKLE)
 uint16_t
 tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
            const uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH],
@@ -284,6 +285,7 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
   }
   return published;
 }
+#endif
 
 /*****************************************************************************/
 #if defined(OPT_MERKLE)
@@ -375,57 +377,6 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 /*****************************************************************************/
 /****************** On the fly merkle tree functions *************************/
 /*****************************************************************************/
-
-// Initialise the state with 0's
-// void merkle_init_state(struct MerkleState *state) {
-//  memset(state->tree_state, 0, (LOG2(T) + 1) * HASH_DIGEST_LENGTH);
-//  state->flag = 0;
-//  state->level = LOG2(T);
-//  state->leaves_seen = 0;
-//  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
-//  memcpy(state->lpl, lpl, sizeof(lpl));
-//}
-//
-// void merkle_add_leaf(struct MerkleState *state, uint8_t *leaf_value) {
-//  // If we have done all the leaves on this level.
-//  // Find the next level with leaves
-//  // We can do this because from left to right the tree leaves should have
-//  // monotonically descending depths.
-//  while (state->leaves_seen == state->lpl[state->level]) {
-//    state->level--;
-//    state->leaves_seen = 0;
-//  }
-//  // Set the current hash and level
-//  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
-//  memcpy(curr_hash, leaf_value, HASH_DIGEST_LENGTH);
-//  // Adjust for 0-index
-//  uint8_t curr_level = state->level - 1;
-//  // Look for an empty spot to insert hash
-//  while ((state->flag & (1 << curr_level)) > 0) {
-//    // When we encounter a hash at our level, hash with it
-//    // 1. First concatenate
-//    memcpy(&state->tree_state[(curr_level + 1) * HASH_DIGEST_LENGTH],
-//    curr_hash,
-//           HASH_DIGEST_LENGTH);
-//    // 2. Then hash
-//    hash(curr_hash, &state->tree_state[curr_level * HASH_DIGEST_LENGTH],
-//         2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
-//    // 3. Then clear flag because the hash has been used
-//    state->flag -= (1 << curr_level);
-//    // If we hit the top of the tree, return the digest in leaf_value
-//    if (curr_level == 0) {
-//      memcpy(leaf_value, &curr_hash, HASH_DIGEST_LENGTH);
-//      return;
-//    }
-//    // 4. Go up a level
-//    curr_level--;
-//  }
-//  // After finding a place to insert, put in state
-//  memcpy(&state->tree_state[curr_level * HASH_DIGEST_LENGTH], curr_hash,
-//         HASH_DIGEST_LENGTH);
-//  state->flag += (1 << curr_level);
-//  state->leaves_seen++;
-//}
 
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
                unsigned char leaves[T][HASH_DIGEST_LENGTH]) {

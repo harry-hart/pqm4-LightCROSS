@@ -43,7 +43,7 @@
 #include "parameters.h"
 #include "seedtree.h"
 
-#if defined(OPT_DEBUG)
+#if defined(OPT_DEBUG) || defined(OPT_PROFILE)
 #include "hal.h"
 #include "sendfn.h"
 #endif
@@ -176,6 +176,9 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
                                    FP_ELEM *s, uint8_t *seed_pk) {
 #endif
 
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   /* Expansion of pk->seed, explicit domain separation for CSPRNG as in keygen
    */
   const uint16_t dsc_csprng_seed_pk = CSPRNG_DOMAIN_SEP_CONST + (3 * T + 2);
@@ -198,22 +201,25 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   // This is either 9 or 7 depending on RSDPG vs RSDP
   int elem_size = BITS_TO_REPRESENT(P - 1);
   FP_ELEM v;
+#if defined(OPT_KEYGEN_BLOCKS)
   // TODO: Make window r long
 #if defined(CATEGORY_1)
   // SHAKE128 r size: 168 bytes
 #define R_SIZE 168
 #else
+  // SHAKE256 r size: 136 bytes
 #define R_SIZE 136
 #endif
-  // uint64_t v_window = 0;
   // 2 byte buffer to allow for max 9 byte remaining
   uint8_t rand_buflen = R_SIZE + 2;
   uint8_t rand_buffer[R_SIZE + 2] = {0};
   uint8_t rand_bufrem = csprng_state_mat.ctx[25];
   uint8_t rand_pos = 0;
+#endif
   uint64_t v_window = 0;
   int remaining_window_bits = 0;
 
+#if defined(OPT_KEYGEN_BLOCKS)
   // Put any remaining unsqueezed bytes into here for clean chunks later
   if (rand_bufrem != 0) {
     csprng_randombytes(rand_buffer, rand_bufrem, &csprng_state_mat);
@@ -228,6 +234,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   }
   // Adjust to bits
   remaining_window_bits *= 8;
+#endif
 
   FZ_ELEM *e_bar = s_e_bar;
   FP_ELEM sparse_e_bar[N] = {0};
@@ -317,6 +324,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
       // If we have less than 32 remaining
       do {
         if (remaining_window_bits <= 32) {
+#if defined(OPT_KEYGEN_BLOCKS)
           // If we have run out of random buffer, generate more
           if (rand_bufrem <= 4) {
             // Copy the remaining bytes to the front
@@ -328,21 +336,27 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
             // Update remaining
             rand_bufrem += R_SIZE;
           }
+#endif
           uint32_t replace_window = 0;
+#if defined(OPT_KEYGEN_BLOCKS)
           // Have to do this to flip it for right shift
           for (uint8_t k = 0; k < 4; k++) {
             replace_window |= ((uint32_t)rand_buffer[rand_pos]) << 8 * k;
             rand_pos++;
           }
+#else
           //  Get new random bytes
-          // csprng_randombytes((unsigned char *)&replace_window,
-          //                    sizeof(replace_window), &csprng_state_mat);
+          csprng_randombytes((unsigned char *)&replace_window,
+                             sizeof(replace_window), &csprng_state_mat);
+#endif
           // put on sub buffer
           v_window |= ((uint64_t)replace_window) << remaining_window_bits;
           // add to remaining window
           remaining_window_bits += 32;
+#if defined(OPT_KEYGEN_BLOCKS)
           // Update remaining
           rand_bufrem -= 4;
+#endif
         }
         v = v_window & mask;
         // shift window
@@ -416,6 +430,10 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
     }
     s[j] = FPRED_DOUBLE(((uint64_t)s[j] + col_accum));
   }
+#endif
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  send_unsignedll("CROSS_keygen_compute_syndrome:", t1 - t0);
 #endif
 }
 #endif
@@ -549,24 +567,25 @@ struct GGMNode {
 };
 
 #if defined(RSDP)
-int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
-                   const unsigned char *indices_to_publish,
-                   uint8_t *seed_storage, unsigned char *round_seeds,
-                   FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
-                   FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
-                   FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
-                   uint8_t nodes_revealed) {
+build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
+               const unsigned char *indices_to_publish, uint8_t *seed_storage,
+               unsigned char *round_seeds, FZ_ELEM *e_bar, FZ_ELEM *v_bar,
+               FP_ELEM *chall_1, FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
+               FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
+               uint8_t nodes_revealed) {
 #elif defined(RSDPG)
-int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
-                   const unsigned char *indices_to_publish,
-                   uint8_t *seed_storage, unsigned char *round_seeds,
-                   FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
-                   FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
-                   uint8_t *cmt_1, FZ_ELEM *e_bar_prime,
-                   uint16_t *nodes_to_reveal, uint8_t nodes_revealed) {
+build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
+               const unsigned char *indices_to_publish, uint8_t *seed_storage,
+               unsigned char *round_seeds, FZ_ELEM *e_bar, FZ_ELEM *v_bar,
+               FP_ELEM *chall_1, FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
+               uint8_t *cmt_1, FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
+               uint8_t nodes_revealed) {
 #endif
-  // NOTES:
-  // - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
+// NOTES:
+// - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
 
   // Track current level
   uint8_t curr_level = 0;
@@ -863,8 +882,10 @@ int build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       }
     }
   }
-  // return published_rsps;
-  return published_nodes;
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  send_unsignedll("build_response:", t1 - t0);
+#endif
 }
 #endif
 
@@ -908,7 +929,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   randombytes(sig->salt, SALT_LENGTH_BYTES);
 #endif
 
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   unsigned long long t0, t1;
   t0 = hal_get_time();
 #endif
@@ -928,7 +949,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   }
 #endif
 #endif
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t1 = hal_get_time();
   send_unsignedll("seed tree generation cycles:", (t1 - t0));
 #endif
@@ -1009,7 +1030,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   CSPRNG_STATE_T csprng_state;
 
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t0 = hal_get_time();
 #endif
 #if defined(OPT_MERKLE) && !defined(OPT_OTF_MERKLE)
@@ -1142,12 +1163,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     }
 #endif
   }
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t1 = hal_get_time();
   send_unsignedll("main commitment computation cycles:", (t1 - t0));
 #endif
 
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t0 = hal_get_time();
 #endif
 #if defined(NO_TREES)
@@ -1161,7 +1182,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
 #endif
 #endif
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t1 = hal_get_time();
   send_unsignedll("tree root cycles:", (t1 - t0));
 #endif
@@ -1205,7 +1226,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                     dsc_csprng_chall_1);
   csprng_fp_vec_chall_1(chall_1, &csprng_state);
 
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t0 = hal_get_time();
 #endif
 /* Computation of the first round of responses */
@@ -1284,7 +1305,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   hash(sig->digest_chall_2, y_digest_chall_1, sizeof(y_digest_chall_1),
        HASH_DOMAIN_SEP_CONST);
 #endif
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t1 = hal_get_time();
   send_unsignedll("computing first response and digest cycles:", (t1 - t0));
 #endif
@@ -1298,7 +1319,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
 #endif
 
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t0 = hal_get_time();
 #endif
 /* Computation of the second round of responses */
@@ -1313,12 +1334,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t1 = hal_get_time();
   send_unsignedll("merkle proof cycles:", (t1 - t0));
 #endif
 
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t0 = hal_get_time();
 #endif
 #if defined(OPT_GGM)
@@ -1341,15 +1362,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(RSDP)
-  int published_nodes =
-      build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                     v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
-                     nodes_published, nodes_to_reveal);
+  build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
+                 v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
+                 nodes_published, nodes_to_reveal);
 #elif defined(RSDPG)
-  int published_rsps =
-      build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                     v_bar[0], chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1,
-                     e_bar_prime[0], nodes_published, nodes_to_reveal);
+  build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
+                 v_bar[0], chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1,
+                 e_bar_prime[0], nodes_published, nodes_to_reveal);
 #endif
 #else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
@@ -1414,7 +1433,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     }
   }
 #endif
-#if defined(OPT_DEBUG)
+#if defined(OPT_PROFILE)
   t1 = hal_get_time();
   send_unsignedll("GGM and response cycles:", (t1 - t0));
 #endif
