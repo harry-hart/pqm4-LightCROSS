@@ -37,6 +37,16 @@
 #include "parameters.h"
 #include "sha3.h"
 
+#if defined(OPT_DEBUG) || defined(OPT_PROFILE)
+#include "hal.h"
+#include "sendfn.h"
+#endif
+
+#if defined(OPT_PROFILE)
+extern uint64_t csprng_cycles;
+extern uint64_t hash_cycles;
+#endif
+
 /************************* CSPRNG ********************************/
 
 #define CSPRNG_STATE_T SHAKE_STATE_STRUCT
@@ -45,6 +55,9 @@ static inline void csprng_initialize(CSPRNG_STATE_T *const csprng_state,
                                      const unsigned char *const seed,
                                      const uint32_t seed_len_bytes,
                                      const uint16_t dsc) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   // the second parameter is the security level of the SHAKE instance
   xof_shake_init(csprng_state, SEED_LENGTH_BYTES * 8);
   xof_shake_update(csprng_state, seed, seed_len_bytes);
@@ -53,13 +66,24 @@ static inline void csprng_initialize(CSPRNG_STATE_T *const csprng_state,
   dsc_ordered[1] = (dsc >> 8) & 0xff;
   xof_shake_update(csprng_state, dsc_ordered, 2);
   xof_shake_final(csprng_state);
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  csprng_cycles += t1 - t0;
+#endif
 } /* end initialize_csprng */
 
 /* extracts xlen bytes from the CSPRNG, given the state */
 static inline void csprng_randombytes(unsigned char *const x,
                                       unsigned long long xlen,
                                       CSPRNG_STATE_T *const csprng_state) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   xof_shake_extract(csprng_state, x, xlen);
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  csprng_cycles += t1 - t0;
+#endif
 }
 
 /******************************************************************************/
@@ -77,6 +101,9 @@ static inline void randombytes(unsigned char *x, unsigned long long xlen) {
 static inline void hash(uint8_t digest[HASH_DIGEST_LENGTH],
                         const unsigned char *const m, const uint64_t mlen,
                         const uint16_t dsc) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
   /* SHAKE with a 2*lambda bit digest is employed also for hashing */
   CSPRNG_STATE_T csprng_state;
   xof_shake_init(&csprng_state, SEED_LENGTH_BYTES * 8);
@@ -87,6 +114,10 @@ static inline void hash(uint8_t digest[HASH_DIGEST_LENGTH],
   xof_shake_update(&csprng_state, dsc_ordered, 2);
   xof_shake_final(&csprng_state);
   xof_shake_extract(&csprng_state, digest, HASH_DIGEST_LENGTH);
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  hash_cycles += t1 - t0;
+#endif
 }
 
 /***************** Specialized CSPRNGs for non binary domains *****************/

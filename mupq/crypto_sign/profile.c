@@ -30,6 +30,8 @@
 // unsigned long long hash_cycles;
 uint64_t fp_arith_cycles;
 uint64_t restr_arith_cycles;
+uint64_t csprng_cycles;
+uint64_t hash_cycles;
 
 int main(void) {
   unsigned char sk[MUPQ_CRYPTO_SECRETKEYBYTES];
@@ -55,6 +57,8 @@ int main(void) {
     //    printcycles("keypair hash cycles:", hash_cycles);
     printcycles("keypair fp_arith cycles:", fp_arith_cycles);
     printcycles("keypair restr_arith cycles:", restr_arith_cycles);
+    printcycles("keypair csprng cycles:", csprng_cycles);
+    printcycles("keypair hash cycles:", hash_cycles);
     hal_send_str("+");
 
     // Signing
@@ -67,6 +71,8 @@ int main(void) {
     //   printcycles("sign hash cycles:", hash_cycles);
     printcycles("sign fp_arith cycles:", fp_arith_cycles);
     printcycles("sign restr_arith cycles:", restr_arith_cycles);
+    printcycles("sign csprng cycles:", csprng_cycles);
+    printcycles("sign hash cycles:", hash_cycles);
     hal_send_str("+");
 
     // Verification
@@ -79,6 +85,8 @@ int main(void) {
     //    printcycles("verify hash cycles:", hash_cycles);
     printcycles("verify fp_arith cycles:", fp_arith_cycles);
     printcycles("verify restr_arith cycles:", restr_arith_cycles);
+    printcycles("verify csprng cycles:", csprng_cycles);
+    printcycles("verify hash cycles:", hash_cycles);
 
     hal_send_str("++");
   }
