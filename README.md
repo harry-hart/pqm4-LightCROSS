@@ -1,9 +1,11 @@
 # LightCROSS
 
 TODO:
-  - [ ] Fix GGM optimisation for SDPG
-  - [ ] Port DSP matrix mult optimisation for restricted version
-  - [ ] Re-run all benchmarks
+  - [X] Fix GGM optimisation for SDPG
+  - [X] Port DSP matrix mult optimisation for restricted version
+  - [X] Re-run all benchmarks
+  - [ ] Move to ./crypto_sign from ./mupq/crypto_sign to take advantage of keccak asm
+  - [ ] Finish writing automated profiling script
 
 # pqm4
 Collection of post-quantum cryptographic alrogithms for the ARM Cortex-M4
