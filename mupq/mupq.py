@@ -106,6 +106,7 @@ class Implementation(object):
                          "make stderr output:\n" + stderr.decode("utf8").strip())
         if ret:
             self.log.error("make return code %d", ret)
+            self.log.error("makeflags:\n" + " ".join(makeflags))
         return ret
 
     def get_binary_path(self, test_type, bin_type=None):

@@ -53,13 +53,13 @@ int main(void) {
     t0 = hal_get_time();
     MUPQ_crypto_sign_keypair(pk, sk);
     t1 = hal_get_time();
-    printcycles("keypair cycles:", t1 - t0);
     //    printcycles("keypair hash cycles:", hash_cycles);
     printcycles("keypair fp_arith cycles:", fp_arith_cycles);
     printcycles("keypair restr_arith cycles:", restr_arith_cycles);
     printcycles("keypair csprng cycles:", csprng_cycles);
     printcycles("keypair hash cycles:", hash_cycles);
-    hal_send_str("+");
+    printcycles("keypair total cycles:", t1 - t0);
+    // hal_send_str("+");
 
     // Signing
     //    hash_cycles = 0;
@@ -67,13 +67,13 @@ int main(void) {
     t0 = hal_get_time();
     MUPQ_crypto_sign(sm, &smlen, sm, MLEN, sk);
     t1 = hal_get_time();
-    printcycles("sign cycles:", t1 - t0);
     //   printcycles("sign hash cycles:", hash_cycles);
     printcycles("sign fp_arith cycles:", fp_arith_cycles);
     printcycles("sign restr_arith cycles:", restr_arith_cycles);
     printcycles("sign csprng cycles:", csprng_cycles);
     printcycles("sign hash cycles:", hash_cycles);
-    hal_send_str("+");
+    printcycles("sign total cycles:", t1 - t0);
+    // hal_send_str("+");
 
     // Verification
     //   hash_cycles = 0;
@@ -81,14 +81,14 @@ int main(void) {
     t0 = hal_get_time();
     MUPQ_crypto_sign_open(sm, &smlen, sm, smlen, pk);
     t1 = hal_get_time();
-    printcycles("verify cycles:", t1 - t0);
     //    printcycles("verify hash cycles:", hash_cycles);
     printcycles("verify fp_arith cycles:", fp_arith_cycles);
     printcycles("verify restr_arith cycles:", restr_arith_cycles);
     printcycles("verify csprng cycles:", csprng_cycles);
     printcycles("verify hash cycles:", hash_cycles);
+    printcycles("verify total cycles:", t1 - t0);
 
-    hal_send_str("++");
+    hal_send_str("+");
   }
 
   hal_send_str("#");
