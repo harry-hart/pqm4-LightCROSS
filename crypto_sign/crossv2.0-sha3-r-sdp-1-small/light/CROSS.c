@@ -172,8 +172,8 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 #if defined(RSDP)
 void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, uint8_t *seed_pk) {
 #elif defined(RSDPG)
-void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
-                                   FP_ELEM *s, uint8_t *seed_pk) {
+void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
+                                   uint8_t *seed_pk) {
 #endif
 
 #if defined(OPT_PROFILE)
@@ -202,7 +202,6 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   int elem_size = BITS_TO_REPRESENT(P - 1);
   FP_ELEM v;
 #if defined(OPT_KEYGEN_BLOCKS)
-  // TODO: Make window r long
 #if defined(CATEGORY_1)
   // SHAKE128 r size: 168 bytes
 #define R_SIZE 168
@@ -245,7 +244,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
 #endif
 
 #if defined(RSDPG)
-  fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
+  fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], W_mat);
   fz_dz_norm_n(e_bar);
 #endif
 
@@ -501,8 +500,9 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   csprng_fz_vec(s_e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
   FP_ELEM s[N - K];
-  FZ_ELEM e_G_bar[RSDPG_M];
-  csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
+  // FZ_ELEM e_G_bar[RSDPG_M];
+  // Put e_G_bar at the tail of s_e_bar
+  csprng_fz_inf_w(&s_e_bar[N - RSDPG_M], &csprng_state_e_bar);
 #endif
 #else
   //  Original Implementation
@@ -527,7 +527,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #if defined(RSDP)
   CROSS_keygen_compute_syndrome(s_e_bar, PK->seed_pk);
 #elif defined(RSDPG)
-  CROSS_keygen_compute_syndrome(s_e_bar, e_G_bar, s, PK->seed_pk);
+  CROSS_keygen_compute_syndrome(s_e_bar, s, PK->seed_pk);
 #endif
 #else
   restr_vec_by_fp_matrix(s, e_bar, V_tr);
