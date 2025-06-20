@@ -9,6 +9,7 @@ TIMELINE:
     - [ ] Security evaluation
     - [ ] Application to other schemes
       - [ ] LESS
+        - [ ] First implementation 28/06
       - [ ] FAEST?
 
 TODO:
