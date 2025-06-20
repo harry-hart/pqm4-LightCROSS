@@ -63,7 +63,7 @@
 /*
  * Debugging Flags
  */
-// #define OPT_DEBUG
+#define OPT_DEBUG
 // #define OPT_PROFILE
 //  #define DETERMINISTIC
 
