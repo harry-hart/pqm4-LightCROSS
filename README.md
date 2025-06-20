@@ -1,11 +1,23 @@
 # LightCROSS
 
+TIMELINE:
+
+  - [ ] Submit to ePrint 25/06
+    - [ ] Write section for GGM and Merkle merge optimisation
+    - [ ] Polish Paper for ePrint
+  - [ ] Submit to TCHES 15/07
+    - [ ] Security evaluation
+    - [ ] Application to other schemes
+      - [ ] LESS
+      - [ ] FAEST?
+
 TODO:
   - [X] Fix GGM optimisation for SDPG
   - [X] Port DSP matrix mult optimisation for restricted version
   - [X] Re-run all benchmarks
-  - [ ] Move to ./crypto_sign from ./mupq/crypto_sign to take advantage of keccak asm
-  - [ ] Finish writing automated profiling script
+  - [X] Move to ./crypto_sign from ./mupq/crypto_sign to take advantage of keccak asm
+  - [X] Finish writing automated profiling script
+  - [ ] Finish merge of GGM and Merkle optimisation
 
 # pqm4
 Collection of post-quantum cryptographic alrogithms for the ARM Cortex-M4
