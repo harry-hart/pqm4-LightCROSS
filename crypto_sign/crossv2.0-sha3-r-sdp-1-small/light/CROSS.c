@@ -819,6 +819,11 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                  round_seeds + child_partition_start * SEED_LENGTH_BYTES,
                  SEED_LENGTH_BYTES);
 #if defined(OPT_MERKLE_GGM_COMBO)
+          int child_i =
+              npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
+
+          send_unsigned("memcpy node: ", child_i);
+          send_unsigned("level: ", curr_level);
           memcpy(&sig->proof[mtp_proof_len -
                              (published_nodes * HASH_DIGEST_LENGTH)],
                  cmt_0 + child_partition_start * HASH_DIGEST_LENGTH,
@@ -846,6 +851,10 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_MERKLE_GGM_COMBO)
           /* MERKLE HASH */
           // Calculate merkle node
+          int child_i =
+              npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
+          send_unsigned("tree root leaf: ", child_i);
+          send_unsigned("level: ", curr_level);
           tree_root(&sig->proof[mtp_proof_len -
                                 (published_nodes * HASH_DIGEST_LENGTH)],
                     &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
@@ -929,6 +938,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   send_unsignedll("build_response:", t1 - t0);
 #endif
 #if defined(OPT_MERKLE_GGM_COMBO)
+  send_unsigned("offset", TREE_NODES_TO_STORE - published_nodes);
   if (published_nodes != TREE_NODES_TO_STORE) {
     memmove(sig->proof,
             &sig->proof[mtp_proof_len -
@@ -943,7 +953,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   }
   for (int i = 0; i < published_nodes; i++) {
     if (memcmp(&mtp_check[i * HASH_DIGEST_LENGTH],
-               &sig->proof[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH) == 0) {
+               &sig->proof[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH) != 0) {
       hal_send_str("proof don't match");
       send_unsigned("unmatched index: ", i);
     }
@@ -1389,14 +1399,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
 #else
+  uint16_t nodes_published[W] = {0};
   uint8_t mtp_check[TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH] = {0};
   uint16_t nodes_to_reveal =
       tree_proof(mtp_check, cmt_0[0], chall_2, nodes_published);
 #endif
-
-#if defined(OPT_PROFILE)
-  t0 = hal_get_time();
 #endif
+
 #if defined(OPT_GGM)
 // Placeholders for compatability with different combinations of optimisations
 #if defined(OPT_HASH_Y)
@@ -1416,8 +1425,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   FZ_ELEM *v_bar[1] = {0};
 #endif
 #if defined(OPT_MERKLE_GGM_COMBO)
-  uint16_t nodes_published[1] = {0};
-  uint16_t nodes_to_reveal = 0;
+  // uint16_t nodes_published[1] = {0};
+  // uint16_t nodes_to_reveal = 0;
 #endif
 
 #if defined(RSDP)
@@ -1431,7 +1440,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
-#endif
 #endif
 
 #if !defined(OPT_GGM) || defined(NO_TREES)
