@@ -651,7 +651,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   flag_index = 0;
 
 #if defined(OPT_MERKLE_GGM_COMBO)
-  uint32_t mtp_proof_len = HASH_DIGEST_LENGTH * (TREE_NODES_TO_STORE - 1);
+  uint32_t mtp_proof_empty = HASH_DIGEST_LENGTH * (TREE_NODES_TO_STORE - 1);
 #endif
 
   // While queue not empty
@@ -732,7 +732,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         flag_index++;
         hidden_nodes++;
         node_state = 0;
-        if (highest_streak < child_partition_start) {
+        if (highest_streak < child_partition_size) {
           break;
         }
       }
@@ -821,12 +821,13 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_MERKLE_GGM_COMBO)
           int child_i =
               npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
-
+          if (i == 1)
+            child_i++;
           send_unsigned("memcpy node: ", child_i);
+          send_unsigned("memcpy leaf: ", child_partition_start);
           send_unsigned("level: ", curr_level);
-          memcpy(&sig->proof[mtp_proof_len -
-                             (published_nodes * HASH_DIGEST_LENGTH)],
-                 cmt_0 + child_partition_start * HASH_DIGEST_LENGTH,
+          memcpy(&sig->proof[mtp_proof_empty],
+                 &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
                  HASH_DIGEST_LENGTH);
 #endif
         } else {
@@ -853,15 +854,19 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           // Calculate merkle node
           int child_i =
               npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
+          if (i == 1)
+            child_i++;
           send_unsigned("tree root leaf: ", child_i);
           send_unsigned("level: ", curr_level);
-          tree_root(&sig->proof[mtp_proof_len -
-                                (published_nodes * HASH_DIGEST_LENGTH)],
+          tree_root(&sig->proof[mtp_proof_empty],
                     &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
                     child_partition_size);
 #endif
         }
         published_nodes++;
+#if defined(OPT_MERKLE_GGM_COMBO)
+        mtp_proof_empty -= HASH_DIGEST_LENGTH;
+#endif
       }
       // All hidden publish response
       else if (node_state == 2) {
@@ -939,10 +944,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #endif
 #if defined(OPT_MERKLE_GGM_COMBO)
   send_unsigned("offset", TREE_NODES_TO_STORE - published_nodes);
-  if (published_nodes != TREE_NODES_TO_STORE) {
-    memmove(sig->proof,
-            &sig->proof[mtp_proof_len -
-                        ((published_nodes - 1) * HASH_DIGEST_LENGTH)],
+  if (mtp_proof_empty != 0) {
+    memmove(sig->proof, &sig->proof[mtp_proof_empty + HASH_DIGEST_LENGTH],
             published_nodes * HASH_DIGEST_LENGTH);
     hal_send_str("Moved nodes");
   }
@@ -956,7 +959,12 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                &sig->proof[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH) != 0) {
       hal_send_str("proof don't match");
       send_unsigned("unmatched index: ", i);
+      send_unsigned("nodes index: ", nodes_to_reveal[i]);
     }
+  }
+  if (memcmp(mtp_check, sig->proof, published_nodes * HASH_DIGEST_LENGTH) !=
+      0) {
+    hal_send_str("proof total don't match");
   }
 #endif
 }
@@ -1401,8 +1409,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   uint16_t nodes_published[W] = {0};
   uint8_t mtp_check[TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH] = {0};
+  uint8_t cmt_0_backup[T * HASH_DIGEST_LENGTH];
+  memcpy(cmt_0_backup, cmt_0, T * HASH_DIGEST_LENGTH);
   uint16_t nodes_to_reveal =
-      tree_proof(mtp_check, cmt_0[0], chall_2, nodes_published);
+      tree_proof(mtp_check, cmt_0_backup, chall_2, nodes_published);
 #endif
 #endif
 
