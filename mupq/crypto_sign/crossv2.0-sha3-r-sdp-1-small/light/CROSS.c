@@ -172,8 +172,8 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 #if defined(RSDP)
 void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, uint8_t *seed_pk) {
 #elif defined(RSDPG)
-void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
-                                   FP_ELEM *s, uint8_t *seed_pk) {
+void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
+                                   uint8_t *seed_pk) {
 #endif
 
 #if defined(OPT_PROFILE)
@@ -202,7 +202,6 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
   int elem_size = BITS_TO_REPRESENT(P - 1);
   FP_ELEM v;
 #if defined(OPT_KEYGEN_BLOCKS)
-  // TODO: Make window r long
 #if defined(CATEGORY_1)
   // SHAKE128 r size: 168 bytes
 #define R_SIZE 168
@@ -245,7 +244,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FZ_ELEM *e_G_bar,
 #endif
 
 #if defined(RSDPG)
-  fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
+  fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], W_mat);
   fz_dz_norm_n(e_bar);
 #endif
 
@@ -501,8 +500,9 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   csprng_fz_vec(s_e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
   FP_ELEM s[N - K];
-  FZ_ELEM e_G_bar[RSDPG_M];
-  csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
+  // FZ_ELEM e_G_bar[RSDPG_M];
+  // Put e_G_bar at the tail of s_e_bar
+  csprng_fz_inf_w(&s_e_bar[N - RSDPG_M], &csprng_state_e_bar);
 #endif
 #else
   //  Original Implementation
@@ -527,7 +527,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #if defined(RSDP)
   CROSS_keygen_compute_syndrome(s_e_bar, PK->seed_pk);
 #elif defined(RSDPG)
-  CROSS_keygen_compute_syndrome(s_e_bar, e_G_bar, s, PK->seed_pk);
+  CROSS_keygen_compute_syndrome(s_e_bar, s, PK->seed_pk);
 #endif
 #else
   restr_vec_by_fp_matrix(s, e_bar, V_tr);
@@ -614,6 +614,11 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   uint16_t partition_size;
   uint16_t domain_sep;
 
+#if defined(OPT_MERKLE_GGM_COMBO)
+  uint8_t cmt_0[T * HASH_DIGEST_LENGTH];
+  memcpy(cmt_0, seed_storage, T * HASH_DIGEST_LENGTH);
+#endif
+
   // Populate queue
   struct GGMNode root = {0, 0, T, 0, 0};
   // struct GGMNode queue[T - W];
@@ -644,6 +649,10 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   }
   uint8_t flag_len = flag_index;
   flag_index = 0;
+
+#if defined(OPT_MERKLE_GGM_COMBO)
+  uint32_t mtp_proof_empty = HASH_DIGEST_LENGTH * (TREE_NODES_TO_STORE - 1);
+#endif
 
   // While queue not empty
   while (head != tail) {
@@ -676,6 +685,16 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       // Highest power of 2 that divides it (maybe implement in assembly
       // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
       // register
+      // uint32_t bit_check = 1 << 31;
+      // uint32_t find_bit_len = partition_size << msb;
+      //// uint8_t block_len = 0;
+      // while ((bit_check & find_bit_len) > 0) {
+      //   find_bit_len = find_bit_len << 1;
+      //   partition = partition << 1;
+      //   partition++;
+      //   // block_len++;
+      // }
+
       partition = 1 << (31 - msb);
     }
 
@@ -696,24 +715,31 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       }
 
       // 0 = mixed, 1 = reveal, 2 = publish rsps
-      uint8_t node_state =
-          child_node_i == nodes_to_reveal[nodes_revealed - 1 - published_nodes];
+      // uint8_t node_state =
+      //    child_node_i == nodes_to_reveal[nodes_revealed - 1 -
+      //    published_nodes];
+      uint8_t node_state = 1;
 
       //  If there is a chance of publishing responses
-      if (highest_streak >= child_partition_size) {
-        while (flag_index < flag_len &&
-               flags[flag_index].pos < child_partition_start) {
-          flag_index++;
-        }
-        while (flag_index < flag_len &&
-               child_partition_start <= flags[flag_index].pos &&
-               flags[flag_index].pos < child_partition_end) {
-          flag_index++;
-          hidden_nodes++;
-        }
-        if (hidden_nodes == child_partition_size)
-          node_state = 2;
+      // if (highest_streak >= child_partition_size) {
+      while (flag_index < flag_len &&
+             flags[flag_index].pos < child_partition_start) {
+        flag_index++;
       }
+      while (flag_index < flag_len &&
+             child_partition_start <= flags[flag_index].pos &&
+             flags[flag_index].pos < child_partition_end) {
+        flag_index++;
+        hidden_nodes++;
+        node_state = 0;
+        if (highest_streak < child_partition_size) {
+          break;
+        }
+      }
+      if (hidden_nodes == child_partition_size) {
+        node_state = 2;
+      }
+      //}
 
       /* Deal with the three possible cases:
        1. Mixed hidden and revealed leaves
@@ -792,6 +818,11 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           memcpy(sig->path + published_nodes * SEED_LENGTH_BYTES,
                  round_seeds + child_partition_start * SEED_LENGTH_BYTES,
                  SEED_LENGTH_BYTES);
+#if defined(OPT_MERKLE_GGM_COMBO)
+          memcpy(&sig->proof[mtp_proof_empty],
+                 &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
+                 HASH_DIGEST_LENGTH);
+#endif
         } else {
           if (i == 0 || !left_calculated) {
             /* prepare the CSPRNG input to expand the father node */
@@ -811,8 +842,18 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
             csprng_randombytes(sig->path + published_nodes * SEED_LENGTH_BYTES,
                                SEED_LENGTH_BYTES, &tree_csprng_state);
           }
+#if defined(OPT_MERKLE_GGM_COMBO)
+          /* MERKLE HASH */
+          // Calculate merkle node
+          tree_root(&sig->proof[mtp_proof_empty],
+                    &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
+                    child_partition_size);
+#endif
         }
         published_nodes++;
+#if defined(OPT_MERKLE_GGM_COMBO)
+        mtp_proof_empty -= HASH_DIGEST_LENGTH;
+#endif
       }
       // All hidden publish response
       else if (node_state == 2) {
@@ -887,6 +928,14 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_PROFILE)
   uint64_t t1 = hal_get_time();
   send_unsignedll("build_response:", t1 - t0);
+#endif
+#if defined(OPT_MERKLE_GGM_COMBO)
+  if (mtp_proof_empty != 0) {
+    memmove(sig->proof, &sig->proof[mtp_proof_empty + HASH_DIGEST_LENGTH],
+            published_nodes * HASH_DIGEST_LENGTH);
+    memset(&sig->proof[published_nodes * HASH_DIGEST_LENGTH], 0,
+           mtp_proof_empty + HASH_DIGEST_LENGTH);
+  }
 #endif
 }
 #endif
@@ -1170,23 +1219,16 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   send_unsignedll("main commitment computation cycles:", (t1 - t0));
 #endif
 
-#if defined(OPT_PROFILE)
-  t0 = hal_get_time();
-#endif
 #if defined(NO_TREES)
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
 #if defined(OPT_OTF_MERKLE)
-  tree_root(digest_cmt0_cmt1, cmt_0);
+  tree_root(digest_cmt0_cmt1, cmt_0[0], T);
 #elif defined(OPT_MERKLE)
   tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
   tree_root(digest_cmt0_cmt1, merkle_tree_0, cmt_0);
 #endif
-#endif
-#if defined(OPT_PROFILE)
-  t1 = hal_get_time();
-  send_unsignedll("tree root cycles:", (t1 - t0));
 #endif
 
 #if defined(OPT_HASH_CMT1)
@@ -1321,14 +1363,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
 #endif
 
-#if defined(OPT_PROFILE)
-  t0 = hal_get_time();
-#endif
 /* Computation of the second round of responses */
 #if defined(NO_TREES)
   tree_proof(sig->proof, cmt_0, chall_2);
   seed_path(sig->path, round_seeds, chall_2);
 #else
+#if !defined(OPT_MERKLE_GGM_COMBO)
 #if defined(OPT_OTF_MERKLE)
   uint16_t nodes_published[W] = {0};
   uint16_t nodes_to_reveal =
@@ -1336,14 +1376,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
-#if defined(OPT_PROFILE)
-  t1 = hal_get_time();
-  send_unsignedll("merkle proof cycles:", (t1 - t0));
+#endif
 #endif
 
-#if defined(OPT_PROFILE)
-  t0 = hal_get_time();
-#endif
 #if defined(OPT_GGM)
 // Placeholders for compatability with different combinations of optimisations
 #if defined(OPT_HASH_Y)
@@ -1362,6 +1397,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #elif defined(OPT_V_BAR)
   FZ_ELEM *v_bar[1] = {0};
 #endif
+#if defined(OPT_MERKLE_GGM_COMBO)
+  uint16_t nodes_published[1] = {0};
+  uint16_t nodes_to_reveal = 0;
+#endif
 
 #if defined(RSDP)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
@@ -1374,7 +1413,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
-#endif
 #endif
 
 #if !defined(OPT_GGM) || defined(NO_TREES)
