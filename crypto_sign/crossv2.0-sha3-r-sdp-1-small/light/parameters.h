@@ -59,10 +59,11 @@
 #define OPT_DSP
 #define OPT_Y_U_OVERLAP
 #define OPT_KEYGEN_BLOCKS
+#define OPT_MERKLE_GGM_COMBO
 /*
  * Debugging Flags
  */
-// #define OPT_DEBUG
+#define OPT_DEBUG
 // #define OPT_PROFILE
 //  #define DETERMINISTIC
 

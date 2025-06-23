@@ -47,8 +47,8 @@ uint8_t recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 
 /* Stub of the interface to Merkle tree root computer from all leaves */
 #if defined(OPT_OTF_MERKLE)
-void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
-               unsigned char leaves[T][HASH_DIGEST_LENGTH]);
+void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
+               uint32_t leaves_len);
 #elif defined(OPT_MERKLE)
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
                uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH]);
