@@ -260,6 +260,11 @@ static inline void csprng_fp_mat(FP_ELEM res[K][N - K],
 #else
   while (placed < K * (N - K)) {
 #endif
+      if (pos_remaining == 0) {
+        csprng_randombytes(CSPRNG_buffer, sizeof(CSPRNG_buffer), csprng_state);
+        pos_remaining = sizeof(CSPRNG_buffer);
+        pos_in_buf = 0;
+      }
       // If we have less than half left in window and
       // some remaining in random buffer
       if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
@@ -384,6 +389,11 @@ static inline void csprng_fz_vec(FZ_ELEM res[N],
   int pos_in_buf = 8;
   int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
   while (placed < N) {
+    if (pos_remaining == 0) {
+      csprng_randombytes(CSPRNG_buffer, sizeof(CSPRNG_buffer), csprng_state);
+      pos_remaining = sizeof(CSPRNG_buffer);
+      pos_in_buf = 0;
+    }
     if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
       /* get at most 4 bytes from buffer */
       int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
@@ -425,6 +435,11 @@ static inline void csprng_fz_inf_w(FZ_ELEM res[RSDPG_M],
   int pos_in_buf = 8;
   int pos_remaining = sizeof(CSPRNG_buffer) - pos_in_buf;
   while (placed < RSDPG_M) {
+    if (pos_remaining == 0) {
+      csprng_randombytes(CSPRNG_buffer, sizeof(CSPRNG_buffer), csprng_state);
+      pos_remaining = sizeof(CSPRNG_buffer);
+      pos_in_buf = 0;
+    }
     if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
       /* get at most 4 bytes from buffer */
       int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
@@ -480,6 +495,11 @@ static inline void csprng_fz_mat(FZ_ELEM res[RSDPG_M][N - RSDPG_M],
 #else
   while (placed < RSDPG_M * (N - RSDPG_M)) {
 #endif
+      if (pos_remaining == 0) {
+        csprng_randombytes(CSPRNG_buffer, sizeof(CSPRNG_buffer), csprng_state);
+        pos_remaining = sizeof(CSPRNG_buffer);
+        pos_in_buf = 0;
+      }
       if (bits_in_sub_buf <= 32 && pos_remaining > 0) {
         /* get at most 4 bytes from buffer */
         int refresh_amount = (pos_remaining >= 4) ? 4 : pos_remaining;
