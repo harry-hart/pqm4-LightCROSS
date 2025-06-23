@@ -947,6 +947,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   if (mtp_proof_empty != 0) {
     memmove(sig->proof, &sig->proof[mtp_proof_empty + HASH_DIGEST_LENGTH],
             published_nodes * HASH_DIGEST_LENGTH);
+    memset(&sig->proof[published_nodes * HASH_DIGEST_LENGTH], 0,
+           mtp_proof_empty + HASH_DIGEST_LENGTH);
     hal_send_str("Moved nodes");
   }
   if (sig->proof[0] == 0) {
