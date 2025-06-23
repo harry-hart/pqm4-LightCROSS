@@ -391,6 +391,73 @@ int total_leaves_at_level(uint16_t ancestors_tracked,
   return 0;
 }
 
+void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
+                     uint32_t leaf_start_i, uint32_t leaves_len) {
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
+  // If we have done all the leaves on this level.
+  // Find the next level with leaves
+  // We can do this because from left to right the tree leaves should have
+  // monotonically descending depths.
+  uint8_t hash_buffer[(LOG2(leaves_len) + 2) * HASH_DIGEST_LENGTH];
+  // At most ~10 bits will be used
+  uint16_t flag = 0;
+  uint8_t base_level = LOG2(T);
+  uint8_t rel_level = LOG2(leaves_len);
+  uint8_t root_level = base_level - rel_level;
+  uint16_t leaves_seen = leaf_start_i;
+  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+
+  while (leaves_seen > lpl[base_level]) {
+    leaves_seen -= lpl[base_level];
+    base_level--;
+    rel_level--;
+  }
+
+  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+  for (int i = 0; i < leaves_len; i++) {
+    while (leaves_seen == lpl[base_level]) {
+      leaves_seen = 0;
+      base_level--;
+      rel_level--;
+    }
+    // Set the current hash and level
+    memcpy(curr_hash, &leaves[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH);
+    // Adjust for 0-index
+    uint8_t curr_level = rel_level - 1;
+    // Look for an empty spot to insert hash
+    while ((flag & (1 << curr_level)) > 0) {
+      // When we encounter a hash at our level, hash with it
+      // 1. First concatenate
+      memcpy(&hash_buffer[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+             HASH_DIGEST_LENGTH);
+      // 2. Then hash
+      hash(curr_hash, &hash_buffer[curr_level * HASH_DIGEST_LENGTH],
+           2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+      // 3. Then clear flag because the hash has been used
+      flag -= (1 << curr_level);
+      // If we hit the top of the tree, return the digest in leaf_value
+      if (curr_level == 0) {
+        memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
+#if defined(OPT_PROFILE)
+        uint64_t t1 = hal_get_time();
+        send_unsignedll("tree_root:", t1 - t0);
+#endif
+        return;
+      }
+      // 4. Go up a level
+      curr_level--;
+    }
+    // After finding a place to insert, put in state
+    memcpy(&hash_buffer[curr_level * HASH_DIGEST_LENGTH], curr_hash,
+           HASH_DIGEST_LENGTH);
+    flag += (1 << curr_level);
+    leaves_seen++;
+  }
+  memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
+}
+
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
                uint32_t leaves_len) {
 #if defined(OPT_PROFILE)
@@ -439,13 +506,6 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
         // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
         // register
         leaves_this_block = 1 << (31 - msb);
-        // Set level
-        // Find the next set bit to find the next leaf block
-        // while ((leaves_len & level_mask) == 0) {
-        //  level--;
-        //  level_mask = level_mask >> 1;
-        //}
-        //
       }
       level = subtree_offset + LOG2(leaves_this_block);
     }

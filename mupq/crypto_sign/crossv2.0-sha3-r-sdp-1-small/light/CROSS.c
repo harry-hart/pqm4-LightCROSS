@@ -845,9 +845,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_MERKLE_GGM_COMBO)
           /* MERKLE HASH */
           // Calculate merkle node
-          tree_root(&sig->proof[mtp_proof_empty],
-                    &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
-                    child_partition_size);
+          tree_root_tuned(&sig->proof[mtp_proof_empty],
+                          &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
+                          child_partition_start, child_partition_size);
 #endif
         }
         published_nodes++;
@@ -1223,7 +1223,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
 #if defined(OPT_OTF_MERKLE)
-  tree_root(digest_cmt0_cmt1, cmt_0[0], T);
+  tree_root_tuned(digest_cmt0_cmt1, cmt_0[0], 0, T);
 #elif defined(OPT_MERKLE)
   tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
