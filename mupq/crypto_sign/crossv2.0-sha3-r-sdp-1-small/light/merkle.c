@@ -405,7 +405,6 @@ void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
   uint16_t flag = 0;
   uint8_t base_level = LOG2(T);
   uint8_t rel_level = LOG2(leaves_len);
-  uint8_t root_level = base_level - rel_level;
   uint16_t leaves_seen = leaf_start_i;
   uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
 
