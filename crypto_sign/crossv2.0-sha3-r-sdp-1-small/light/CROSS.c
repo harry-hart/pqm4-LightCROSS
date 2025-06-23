@@ -573,7 +573,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                     FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
                     FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
-                    uint8_t nodes_revealed, uint8_t *mtp_check) {
+                    uint8_t nodes_revealed) {
 #elif defined(RSDPG)
 void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     const unsigned char *indices_to_publish,
@@ -819,13 +819,6 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                  round_seeds + child_partition_start * SEED_LENGTH_BYTES,
                  SEED_LENGTH_BYTES);
 #if defined(OPT_MERKLE_GGM_COMBO)
-          int child_i =
-              npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
-          if (i == 1)
-            child_i++;
-          send_unsigned("memcpy node: ", child_i);
-          send_unsigned("memcpy leaf: ", child_partition_start);
-          send_unsigned("level: ", curr_level);
           memcpy(&sig->proof[mtp_proof_empty],
                  &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
                  HASH_DIGEST_LENGTH);
@@ -852,12 +845,6 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_MERKLE_GGM_COMBO)
           /* MERKLE HASH */
           // Calculate merkle node
-          int child_i =
-              npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
-          if (i == 1)
-            child_i++;
-          send_unsigned("tree root leaf: ", child_i);
-          send_unsigned("level: ", curr_level);
           tree_root(&sig->proof[mtp_proof_empty],
                     &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
                     child_partition_size);
@@ -943,30 +930,11 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   send_unsignedll("build_response:", t1 - t0);
 #endif
 #if defined(OPT_MERKLE_GGM_COMBO)
-  send_unsigned("offset", TREE_NODES_TO_STORE - published_nodes);
   if (mtp_proof_empty != 0) {
     memmove(sig->proof, &sig->proof[mtp_proof_empty + HASH_DIGEST_LENGTH],
             published_nodes * HASH_DIGEST_LENGTH);
     memset(&sig->proof[published_nodes * HASH_DIGEST_LENGTH], 0,
            mtp_proof_empty + HASH_DIGEST_LENGTH);
-    hal_send_str("Moved nodes");
-  }
-  if (sig->proof[0] == 0) {
-    hal_send_str("blank in proof");
-    send_unsigned("published_nodes: ", published_nodes);
-    send_unsigned("nodes to store: ", TREE_NODES_TO_STORE);
-  }
-  for (int i = 0; i < published_nodes; i++) {
-    if (memcmp(&mtp_check[i * HASH_DIGEST_LENGTH],
-               &sig->proof[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH) != 0) {
-      hal_send_str("proof don't match");
-      send_unsigned("unmatched index: ", i);
-      send_unsigned("nodes index: ", nodes_to_reveal[i]);
-    }
-  }
-  if (memcmp(mtp_check, sig->proof, published_nodes * HASH_DIGEST_LENGTH) !=
-      0) {
-    hal_send_str("proof total don't match");
   }
 #endif
 }
@@ -1408,13 +1376,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
-#else
-  uint16_t nodes_published[W] = {0};
-  uint8_t mtp_check[TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH] = {0};
-  uint8_t cmt_0_backup[T * HASH_DIGEST_LENGTH];
-  memcpy(cmt_0_backup, cmt_0, T * HASH_DIGEST_LENGTH);
-  uint16_t nodes_to_reveal =
-      tree_proof(mtp_check, cmt_0_backup, chall_2, nodes_published);
 #endif
 #endif
 
@@ -1437,14 +1398,14 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   FZ_ELEM *v_bar[1] = {0};
 #endif
 #if defined(OPT_MERKLE_GGM_COMBO)
-  // uint16_t nodes_published[1] = {0};
-  // uint16_t nodes_to_reveal = 0;
+  uint16_t nodes_published[1] = {0};
+  uint16_t nodes_to_reveal = 0;
 #endif
 
 #if defined(RSDP)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
                  v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
-                 nodes_published, nodes_to_reveal, mtp_check);
+                 nodes_published, nodes_to_reveal);
 #elif defined(RSDPG)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
                  v_bar[0], chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1,
