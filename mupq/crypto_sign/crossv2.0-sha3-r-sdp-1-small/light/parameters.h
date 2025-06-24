@@ -60,7 +60,7 @@
 #define OPT_DSP
 #define OPT_Y_U_OVERLAP
 #define OPT_KEYGEN_BLOCKS
-// #define OPT_MERKLE_GGM_COMBO
+#define OPT_MERKLE_GGM_COMBO
 #if (TREE_MAX_DEPTH != EXPECTED_DEPTH)
 #define OPT_EXP_MERKLE
 #endif

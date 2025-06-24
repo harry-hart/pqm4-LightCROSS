@@ -573,7 +573,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                     FP_ELEM *u_prime, FP_ELEM *y, uint8_t *cmt_1,
                     FZ_ELEM *e_bar_prime, uint16_t *nodes_to_reveal,
-                    uint8_t nodes_revealed) {
+                    uint8_t nodes_revealed, uint8_t *merkle_expected_hashed) {
 #elif defined(RSDPG)
 void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     const unsigned char *indices_to_publish,
@@ -581,7 +581,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                     FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
                     uint8_t *cmt_1, FZ_ELEM *e_bar_prime,
-                    uint16_t *nodes_to_reveal, uint8_t nodes_revealed) {
+                    uint16_t *nodes_to_reveal, uint8_t nodes_revealed,
+                    uint8_t *merkle_expected_hashed) {
 #endif
 // NOTES:
 // - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
@@ -845,9 +846,14 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_MERKLE_GGM_COMBO)
           /* MERKLE HASH */
           // Calculate merkle node
-          subtree_root(&sig->proof[mtp_proof_empty],
-                       &cmt_0[child_partition_start * HASH_DIGEST_LENGTH],
+#if defined(OPT_EXP_MERKLE)
+          subtree_root(&sig->proof[mtp_proof_empty], cmt_0,
+                       child_partition_start, child_partition_size,
+                       merkle_expected_hashed);
+#else
+          subtree_root(&sig->proof[mtp_proof_empty], cmt_0,
                        child_partition_start, child_partition_size);
+#endif
 #endif
         }
         published_nodes++;
@@ -1407,15 +1413,19 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   uint16_t nodes_published[1] = {0};
   uint16_t nodes_to_reveal = 0;
 #endif
+#if !defined(OPT_EXP_MERKLE)
+  uint8_t *merkle_expected_hashed = cmt_1;
+#endif
 
 #if defined(RSDP)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
                  v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
-                 nodes_published, nodes_to_reveal);
+                 nodes_published, nodes_to_reveal, merkle_expected_hashed);
 #elif defined(RSDPG)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
                  v_bar[0], chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1,
-                 e_bar_prime[0], nodes_published, nodes_to_reveal);
+                 e_bar_prime[0], nodes_published, nodes_to_reveal,
+                 merkle_expected_hashed);
 #endif
 #else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
