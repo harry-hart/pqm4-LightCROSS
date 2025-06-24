@@ -391,10 +391,21 @@ int total_leaves_at_level(uint16_t ancestors_tracked,
   return 0;
 }
 
+#if defined(OPT_EXP_MERKLE)
+void subtree_root(
+    uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
+    uint32_t leaf_start_i, uint32_t leaves_len,
+    uint8_t exp_hashes[EXP_TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH]) {
+#else
 void subtree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
                   uint32_t leaf_start_i, uint32_t leaves_len) {
+#endif
 #if defined(OPT_PROFILE)
   uint64_t t0 = hal_get_time();
+#endif
+  uint8_t rel_level = LOG2(leaves_len);
+#if defined(OPT_EXP_MERKLE)
+  uint8_t use_exp = rel_level >= (TREE_MAX_DEPTH - EXPECTED_DEPTH);
 #endif
   // If we have done all the leaves on this level.
   // Find the next level with leaves
@@ -403,10 +414,23 @@ void subtree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
   uint8_t hash_buffer[(LOG2(leaves_len) + 2) * HASH_DIGEST_LENGTH];
   // At most ~10 bits will be used
   uint16_t flag = 0;
+#if defined(OPT_EXP_MERKLE)
+  uint8_t base_level = use_exp ? EXPECTED_DEPTH : TREE_MAX_DEPTH;
+#else
   uint8_t base_level = TREE_MAX_DEPTH;
-  uint8_t rel_level = LOG2(leaves_len);
+#endif
   uint16_t leaves_seen = leaf_start_i;
   uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+#if defined(OPT_EXP_MERKLE)
+  if (use_exp) {
+    uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+    lpl[EXPECTED_DEPTH] = npl[EXPECTED_DEPTH];
+    rel_level = rel_level - (TREE_MAX_DEPTH - EXPECTED_DEPTH);
+  }
+#endif
+#if defined(OPT_EXP_MERKLE)
+  uint8_t *hashes = use_exp ? exp_hashes : leaves;
+#endif
 
   while (leaves_seen > lpl[base_level]) {
     leaves_seen -= lpl[base_level];
@@ -478,6 +502,10 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves) {
   uint16_t leaves_seen = 0;
   uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
 
+#if defined(OPT_EXP_MERKLE)
+  uint16_t exp_level_index = 0;
+#endif
+
   uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
   for (int i = 0; i < T; i++) {
     while (leaves_seen == lpl[base_level]) {
@@ -491,12 +519,31 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves) {
     // Look for an empty spot to insert hash
     while ((flag & (1 << curr_level)) > 0) {
       // When we encounter a hash at our level, hash with it
+#if defined(OPT_EXP_MERKLE)
+      if (curr_level == EXPECTED_DEPTH) {
+        // 1. First concatenate
+        memcpy(&exp_hashes[(exp_level_index + 1) * HASH_DIGEST_LENGTH],
+               curr_hash, HASH_DIGEST_LENGTH);
+        // 2. Then hash
+        hash(curr_hash, &exp_hashes[exp_level_index * HASH_DIGEST_LENGTH],
+             2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+        exp_level_index++;
+      } else {
+        // 1. First concatenate
+        memcpy(&hash_buffer[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+               HASH_DIGEST_LENGTH);
+        // 2. Then hash
+        hash(curr_hash, &hash_buffer[curr_level * HASH_DIGEST_LENGTH],
+             2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+      }
+#else
       // 1. First concatenate
       memcpy(&hash_buffer[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
              HASH_DIGEST_LENGTH);
       // 2. Then hash
       hash(curr_hash, &hash_buffer[curr_level * HASH_DIGEST_LENGTH],
            2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+#endif
       // 3. Then clear flag because the hash has been used
       flag -= (1 << curr_level);
       // If we hit the top of the tree, return the digest in leaf_value
@@ -511,9 +558,21 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves) {
       // 4. Go up a level
       curr_level--;
     }
+#if defined(OPT_EXP_MERKLE)
+    if (curr_level == EXPECTED_DEPTH) {
+      // After finding a place to insert, put in state
+      memcpy(&exp_hashes[exp_level_index * HASH_DIGEST_LENGTH], curr_hash,
+             HASH_DIGEST_LENGTH);
+    } else {
+      // After finding a place to insert, put in state
+      memcpy(&hash_buffer[curr_level * HASH_DIGEST_LENGTH], curr_hash,
+             HASH_DIGEST_LENGTH);
+    }
+#else
     // After finding a place to insert, put in state
     memcpy(&hash_buffer[curr_level * HASH_DIGEST_LENGTH], curr_hash,
            HASH_DIGEST_LENGTH);
+#endif
     flag += (1 << curr_level);
     leaves_seen++;
   }
@@ -569,7 +628,7 @@ void tree_root_general(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
         // register
         leaves_this_block = 1 << (31 - msb);
       }
-      level = subtree_offset + LOG2(leaves_this_block);
+      level = subtree_offset + (LOG2(leaves_this_block));
     }
     // Set the current hash and level
     uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};

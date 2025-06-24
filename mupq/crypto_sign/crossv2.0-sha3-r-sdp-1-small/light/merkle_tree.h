@@ -29,6 +29,8 @@
  *
  **/
 
+#include "parameters.h"
+
 #if defined(NO_TREES)
 
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
@@ -47,9 +49,19 @@ uint8_t recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 
 /* Stub of the interface to Merkle tree root computer from all leaves */
 #if defined(OPT_OTF_MERKLE)
+#if defined(OPT_EXP_MERKLE)
+void tree_root(
+    uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
+    uint8_t exp_hashes[EXP_TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH]);
+void subtree_root(
+    uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
+    uint32_t leaf_start_i, uint32_t leaves_len,
+    uint8_t exp_hashes[EXP_TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH]);
+#else
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves);
 void subtree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
                   uint32_t leaf_start_i, uint32_t leaves_len);
+#endif
 #elif defined(OPT_MERKLE)
 void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
                uint8_t tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH]);

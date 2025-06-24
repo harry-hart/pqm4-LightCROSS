@@ -32,6 +32,7 @@
 #pragma once
 #include <stdint.h>
 
+#include "constants.h"
 #include "variant.h"
 
 /******************************************************************************/
@@ -60,7 +61,9 @@
 #define OPT_Y_U_OVERLAP
 #define OPT_KEYGEN_BLOCKS
 // #define OPT_MERKLE_GGM_COMBO
-// #define OPT_EXP_MERKLE
+#if (TREE_MAX_DEPTH != EXPECTED_DEPTH)
+#define OPT_EXP_MERKLE
+#endif
 /*
  * Debugging Flags
  */
@@ -315,7 +318,7 @@
 #define NUM_NODES_SEED_TREE (2 * NUM_LEAVES_SEED_TREE - 1)
 
 #if defined(OPT_EXP_MERKLE)
-#define EXP_TREE_NODES_TO_STORE (1 << (EXP_DEPTH))
+#define EXP_TREE_NODES_TO_STORE (1 << (EXPECTED_DEPTH))
 #endif
 
 /* Sizes of bitpacked field element vectors
@@ -337,6 +340,7 @@
    ROUND_UP(((RSDPG_M % 8) * BITS_TO_REPRESENT(Z - 1)), 8) / 8)
 #endif
 
+#if 0
 /* Derived parameters computed via compute_derived_parameters.py */
 #if (defined(CATEGORY_1) && defined(RSDP) && defined(SPEED))
 #define TREE_OFFSETS {0, 0, 0, 0, 0, 2, 2, 58, 58}
@@ -635,4 +639,5 @@
 #define BITS_M_FZ_CT_RNG 679
 #define BITS_CWSTR_RNG 15140
 
+#endif
 #endif

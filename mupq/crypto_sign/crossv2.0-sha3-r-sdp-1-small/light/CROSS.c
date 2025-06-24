@@ -1223,7 +1223,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
 #if defined(OPT_OTF_MERKLE)
+#if defined(OPT_EXP_MERKLE)
+  uint8_t merkle_expected_hashed[EXP_TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH] =
+      {0};
+  tree_root(digest_cmt0_cmt1, cmt_0[0], merkle_expected_hashed);
+#else
   tree_root(digest_cmt0_cmt1, cmt_0[0]);
+#endif
 #elif defined(OPT_MERKLE)
   tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
