@@ -164,8 +164,8 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
    * leaves_start_indices contains the index of the leftmost leaf of each full
    * binary subtree
    */
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   const uint16_t leaves_start_indices[TREE_SUBROOTS] =
       TREE_LEAVES_START_INDICES;
 
@@ -180,7 +180,7 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
    * the left-child node */
   unsigned int start_node = leaves_start_indices[0];
   // For each level in the depth of the tree starting at the bottom
-  for (int level = LOG2(T); level > 0; level--) {
+  for (int level = TREE_MAX_DEPTH; level > 0; level--) {
     // For the distance from the first node to the right-most node on the leve
     for (int i = npl[level] - 2; i >= 0; i -= 2) {
       // Get the right-most node
@@ -247,14 +247,14 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
   unsigned char flag_tree[NUM_NODES_MERKLE_TREE] = {NOT_COMPUTED};
   label_leaves(flag_tree, leaves_to_reveal);
 
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   const uint16_t leaves_start_indices[TREE_SUBROOTS] =
       TREE_LEAVES_START_INDICES;
 
   int published = 0;
   unsigned int start_node = leaves_start_indices[0];
-  for (int level = LOG2(T); level > 0; level--) {
+  for (int level = TREE_MAX_DEPTH; level > 0; level--) {
     for (int i = npl[level] - 2; i >= 0; i -= 2) {
       uint16_t current_node = start_node + i;
       uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
@@ -314,14 +314,14 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 #endif
   label_leaves(flag_tree, leaves_to_reveal);
 
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   const uint16_t leaves_start_indices[TREE_SUBROOTS] =
       TREE_LEAVES_START_INDICES;
 
   unsigned int published = 0;
   unsigned int start_node = leaves_start_indices[0];
-  for (int level = LOG2(T); level > 0; level--) {
+  for (int level = TREE_MAX_DEPTH; level > 0; level--) {
     for (int i = npl[level] - 2; i >= 0; i -= 2) {
       uint16_t current_node = start_node + i;
       uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
@@ -391,8 +391,8 @@ int total_leaves_at_level(uint16_t ancestors_tracked,
   return 0;
 }
 
-void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
-                     uint32_t leaf_start_i, uint32_t leaves_len) {
+void subtree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
+                  uint32_t leaf_start_i, uint32_t leaves_len) {
 #if defined(OPT_PROFILE)
   uint64_t t0 = hal_get_time();
 #endif
@@ -403,10 +403,10 @@ void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
   uint8_t hash_buffer[(LOG2(leaves_len) + 2) * HASH_DIGEST_LENGTH];
   // At most ~10 bits will be used
   uint16_t flag = 0;
-  uint8_t base_level = LOG2(T);
+  uint8_t base_level = TREE_MAX_DEPTH;
   uint8_t rel_level = LOG2(leaves_len);
   uint16_t leaves_seen = leaf_start_i;
-  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
 
   while (leaves_seen > lpl[base_level]) {
     leaves_seen -= lpl[base_level];
@@ -457,8 +457,71 @@ void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
   memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
 }
 
-void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
-               uint32_t leaves_len) {
+#if defined(OPT_EXP_MERKLE)
+void tree_root(
+    uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
+    uint8_t exp_hashes[EXP_TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH]) {
+#else
+void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves) {
+#endif
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
+  // If we have done all the leaves on this level.
+  // Find the next level with leaves
+  // We can do this because from left to right the tree leaves should have
+  // monotonically descending depths.
+  uint8_t hash_buffer[(TREE_MAX_DEPTH + 2) * HASH_DIGEST_LENGTH];
+  // At most ~10 bits will be used
+  uint16_t flag = 0;
+  uint8_t base_level = TREE_MAX_DEPTH;
+  uint16_t leaves_seen = 0;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+
+  uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+  for (int i = 0; i < T; i++) {
+    while (leaves_seen == lpl[base_level]) {
+      leaves_seen = 0;
+      base_level--;
+    }
+    // Set the current hash and level
+    memcpy(curr_hash, &leaves[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH);
+    // Adjust for 0-index
+    uint8_t curr_level = base_level - 1;
+    // Look for an empty spot to insert hash
+    while ((flag & (1 << curr_level)) > 0) {
+      // When we encounter a hash at our level, hash with it
+      // 1. First concatenate
+      memcpy(&hash_buffer[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+             HASH_DIGEST_LENGTH);
+      // 2. Then hash
+      hash(curr_hash, &hash_buffer[curr_level * HASH_DIGEST_LENGTH],
+           2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+      // 3. Then clear flag because the hash has been used
+      flag -= (1 << curr_level);
+      // If we hit the top of the tree, return the digest in leaf_value
+      if (curr_level == 0) {
+        memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
+#if defined(OPT_PROFILE)
+        uint64_t t1 = hal_get_time();
+        send_unsignedll("tree_root:", t1 - t0);
+#endif
+        return;
+      }
+      // 4. Go up a level
+      curr_level--;
+    }
+    // After finding a place to insert, put in state
+    memcpy(&hash_buffer[curr_level * HASH_DIGEST_LENGTH], curr_hash,
+           HASH_DIGEST_LENGTH);
+    flag += (1 << curr_level);
+    leaves_seen++;
+  }
+  memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
+}
+
+void tree_root_general(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
+                       uint32_t leaves_len) {
 #if defined(OPT_PROFILE)
   uint64_t t0 = hal_get_time();
 #endif
@@ -553,9 +616,9 @@ uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
   uint64_t t0 = hal_get_time();
 #endif
   uint8_t flags[T + 1] = {NOT_COMPUTED};
-  uint8_t level = LOG2(T);
-  uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
-  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+  uint8_t level = TREE_MAX_DEPTH;
+  uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
   uint16_t published = 0;
   uint16_t leaves_left = T;
 
