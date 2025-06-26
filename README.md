@@ -3,14 +3,18 @@
 TIMELINE:
 
   - [ ] Submit to ePrint 25/06
-    - [ ] Write section for GGM and Merkle merge optimisation
+    - [ ] ~~Write section for GGM and Merkle merge optimisation~~
     - [ ] Polish Paper for ePrint
+      - [ ] Finish results section
+        - [ ] Check the result/discussion section
+        - [ ] Update benchmark results
   - [ ] Submit to TCHES 15/07
     - [ ] Security evaluation
     - [ ] Application to other schemes
       - [ ] LESS
         - [ ] First implementation 28/06
       - [ ] FAEST?
+    - [ ] Check all combinations of parameters work
 
 TODO:
   - [X] Fix GGM optimisation for SDPG
@@ -18,7 +22,8 @@ TODO:
   - [X] Re-run all benchmarks
   - [X] Move to ./crypto_sign from ./mupq/crypto_sign to take advantage of keccak asm
   - [X] Finish writing automated profiling script
-  - [ ] Finish merge of GGM and Merkle optimisation
+  - [X] Finish merge of GGM and Merkle optimisation
+  - [ ] Experimental partial caching of tree according to expected probability of run
 
 # pqm4
 Collection of post-quantum cryptographic alrogithms for the ARM Cortex-M4
