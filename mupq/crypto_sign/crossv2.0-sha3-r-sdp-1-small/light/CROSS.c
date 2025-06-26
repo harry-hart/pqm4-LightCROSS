@@ -942,6 +942,15 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
     memset(&sig->proof[published_nodes * HASH_DIGEST_LENGTH], 0,
            mtp_proof_empty + HASH_DIGEST_LENGTH);
   }
+  uint8_t mtp_check[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE];
+  uint16_t nod_published[TREE_NODES_TO_STORE];
+  tree_proof(mtp_check, cmt_0, indices_to_publish, nod_published);
+  for (uint32_t i = 0; i < published_nodes; i++) {
+    if (memcmp(&sig->proof[i * HASH_DIGEST_LENGTH],
+               &mtp_check[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH) != 0) {
+      send_unsigned("Proof wrong at: ", i);
+    }
+  }
 #endif
 }
 #endif

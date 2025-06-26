@@ -413,8 +413,10 @@ void subtree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
 #if defined(OPT_PROFILE)
   uint64_t t0 = hal_get_time();
 #endif
+
   uint8_t rel_level = LOG2(leaves_len);
 #if defined(OPT_EXP_MERKLE)
+  // Check if the run meets the expected length
   uint8_t depth_offset = TREE_MAX_DEPTH - EXPECTED_DEPTH;
   uint8_t use_exp = rel_level >= depth_offset;
 #endif
@@ -433,13 +435,18 @@ void subtree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
 #endif
   uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
 #if defined(OPT_EXP_MERKLE)
+  // Some adjustment of variables to treat the exp_hashes level
+  // as the new leaf level
   if (use_exp) {
     uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
     lpl[EXPECTED_DEPTH] = npl[EXPECTED_DEPTH];
     rel_level = rel_level - depth_offset;
-    for (int l = 0; l < depth_offset; l++) {
-      leaf_start_i = leaf_start_i >> 1;
-      leaves_len = leaves_len >> 1;
+    leaf_start_i = leaf_start_i >> depth_offset;
+    leaves_len = leaves_len >> depth_offset;
+    // If it is at this level, can return immediately
+    if (rel_level == 0) {
+      memcpy(root, &exp_hashes[leaf_start_i], HASH_DIGEST_LENGTH);
+      return;
     }
   }
 #endif
