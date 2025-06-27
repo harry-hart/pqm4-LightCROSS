@@ -548,7 +548,7 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves) {
     while ((flag & (1 << curr_level)) > 0) {
       // When we encounter a hash at our level, hash with it
 #if defined(OPT_EXP_MERKLE)
-      if (curr_level == EXPECTED_DEPTH) {
+      if (curr_level == EXPECTED_DEPTH - 1) {
         // 1. First concatenate
         memcpy(&exp_hashes[(exp_level_index + 1) * HASH_DIGEST_LENGTH],
                curr_hash, HASH_DIGEST_LENGTH);
