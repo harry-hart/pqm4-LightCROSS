@@ -139,7 +139,7 @@ static inline void fp_dz_norm(FP_ELEM v[N]) {
  * V, is provided, transposed, hence linearized by columns so that syndrome
  * computation is vectorizable. */
 
-// #if !defined(OPT_KEYGEN)
+#if !defined(OPT_KEYGEN)
 #if defined(OPT_DSP)
 #if defined(RSDP)
 static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e_bar[N],
@@ -239,7 +239,7 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e[N],
   fp_arith_cycles += t1 - t0;
 #endif
 }
-// #endif
+#endif
 
 #if defined(OPT_DSP)
 #if defined(RSDP)

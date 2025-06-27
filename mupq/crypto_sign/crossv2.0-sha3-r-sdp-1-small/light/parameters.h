@@ -55,11 +55,11 @@
 #define OPT_E_BAR_PRIME
 #define OPT_OTF_MERKLE
 #define OPT_GGM
-//  The only ARM specific optimisation
-#define OPT_DSP
-#define OPT_Y_U_OVERLAP
-#define OPT_KEYGEN_BLOCKS
-// #define OPT_MERKLE_GGM_COMBO
+//   The only ARM specific optimisation
+// #define OPT_DSP
+//  #define OPT_Y_U_OVERLAP
+//   #define OPT_KEYGEN_BLOCKS
+//    #define OPT_MERKLE_GGM_COMBO
 /*
  * Debugging Flags
  */

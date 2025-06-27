@@ -385,11 +385,13 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 /****************** On the fly merkle tree functions *************************/
 /*****************************************************************************/
 
+#if 0
 int total_leaves_at_level(uint16_t ancestors_tracked,
                           uint16_t next_block_size) {
   // TODO: Not needed but interesting formula
   return 0;
 }
+#endif
 
 void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
                      uint32_t leaf_start_i, uint32_t leaves_len) {
@@ -415,7 +417,7 @@ void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
   }
 
   uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
-  for (int i = 0; i < leaves_len; i++) {
+  for (uint16_t i = 0; i < leaves_len; i++) {
     while (leaves_seen == lpl[base_level]) {
       leaves_seen = 0;
       base_level--;
@@ -488,7 +490,7 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
     leaves_this_block = 1 << (31 - msb);
   }
 
-  for (int i = 0; i < leaves_len; i++) {
+  for (uint16_t i = 0; i < leaves_len; i++) {
     if (leaves_seen == leaves_this_block) {
       leaves_left = leaves_left - leaves_seen;
       leaves_seen = 0;

@@ -236,11 +236,12 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #endif
 
   FZ_ELEM *e_bar = s_e_bar;
-  FP_ELEM sparse_e_bar[N] = {0};
 #if defined(RSDP)
   // Once again this only works in RSDP because FZ_ELEM and FP_ELEM are same
   // size
   FP_ELEM *s = &s_e_bar[K];
+#else
+  FP_ELEM sparse_e_bar[N] = {0};
 #endif
 
 #if defined(RSDPG)
