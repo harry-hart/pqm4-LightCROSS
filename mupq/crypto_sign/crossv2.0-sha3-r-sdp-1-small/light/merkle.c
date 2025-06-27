@@ -164,8 +164,8 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
    * leaves_start_indices contains the index of the leftmost leaf of each full
    * binary subtree
    */
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   const uint16_t leaves_start_indices[TREE_SUBROOTS] =
       TREE_LEAVES_START_INDICES;
 
@@ -180,7 +180,7 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
    * the left-child node */
   unsigned int start_node = leaves_start_indices[0];
   // For each level in the depth of the tree starting at the bottom
-  for (int level = LOG2(T); level > 0; level--) {
+  for (int level = TREE_MAX_DEPTH; level > 0; level--) {
     // For the distance from the first node to the right-most node on the leve
     for (int i = npl[level] - 2; i >= 0; i -= 2) {
       // Get the right-most node
@@ -247,14 +247,14 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
   unsigned char flag_tree[NUM_NODES_MERKLE_TREE] = {NOT_COMPUTED};
   label_leaves(flag_tree, leaves_to_reveal);
 
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   const uint16_t leaves_start_indices[TREE_SUBROOTS] =
       TREE_LEAVES_START_INDICES;
 
   int published = 0;
   unsigned int start_node = leaves_start_indices[0];
-  for (int level = LOG2(T); level > 0; level--) {
+  for (int level = TREE_MAX_DEPTH; level > 0; level--) {
     for (int i = npl[level] - 2; i >= 0; i -= 2) {
       uint16_t current_node = start_node + i;
       uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
@@ -314,14 +314,14 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 #endif
   label_leaves(flag_tree, leaves_to_reveal);
 
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   const uint16_t leaves_start_indices[TREE_SUBROOTS] =
       TREE_LEAVES_START_INDICES;
 
   unsigned int published = 0;
   unsigned int start_node = leaves_start_indices[0];
-  for (int level = LOG2(T); level > 0; level--) {
+  for (int level = TREE_MAX_DEPTH; level > 0; level--) {
     for (int i = npl[level] - 2; i >= 0; i -= 2) {
       uint16_t current_node = start_node + i;
       uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
@@ -405,10 +405,10 @@ void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
   uint8_t hash_buffer[(LOG2(leaves_len) + 2) * HASH_DIGEST_LENGTH];
   // At most ~10 bits will be used
   uint16_t flag = 0;
-  uint8_t base_level = LOG2(T);
+  uint8_t base_level = TREE_MAX_DEPTH;
   uint8_t rel_level = LOG2(leaves_len);
   uint16_t leaves_seen = leaf_start_i;
-  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
 
   while (leaves_seen > lpl[base_level]) {
     leaves_seen -= lpl[base_level];
@@ -555,9 +555,9 @@ uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
   uint64_t t0 = hal_get_time();
 #endif
   uint8_t flags[T + 1] = {NOT_COMPUTED};
-  uint8_t level = LOG2(T);
-  uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
-  uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+  uint8_t level = TREE_MAX_DEPTH;
+  uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
   uint16_t published = 0;
   uint16_t leaves_left = T;
 

@@ -175,7 +175,7 @@ static inline void csprng_fp_vec(FP_ELEM res[N],
 static inline void csprng_fp_vec_chall_1(FP_ELEM res[T],
                                          CSPRNG_STATE_T *const csprng_state) {
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_FOR_P_M_ONE) - 1;
-  uint8_t CSPRNG_buffer[ROUND_UP(BITS_CHALL_1_FPSTAR_CT_RNG, 8) / 8];
+  uint8_t CSPRNG_buffer[ROUND_UP(BITS_BETA_FPSTAR_CT_RNG, 8) / 8];
   /* To facilitate hardware implementations, the uint64_t
    * sub-buffer is consumed starting from the least significant byte
    * i.e., from the first being output by SHAKE. Bits in the byte are

@@ -65,11 +65,11 @@ void psalt(unsigned char salt[SALT_LENGTH_BYTES]) {
 }
 
 void ptree(unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES]) {
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   int node_idx = 0;
   fprintf(stderr, "Tree dump\n");
   int ancestors = 0;
-  for (int level = 0; level < LOG2(T) + 1; level++) {
+  for (int level = 0; level < TREE_MAX_DEPTH + 1; level++) {
     fprintf(stderr, "level %d ", level);
     for (int idx_in_level = 0; idx_in_level < npl[level]; idx_in_level++) {
       node_idx = ancestors + idx_in_level;
@@ -213,15 +213,15 @@ static void compute_seeds_to_publish(
    * into the linearized tree leaves */
   label_leaves(flags_tree_to_publish, indices_to_publish);
 
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   const uint16_t leaves_start_indices[TREE_SUBROOTS] =
       TREE_LEAVES_START_INDICES;
 
   /* compute the value for the internal nodes of the tree starting from the
    * the leaves, right to left */
   unsigned int start_node = leaves_start_indices[0];
-  for (int level = LOG2(T); level > 0; level--) {
+  for (int level = TREE_MAX_DEPTH; level > 0; level--) {
     for (int i = npl[level] - 2; i >= 0; i -= 2) {
       uint16_t current_node = start_node + i;
       uint16_t parent_node = PARENT(current_node) + (off[level - 1] >> 1);
@@ -272,15 +272,15 @@ void gen_seed_tree(
    * npl contains the number of nodes per level.
    * lpl contains the number of leaves per level
    * */
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
-  const uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
 
   /* Generate the log_2(t) layers from the root, each iteration generates a tree
    * level; iterate on nodes of the parent level; the leaf nodes on each level
    * don't need to be expanded, thus only iterate to npl[level]-lpl[level] */
   int start_node = 0;
-  for (int level = 0; level < LOG2(T); level++) {
+  for (int level = 0; level < TREE_MAX_DEPTH; level++) {
     for (int node_in_level = 0; node_in_level < npl[level] - lpl[level];
          node_in_level++) {
       uint16_t father_node = start_node + node_in_level;
@@ -354,14 +354,14 @@ int seed_path(
   unsigned char flags_tree_to_publish[NUM_NODES_SEED_TREE] = {NOT_TO_PUBLISH};
   compute_seeds_to_publish(flags_tree_to_publish, indices_to_publish);
 
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
 
   /* no sense in trying to publish the root node, start examining from level 1
    */
   int start_node = 1;
   int num_seeds_published = 0;
-  for (int level = 1; level <= LOG2(T); level++) {
+  for (int level = 1; level <= TREE_MAX_DEPTH; level++) {
     for (int node_in_level = 0; node_in_level < npl[level]; node_in_level++) {
       uint16_t current_node = start_node + node_in_level;
       uint16_t father_node = PARENT(current_node) + (off[level - 1] >> 1);
@@ -404,9 +404,9 @@ rebuild_tree(unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES],
   unsigned char csprng_input[csprng_input_len];
   CSPRNG_STATE_T tree_csprng_state;
 
-  const uint16_t off[LOG2(T) + 1] = TREE_OFFSETS;
-  const uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
-  const uint16_t lpl[LOG2(T) + 1] = TREE_LEAVES_PER_LEVEL;
+  const uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  const uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
 
   memcpy(csprng_input + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
 
@@ -414,7 +414,7 @@ rebuild_tree(unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES],
    * disclosed */
   int nodes_used = 0;
   int start_node = 1;
-  for (int level = 1; level <= LOG2(T); level++) {
+  for (int level = 1; level <= TREE_MAX_DEPTH; level++) {
     for (int node_in_level = 0; node_in_level < npl[level]; node_in_level++) {
       uint16_t current_node = start_node + node_in_level;
       uint16_t father_node = PARENT(current_node) + (off[level - 1] >> 1);

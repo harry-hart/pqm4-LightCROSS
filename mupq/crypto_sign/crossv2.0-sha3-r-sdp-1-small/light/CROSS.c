@@ -609,7 +609,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
   // THIS IS BFS, DO BFS
   // Still need to track the global node index for proper domain separation
-  uint16_t npl[LOG2(T) + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   uint16_t npl_cum = 0;
   uint16_t partition_size;
   uint16_t domain_sep;
