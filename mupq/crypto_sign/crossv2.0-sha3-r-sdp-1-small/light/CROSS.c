@@ -375,8 +375,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #else
       // Calculate s
       s[j] = FPRED_DOUBLE((FP_DOUBLEPREC)s[j] +
-                          (FP_DOUBLEPREC)RESTR_TO_VAL(e_bar[i]) *
-                              (FP_DOUBLEPREC)v);
+                          (FP_DOUBLEPREC)e_bar[i] * (FP_DOUBLEPREC)v);
 #endif
     }
 #if defined(OPT_DSP)
