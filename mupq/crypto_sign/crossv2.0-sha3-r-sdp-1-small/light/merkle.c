@@ -455,7 +455,7 @@ void subtree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
 #endif
   uint16_t leaves_seen = leaf_start_i;
 
-  while (leaves_seen > lpl[base_level]) {
+  while (leaves_seen >= lpl[base_level]) {
     leaves_seen -= lpl[base_level];
     base_level--;
     rel_level--;
