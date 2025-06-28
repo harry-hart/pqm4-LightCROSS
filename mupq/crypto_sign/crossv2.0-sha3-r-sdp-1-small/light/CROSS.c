@@ -542,6 +542,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #if defined(OPT_GGM)
 #define REVEAL_VALUE 1
 #define CHALLENGE_REVEAL_VALUE 1
+#define FLAG_VALUE 1 - CHALLENGE_REVEAL_VALUE
 
 struct FlagNode {
   // Next index
@@ -636,7 +637,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   uint8_t highest_streak = 0;
   uint8_t int_streak = 0;
   for (int i = 0; i < T; i++) {
-    if (indices_to_publish[i] != CHALLENGE_REVEAL_VALUE) {
+    if (indices_to_publish[i] == FLAG_VALUE) {
       struct FlagNode flag = {.next = 0, .index = flag_index, .pos = i};
       flags[flag_index] = flag;
       flag_index++;
@@ -730,21 +731,31 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                flags[flag_index].pos < child_partition_start) {
           flag_index++;
         }
-        while (flag_index < flag_len &&
-               child_partition_start <= flags[flag_index].pos &&
-               flags[flag_index].pos < child_partition_end) {
-          flag_index++;
-          hidden_nodes++;
-          node_state = 0;
+        // while (flag_index < flag_len &&
+        //        child_partition_start <= flags[flag_index].pos &&
+        //        flags[flag_index].pos < child_partition_end) {
+        //   flag_index++;
+        //   hidden_nodes++;
+        //   node_state = 0;
+        node_state = 2;
+        for (uint16_t leaf_i = child_partition_start;
+             leaf_i < child_partition_end; leaf_i++) {
+          if (indices_to_publish[leaf_i] != FLAG_VALUE) {
+            node_state = 0;
+            break;
+          }
 #if defined(OPT_MERKLE_GGM_COMBO)
           if (highest_streak < child_partition_size) {
             break;
           }
 #endif
         }
-        if (hidden_nodes == child_partition_size) {
-          node_state = 2;
+        if (node_state == 2) {
+          flag_index += child_partition_size;
         }
+        // if (hidden_nodes == child_partition_size) {
+        //   node_state = 2;
+        // }
 #if !defined(OPT_MERKLE_GGM_COMBO)
       }
 #endif
@@ -869,7 +880,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         // Add all requisite response values
 
         // This is important to add them in the correct order
-        uint8_t base_index = flag_index - hidden_nodes;
+        uint8_t base_index = flag_index - child_partition_size;
 
         for (int k = child_partition_start; k < child_partition_end; k++) {
           assert(published_rsps < T - W);
@@ -1387,7 +1398,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #endif
 
-#if defined(OPT_GGM)
+#if defined(OPT_GGM) && !defined(NO_TREES)
 // Placeholders for compatability with different combinations of optimisations
 #if defined(OPT_HASH_Y)
   FP_ELEM *y[1] = {0};

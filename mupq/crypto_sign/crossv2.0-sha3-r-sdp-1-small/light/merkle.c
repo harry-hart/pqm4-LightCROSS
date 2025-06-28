@@ -561,7 +561,7 @@ uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
   uint16_t published = 0;
   uint16_t leaves_left = T;
 
-  // TEMP: For testing ggm compatibility
+  // For GGM
   uint8_t node_i = 0;
   uint16_t tot_nodes = 0;
   for (int l = 0; l < level + 1; l++) {
@@ -597,7 +597,7 @@ uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
         memcpy(mtp + published * HASH_DIGEST_LENGTH,
                cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
         published++;
-        // TEMP: for ggm compatibility testing
+        // For GGM
         nodes_published[node_i] =
             (tot_nodes - 1) + (i - (T - leaves_left - npl[level] - 1)) - 1;
         node_i++;
@@ -606,7 +606,7 @@ uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
         memcpy(mtp + published * HASH_DIGEST_LENGTH,
                cmt_0 + i * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
         published++;
-        // TEMP: for ggm compatibility testing
+        // For GGM
         nodes_published[node_i] =
             (tot_nodes - 1) + (i - (T - leaves_left - npl[level] - 1));
         node_i++;
