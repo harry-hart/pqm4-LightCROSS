@@ -714,32 +714,40 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         child_node_i++;
       }
 
-      // 0 = mixed, 1 = reveal, 2 = publish rsps
-      // uint8_t node_state =
-      //    child_node_i == nodes_to_reveal[nodes_revealed - 1 -
-      //    published_nodes];
+// 0 = mixed, 1 = reveal, 2 = publish rsps
+#if defined(OPT_MERKLE_GGM_COMBO)
       uint8_t node_state = 1;
+#else
+      uint8_t node_state =
+          child_node_i == nodes_to_reveal[nodes_revealed - 1 - published_nodes];
+#endif
 
-      //  If there is a chance of publishing responses
-      // if (highest_streak >= child_partition_size) {
-      while (flag_index < flag_len &&
-             flags[flag_index].pos < child_partition_start) {
-        flag_index++;
-      }
-      while (flag_index < flag_len &&
-             child_partition_start <= flags[flag_index].pos &&
-             flags[flag_index].pos < child_partition_end) {
-        flag_index++;
-        hidden_nodes++;
-        node_state = 0;
-        if (highest_streak < child_partition_size) {
-          break;
+//  If there is a chance of publishing responses
+#if !defined(OPT_MERKLE_GGM_COMBO)
+      if (highest_streak >= child_partition_size) {
+#endif
+        while (flag_index < flag_len &&
+               flags[flag_index].pos < child_partition_start) {
+          flag_index++;
         }
+        while (flag_index < flag_len &&
+               child_partition_start <= flags[flag_index].pos &&
+               flags[flag_index].pos < child_partition_end) {
+          flag_index++;
+          hidden_nodes++;
+          node_state = 0;
+#if defined(OPT_MERKLE_GGM_COMBO)
+          if (highest_streak < child_partition_size) {
+            break;
+          }
+#endif
+        }
+        if (hidden_nodes == child_partition_size) {
+          node_state = 2;
+        }
+#if !defined(OPT_MERKLE_GGM_COMBO)
       }
-      if (hidden_nodes == child_partition_size) {
-        node_state = 2;
-      }
-      //}
+#endif
 
       /* Deal with the three possible cases:
        1. Mixed hidden and revealed leaves
