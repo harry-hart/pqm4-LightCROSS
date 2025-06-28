@@ -14,7 +14,7 @@ TIMELINE:
       - [ ] Application to other schemes
         - [ ] LESS
           - [ ] First implementation
-      - [ ] Partial caching of tree ?
+      - [ ] Partial caching of tree [ LOW PRIORITY ]
     - [ ] Check all combinations of parameters work
     - [ ] Compress paper to 20 pages for submission
 
