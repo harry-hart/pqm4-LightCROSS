@@ -10,11 +10,13 @@ TIMELINE:
         - [ ] Update benchmark results
   - [ ] Submit to TCHES 15/07
     - [ ] Security evaluation
-    - [ ] Application to other schemes
-      - [ ] LESS
-        - [ ] First implementation 28/06
-      - [ ] FAEST?
+    - [ ] Code
+      - [ ] Application to other schemes
+        - [ ] LESS
+          - [ ] First implementation
+      - [ ] Partial caching of tree ?
     - [ ] Check all combinations of parameters work
+    - [ ] Compress paper to 20 pages for submission
 
 TODO:
   - [X] Fix GGM optimisation for SDPG
