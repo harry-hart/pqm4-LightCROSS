@@ -725,7 +725,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
 //  If there is a chance of publishing responses
 #if !defined(OPT_MERKLE_GGM_COMBO)
-      if (highest_streak >= child_partition_size) {
+      if (node_state != 1 && highest_streak >= child_partition_size) {
 #endif
         while (flag_index < flag_len &&
                flags[flag_index].pos < child_partition_start) {

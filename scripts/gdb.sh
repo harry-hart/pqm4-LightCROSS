@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 
-arm-none-eabi-gdb -ex "target extended-remote :3333" $1
+PORT=3333
+
+if [[ $# -ge 2 ]]; then
+  PORT=$2
+fi
+
+arm-none-eabi-gdb -ex "target extended-remote :${PORT}" $1
