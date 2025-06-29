@@ -731,31 +731,27 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                flags[flag_index].pos < child_partition_start) {
           flag_index++;
         }
-        // while (flag_index < flag_len &&
-        //        child_partition_start <= flags[flag_index].pos &&
-        //        flags[flag_index].pos < child_partition_end) {
-        //   flag_index++;
-        //   hidden_nodes++;
-        //   node_state = 0;
-        node_state = 2;
-        for (uint16_t leaf_i = child_partition_start;
-             leaf_i < child_partition_end; leaf_i++) {
-          if (indices_to_publish[leaf_i] != FLAG_VALUE) {
-            node_state = 0;
-            break;
-          }
+        if (flag_index == flag_len) {
+          node_state = 0;
+        } else {
+          node_state = 2;
+          for (uint16_t leaf_i = child_partition_start;
+               leaf_i < child_partition_end; leaf_i++) {
+            if (indices_to_publish[leaf_i] != FLAG_VALUE) {
+              node_state = 0;
+              break;
+            }
+            // flag_index++;
 #if defined(OPT_MERKLE_GGM_COMBO)
-          if (highest_streak < child_partition_size) {
-            break;
-          }
+            if (highest_streak < child_partition_size) {
+              break;
+            }
 #endif
+          }
+          if (node_state == 2) {
+            flag_index += child_partition_size;
+          }
         }
-        if (node_state == 2) {
-          flag_index += child_partition_size;
-        }
-        // if (hidden_nodes == child_partition_size) {
-        //   node_state = 2;
-        // }
 #if !defined(OPT_MERKLE_GGM_COMBO)
       }
 #endif
