@@ -774,8 +774,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                                      .partition_start = child_partition_start,
                                      .partition_end = child_partition_end,
                                      .seed_i = tail,
-                                     .node_i = npl_cum + npl[curr_level] +
-                                               ((node.node_i - npl_cum) * 2)};
+                                     .node_i = child_node_i};
         // Calculate seed
         if (i == 0) {
           // ADD THE LEFT NODE TO THE PROCESSING QUEUE
@@ -791,8 +790,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                              SEED_LENGTH_BYTES, &tree_csprng_state);
           left_calculated = 1;
         } else {
-          child_node.node_i += 1;
-          // ADD THE RIGHT NODE TO THE PROCESSING QUEUE
+          // child_node.node_i += 1;
+          //  ADD THE RIGHT NODE TO THE PROCESSING QUEUE
           if (left_calculated) {
             // State has already been initialised and first part taken
             csprng_randombytes(seed_storage +
@@ -1238,7 +1237,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
 #if defined(OPT_OTF_MERKLE)
-  tree_root_tuned(digest_cmt0_cmt1, cmt_0[0], 0, T);
+  tree_root(digest_cmt0_cmt1, cmt_0);
 #elif defined(OPT_MERKLE)
   tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
