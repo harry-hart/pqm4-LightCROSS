@@ -27,6 +27,16 @@ TODO:
   - [X] Finish merge of GGM and Merkle optimisation
   - [ ] Experimental partial caching of tree according to expected probability of run
 
+## instructions
+
+### Benchmarking
+
+1. Activate the python environment defined by `requirements.txt`
+2. Run `./scripts/benchmark.sh`.
+  N.B. If it is not correctly connecting to the serial port with the device, make sure to check `/dev/ttyACM0` is correct (and adjust in the script if not)
+3. Run `python3 ./convert_benchmarks.py csv > results/<result_file_name>.csv`
+4. Run `python3 ./results/process-data.py -f ./results/<result_file_name>.csv`
+
 # pqm4
 Collection of post-quantum cryptographic alrogithms for the ARM Cortex-M4
 
