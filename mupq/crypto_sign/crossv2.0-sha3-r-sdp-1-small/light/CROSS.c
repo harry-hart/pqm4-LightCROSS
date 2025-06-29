@@ -1237,7 +1237,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
 #if defined(OPT_OTF_MERKLE)
-  tree_root(digest_cmt0_cmt1, cmt_0[0], T);
+  tree_root(digest_cmt0_cmt1, cmt_0);
 #elif defined(OPT_MERKLE)
   tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else

@@ -459,8 +459,8 @@ void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
   memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
 }
 
-void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
-               uint32_t leaves_len) {
+void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
+               unsigned char leaves[T][HASH_DIGEST_LENGTH]) {
 #if defined(OPT_PROFILE)
   uint64_t t0 = hal_get_time();
 #endif
@@ -468,51 +468,57 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
   // Find the next level with leaves
   // We can do this because from left to right the tree leaves should have
   // monotonically descending depths.
-  uint8_t hash_buffer[(LOG2(leaves_len) + 1) * HASH_DIGEST_LENGTH];
+  uint8_t hash_buffer[(TREE_MAX_DEPTH + 1) * HASH_DIGEST_LENGTH];
   // At most ~10 bits will be used
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
   uint16_t flag = 0;
-  uint8_t level = LOG2(leaves_len);
+  uint8_t level = TREE_MAX_DEPTH;
   uint16_t leaves_seen = 0;
-  uint16_t leaves_this_block = 0;
-  uint16_t leaves_left = leaves_len;
-  uint8_t subtree_offset = 0;
+  uint16_t leaves_this_block = lpl[level];
+  // uint16_t leaves_left = T;
+  //  uint8_t subtree_offset = 0;
 
-  if ((leaves_len & (leaves_len - 1)) == 0) {
-    leaves_this_block = leaves_len;
-  } else {
-    // Count leading zeroes to find msb
-    uint8_t msb = 0;
-    // asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
-    msb = __builtin_clz(leaves_len);
-    // Highest power of 2 that divides it (maybe implement in assembly
-    // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
-    // register
-    leaves_this_block = 1 << (31 - msb);
-  }
+  // if ((leaves_len & (leaves_len - 1)) == 0) {
+  //   leaves_this_block = leaves_len;
+  // } else {
+  //   // Count leading zeroes to find msb
+  //   uint8_t msb = 0;
+  //   // asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
+  //   msb = __builtin_clz(leaves_len);
+  //   // Highest power of 2 that divides it (maybe implement in assembly
+  //   // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
+  //   // register
+  //   leaves_this_block = 1 << (31 - msb);
+  // }
 
-  for (uint16_t i = 0; i < leaves_len; i++) {
-    if (leaves_seen == leaves_this_block) {
-      leaves_left = leaves_left - leaves_seen;
+  for (uint16_t i = 0; i < T; i++) {
+    while (leaves_seen == leaves_this_block) {
       leaves_seen = 0;
-      level = 0;
-      subtree_offset++;
-      if ((leaves_left & (leaves_left - 1)) == 0) {
-        leaves_this_block = leaves_left;
-      } else {
-        // Count leading zeroes to find msb
-        uint8_t msb = 0;
-        // asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
-        msb = __builtin_clz(leaves_left);
-        // Highest power of 2 that divides it (maybe implement in assembly
-        // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
-        // register
-        leaves_this_block = 1 << (31 - msb);
-      }
-      level = subtree_offset + LOG2(leaves_this_block);
+      level--;
+      leaves_this_block = lpl[level];
+      // leaves_left = leaves_left - leaves_seen;
+      // leaves_seen = 0;
+      // level = 0;
+      // subtree_offset++;
+      // if ((leaves_left & (leaves_left - 1)) == 0) {
+      //   leaves_this_block = leaves_left;
+      // } else {
+      //   // Count leading zeroes to find msb
+      //   uint8_t msb = 0;
+      //   // asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
+      //   msb = __builtin_clz(leaves_left);
+      //   // Highest power of 2 that divides it (maybe implement in assembly
+      //   // later?) 31 because registers are 32 bit (CLZ) counts leading bits
+      //   in
+      //   // register
+      //   leaves_this_block = 1 << (31 - msb);
+      // }
+      // level = subtree_offset + LOG2(leaves_this_block);
     }
     // Set the current hash and level
     uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
-    memcpy(curr_hash, &leaves[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH);
+    // memcpy(curr_hash, &leaves[i * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH);
+    memcpy(curr_hash, leaves[i], HASH_DIGEST_LENGTH);
     // Adjust for 0-index
     uint8_t curr_level = level - 1;
     // Look for an empty spot to insert hash
