@@ -1004,13 +1004,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
   // Limit scope for seed_tree
-#if defined(OPT_GGM)
+#if defined(OPT_GGM) && !defined(NO_TREES)
   {
 #endif
     uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
     gen_seed_tree(seed_tree, root_seed, sig->salt);
     seed_leaves(round_seeds, seed_tree);
-#if defined(OPT_GGM)
+#if defined(OPT_GGM) && !defined(NO_TREES)
   }
 #endif
 #endif
@@ -1237,7 +1237,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   tree_root(digest_cmt0_cmt1, cmt_0);
 #else
 #if defined(OPT_OTF_MERKLE)
-  tree_root(digest_cmt0_cmt1, cmt_0);
+  tree_root(digest_cmt0_cmt1, cmt_0[0], T);
 #elif defined(OPT_MERKLE)
   tree_root(digest_cmt0_cmt1, merkle_tree_0);
 #else
@@ -1426,7 +1426,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                  e_bar_prime[0], nodes_published, nodes_to_reveal);
 #endif
 #else
+#if defined(NO_TREES)
+  int published_nodes = seed_path(sig->path, round_seeds, chall_2);
+#else
   int published_nodes = seed_path(sig->path, seed_tree, chall_2);
+#endif
 #endif
 
 #if !defined(OPT_GGM) || defined(NO_TREES)
