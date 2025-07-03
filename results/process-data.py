@@ -125,10 +125,27 @@ def create_table(df):
 
     return grouped_df[new_column_tuples]
 
+def k_formatter(value):
+    if np.round(value) == value:
+        # Size specifiers
+        sizes = ["", "k", "m", "g"]
+        size = 0
+        # Cast to int
+        v = int(value)
+        while v > 1000:
+            v /= 1000
+            size += 1
+        # Round to 2 d.p.
+        if size > 0:
+            v = np.round(v, 2)
+        return str(v) + sizes[size]
+    return value
+
 def create_latex(df, fname):
     styler = df.style
     styler.format_index(escape="latex", axis=1).format_index(escape="latex", axis=0)
     styler.format(
+        formatter=k_formatter,
         precision=2,
         thousands=",",
         na_rep="-",
