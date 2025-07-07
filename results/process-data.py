@@ -188,9 +188,17 @@ def main():
                 continue
             # Give the basic table as csv
             new_table = process_table(test, cat, table)
+            # Compact table naming
             new_table.to_csv(f"RAW-{"_".join(test.split())}-{"_".join(cat.split())}.csv")
             # Create the grouped and pivoted table
             pretty_table = create_table(new_table)
+            pretty_table.columns.set_names([None, "impl."], inplace=True)
+            new_levs = []
+            for l in pretty_table.columns.levels[0]:
+                new_levs.append(l.replace("Generation", "Gen."))
+            pretty_table.columns = pretty_table.columns.set_levels(levels=new_levs, level=0)
+            pretty_table.index.rename(["prob.","lvl","var."], inplace=True)
+            print("After rename")
             print(pretty_table)
             pretty_table.to_csv(f"{"_".join(test.split())}-{"_".join(cat.split())}.csv")
             create_latex(pretty_table, f"{"_".join(test.split())}-{"_".join(cat.split())}.tex")

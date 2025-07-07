@@ -43,8 +43,8 @@
 /*
  * Original Optimisations
  */
-#define OPT_KEYGEN
-////  Note this is overidden if OPT_OTF_MERKLE is defined
+// #define OPT_KEYGEN
+//   Note this is overidden if OPT_OTF_MERKLE is defined
 #define OPT_MERKLE
 #define OPT_HASH_CMT1
 #define OPT_HASH_Y
@@ -60,7 +60,7 @@
 #define OPT_DSP
 #define OPT_Y_U_OVERLAP
 #define OPT_KEYGEN_BLOCKS
-// #define OPT_MERKLE_GGM_COMBO
+#define OPT_MERKLE_GGM_COMBO
 /*
  * Debugging Flags
  */
