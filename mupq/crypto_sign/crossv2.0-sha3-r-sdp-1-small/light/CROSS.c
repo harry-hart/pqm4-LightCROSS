@@ -173,7 +173,9 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, uint8_t *seed_pk) {
 #elif defined(RSDPG)
 void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
-                                   uint8_t *seed_pk) {
+                                   uint8_t *seed_pk, FZ_ELEM *orig_e_bar,
+                                   FP_ELEM *orig_s,
+                                   FZ_ELEM orig_W_mat[RSDPG_M][N - RSDPG_M]) {
 #endif
 
 #if defined(OPT_PROFILE)
@@ -195,6 +197,10 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
 #endif
   csprng_fz_mat(W_mat, &csprng_state_mat);
+  if (memcmp(W_mat, orig_W_mat, RSDPG_M * (N - RSDPG_M) * sizeof(FZ_ELEM)) !=
+      0) {
+    hal_send_str("W_mat wrong");
+  }
 #endif
   /* The on the fly element. */
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
@@ -247,6 +253,9 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #if defined(RSDPG)
   fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], W_mat);
   fz_dz_norm_n(e_bar);
+  if (memcmp(e_bar, orig_e_bar, N * sizeof(FZ_ELEM)) != 0) {
+    hal_send_str("e_bar wrong");
+  }
 #endif
 
   // Restrict the values
@@ -375,7 +384,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #else
       // Calculate s
       s[j] = FPRED_DOUBLE((FP_DOUBLEPREC)s[j] +
-                          (FP_DOUBLEPREC)e_bar[i] * (FP_DOUBLEPREC)v);
+                          (FP_DOUBLEPREC)sparse_e_bar[i] * (FP_DOUBLEPREC)v);
 #endif
     }
 #if defined(OPT_DSP)
@@ -476,6 +485,10 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #endif
 #endif
 
+  FP_ELEM V_tr[K][N - K];
+  FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
+  expand_pk(V_tr, W_mat, PK->seed_pk);
+
   /******* Sample e bar for error vector *******/
   /* expansion of secret key material */
   /* Expansion of seede, explicit domain separation for CSPRNG */
@@ -500,9 +513,15 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   csprng_fz_vec(s_e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
   FP_ELEM s[N - K];
-  // FZ_ELEM e_G_bar[RSDPG_M];
+  FP_ELEM orig_s[N - K];
+  FZ_ELEM e_bar[N];
+  FZ_ELEM e_G_bar[RSDPG_M];
   // Put e_G_bar at the tail of s_e_bar
-  csprng_fz_inf_w(&s_e_bar[N - RSDPG_M], &csprng_state_e_bar);
+  csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
+  memcpy(&s_e_bar[N - RSDPG_M], e_G_bar, RSDPG_M);
+  fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
+  fz_dz_norm_n(e_bar);
+  // csprng_fz_inf_w(&s_e_bar[N - RSDPG_M], &csprng_state_e_bar);
 #endif
 #else
   //  Original Implementation
@@ -527,7 +546,16 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #if defined(RSDP)
   CROSS_keygen_compute_syndrome(s_e_bar, PK->seed_pk);
 #elif defined(RSDPG)
-  CROSS_keygen_compute_syndrome(s_e_bar, s, PK->seed_pk);
+  restr_vec_by_fp_matrix(orig_s, e_bar, V_tr);
+  CROSS_keygen_compute_syndrome(s_e_bar, s, PK->seed_pk, e_bar, orig_s, W_mat);
+  if (memcmp(s, orig_s, (N - K) * sizeof(FP_ELEM)) != 0) {
+    for (int i = 0; i < (N - K); i++) {
+      if (memcmp(&s[i], &orig_s[i], sizeof(FP_ELEM)) != 0) {
+        send_unsigned("following i syndrome don't match:", i);
+      }
+    }
+    hal_send_str("syndrome don't match");
+  }
 #endif
 #else
   restr_vec_by_fp_matrix(s, e_bar, V_tr);
