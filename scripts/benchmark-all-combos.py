@@ -42,7 +42,9 @@ def main():
         # Benchmark
         subprocess.run([str(script_dir / "benchmark.sh")], check=True)
         # Save results
-        subprocess.run([str(script_dir.parent / "convert_benchmarks.py"), "csv", ">", f"{script_dir.parent / "results"}/benchmark_{'_'.join(combo)}"], check=True)
+        results = subprocess.run([str(script_dir.parent / "convert_benchmarks.py"), "csv",], check=True, capture_output=True).stdout
+        with open(f"{script_dir.parent / "results"}/benchmark_{'_'.join(combo)}.csv", "w") as f:
+            f.write(results.decode('utf-8'))
         # Set optimisations off
         for opt in combo:
             param_file_lines[opt_lines[opt]] = f"// #define {opt}\n"
