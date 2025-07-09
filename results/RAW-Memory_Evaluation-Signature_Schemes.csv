@@ -3,7 +3,7 @@
 1,cross,2.0,sdp,1,balance,ref,8112,210016,113184
 2,cross,2.0,sdp,1,fast,light,1520,54480,14776
 3,cross,2.0,sdp,1,fast,ref,8112,116224,56720
-4,cross,2.0,sdp,1,small,light,1520,184272,67048
+4,cross,2.0,sdp,1,small,light,1520,184380,67048
 5,cross,2.0,sdp,1,small,ref,8112,421392,223832
 6,cross,2.0,sdp,3,balance,light,1728,186268,77952
 7,cross,2.0,sdp,3,balance,ref,16832,463484,248804
@@ -24,14 +24,14 @@
 22,cross,2.0,sdpg,1,small,light,2672,147488,64400
 23,cross,2.0,sdpg,1,small,ref,3984,309608,184632
 24,cross,2.0,sdpg,3,balance,light,4384,103584,53912
-25,cross,2.0,sdpg,3,balance,ref,7440,240896,145156
+25,cross,2.0,sdpg,3,balance,ref,7440,240896,145092
 26,cross,2.0,sdpg,3,fast,light,4384,86512,24760
 27,cross,2.0,sdpg,3,fast,ref,7440,170424,91312
 28,cross,2.0,sdpg,3,small,light,4384,191188,96040
 29,cross,2.0,sdpg,3,small,ref,7440,453168,270912
-30,cross,2.0,sdpg,5,balance,light,0,0,0
+30,cross,2.0,sdpg,5,balance,light,6824,179200,92984
 31,cross,2.0,sdpg,5,balance,ref,11776,423232,255760
-32,cross,2.0,sdpg,5,fast,light,0,0,0
+32,cross,2.0,sdpg,5,fast,light,6824,151040,41816
 33,cross,2.0,sdpg,5,fast,ref,11776,300704,159872
-34,cross,2.0,sdpg,5,small,light,0,0,0
+34,cross,2.0,sdpg,5,small,light,6824,314096,158812
 35,cross,2.0,sdpg,5,small,ref,0,0,0

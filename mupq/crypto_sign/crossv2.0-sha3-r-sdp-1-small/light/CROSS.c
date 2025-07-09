@@ -521,15 +521,11 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   csprng_fz_vec(s_e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
   FP_ELEM s[N - K];
-  // FP_ELEM orig_s[N - K];
-  // FZ_ELEM e_bar[N];
-  FZ_ELEM e_G_bar[RSDPG_M];
-  // Put e_G_bar at the tail of s_e_bar
-  csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
-  memcpy(&s_e_bar[N - RSDPG_M], e_G_bar, RSDPG_M);
-  // fz_inf_w_by_fz_matrix(e_bar, e_G_bar, W_mat);
-  // fz_dz_norm_n(e_bar);
-  //  csprng_fz_inf_w(&s_e_bar[N - RSDPG_M], &csprng_state_e_bar);
+  // FZ_ELEM e_G_bar[RSDPG_M];
+  //  Put e_G_bar at the tail of s_e_bar
+  //  csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
+  csprng_fz_inf_w(&s_e_bar[N - RSDPG_M], &csprng_state_e_bar);
+  // memcpy(&s_e_bar[N - RSDPG_M], e_G_bar, RSDPG_M);
 #endif
 #else
   //  Original Implementation
@@ -554,16 +550,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
 #if defined(RSDP)
   CROSS_keygen_compute_syndrome(s_e_bar, PK->seed_pk);
 #elif defined(RSDPG)
-  // restr_vec_by_fp_matrix(orig_s, e_bar, V_tr);
   CROSS_keygen_compute_syndrome(s_e_bar, s, PK->seed_pk);
-  // if (memcmp(s, orig_s, (N - K) * sizeof(FP_ELEM)) != 0) {
-  //   for (int i = 0; i < (N - K); i++) {
-  //     if (memcmp(&s[i], &orig_s[i], sizeof(FP_ELEM)) != 0) {
-  //       send_unsigned("following i syndrome don't match:", i);
-  //     }
-  //   }
-  //   hal_send_str("syndrome don't match");
-  // }
 #endif
 #else
   restr_vec_by_fp_matrix(s, e_bar, V_tr);
