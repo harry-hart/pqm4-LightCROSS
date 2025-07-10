@@ -438,6 +438,10 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
   // This is either 9 or 7 depending on RSDPG vs RSDP
   int elem_size = BITS_TO_REPRESENT(P - 1);
   FP_ELEM v;
+
+  size_t to_squeeze = ROUND_UP(BITS_V_CT_RNG, 8) / 8;
+  size_t sampled = 0;
+
 #if defined(OPT_KEYGEN_BLOCKS)
 #if defined(CATEGORY_1)
   // SHAKE128 r size: 168 bytes
@@ -446,6 +450,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
   // SHAKE256 r size: 136 bytes
 #define R_SIZE 136
 #endif
+#define R_BYTES R_SIZE / 8
   // 2 byte buffer to allow for max 9 byte remaining
   // uint8_t rand_buflen = R_SIZE + 2;
   uint8_t rand_buffer[R_SIZE + 2] = {0};
@@ -459,6 +464,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
   // Put any remaining unsqueezed bytes into here for clean chunks later
   if (rand_bufrem != 0) {
     csprng_randombytes(rand_buffer, rand_bufrem, &csprng_state_mat);
+    sampled += rand_bufrem;
   }
   // Init v_window
   // Using remaining window bits to store bytes for now
@@ -546,39 +552,47 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
       // Are they generated column first or row first?
       // If we have less than 32 remaining
       do {
-        if (remaining_window_bits <= 32) {
+        if (remaining_window_bits <= 32 && sampled < to_squeeze) {
+          size_t rem_to_sample = to_squeeze - sampled;
+          size_t sample_size;
 #if defined(OPT_KEYGEN_BLOCKS)
+          sample_size = rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
           // If we have run out of random buffer, generate more
-          if (rand_bufrem <= 4) {
+          if (rand_bufrem <= sample_size) {
             // Copy the remaining bytes to the front
             memcpy(rand_buffer, &rand_buffer[rand_pos], rand_bufrem);
             rand_pos = 0;
             // Generate another block
-            csprng_randombytes(&rand_buffer[rand_bufrem], R_SIZE,
+            csprng_randombytes(&rand_buffer[rand_bufrem], sample_size,
                                &csprng_state_mat);
+            sampled += sample_size;
             // Update remaining
-            rand_bufrem += R_SIZE;
+            rand_bufrem += sample_size;
           }
 #endif
           uint32_t replace_window = 0;
+          sample_size = rem_to_sample < sizeof(replace_window)
+                            ? rem_to_sample
+                            : sizeof(replace_window);
 #if defined(OPT_KEYGEN_BLOCKS)
           // Have to do this to flip it for right shift
-          for (uint8_t k = 0; k < 4; k++) {
+          for (uint8_t k = 0; k < sample_size; k++) {
             replace_window |= ((uint32_t)rand_buffer[rand_pos]) << 8 * k;
             rand_pos++;
           }
 #else
           //  Get new random bytes
-          csprng_randombytes((unsigned char *)&replace_window,
-                             sizeof(replace_window), &csprng_state_mat);
+          csprng_randombytes((unsigned char *)&replace_window, sample_size,
+                             &csprng_state_mat);
+          sampled += sample_size;
 #endif
           // put on sub buffer
           v_window |= ((uint64_t)replace_window) << remaining_window_bits;
           // add to remaining window
-          remaining_window_bits += 32;
+          remaining_window_bits += sample_size * 8;
 #if defined(OPT_KEYGEN_BLOCKS)
           // Update remaining
-          rand_bufrem -= 4;
+          rand_bufrem -= sample_size;
 #endif
         }
         v = v_window & mask;
