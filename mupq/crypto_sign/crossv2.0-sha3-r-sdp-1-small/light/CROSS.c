@@ -192,7 +192,7 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
   // 2 byte buffer to allow for max 9 byte remaining
   uint8_t rand_buflen = R_SIZE + 2;
   uint8_t rand_buffer[R_SIZE + 2] = {0};
-  uint8_t rand_bufrem = csprng_state_mat.ctx[25];
+  uint8_t rand_bufrem = csprng_state_mat->ctx[25];
   uint8_t rand_pos = 0;
 #endif
   uint64_t w_window = 0;
@@ -256,12 +256,12 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
   uint8_t rows_gen = 0;
 #endif
 
-  CSPRNG_STATE_T orig_csprng_state_mat;
-  FZ_ELEM orig_W_mat[N - RSDPG_M][RSDPG_M] = {0};
-  FZ_ELEM orig_e_bar[N] = {0};
-  memcpy(&orig_csprng_state_mat, csprng_state_mat, sizeof(CSPRNG_STATE_T));
-  csprng_fz_mat(orig_W_mat, &orig_csprng_state_mat);
-  fz_inf_w_by_fz_matrix(orig_e_bar, e_G_bar, orig_W_mat);
+  // CSPRNG_STATE_T orig_csprng_state_mat;
+  // FZ_ELEM orig_W_mat[N - RSDPG_M][RSDPG_M] = {0};
+  // FZ_ELEM orig_e_bar[N] = {0};
+  // memcpy(&orig_csprng_state_mat, csprng_state_mat, sizeof(CSPRNG_STATE_T));
+  // csprng_fz_mat(orig_W_mat, &orig_csprng_state_mat);
+  // fz_inf_w_by_fz_matrix(orig_e_bar, e_G_bar, orig_W_mat);
 
   // Compute
   for (int i = 0; i < RSDPG_M; i++) {
