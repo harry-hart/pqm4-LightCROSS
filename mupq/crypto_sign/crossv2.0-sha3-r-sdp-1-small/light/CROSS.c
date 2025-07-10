@@ -48,6 +48,10 @@
 #include "sendfn.h"
 #endif
 
+#if defined(OPT_KEYGEN)
+#include "keccakf1600.h"
+#endif
+
 #if defined(RSDP)
 #if defined(OPT_DSP)
 // Column major ordering
@@ -163,6 +167,255 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 #endif
 
 #if defined(OPT_KEYGEN)
+
+void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
+                                  CSPRNG_STATE_T *csprng_state_mat) {
+  // Generate the matrix on the fly
+  /* The on the fly element. */
+  const FZ_ELEM mask = ((FZ_ELEM)1 << BITS_TO_REPRESENT(Z - 1)) - 1;
+  // This is either 9 or 7 depending on RSDPG vs RSDP
+  int elem_size = BITS_TO_REPRESENT(Z - 1);
+  // This is how many we have to squeeze such that the sampling lines up
+  const size_t to_squeeze = ROUND_UP(BITS_W_CT_RNG, 8) / 8;
+  size_t sampled = 0;
+
+#if defined(CATEGORY_1)
+  // SHAKE128 r size: 168 bytes
+#define R_SIZE 168
+#else
+  // SHAKE256 r size: 136 bytes
+#define R_SIZE 136
+#endif
+
+  FZ_ELEM w;
+#if defined(OPT_KEYGEN_BLOCKS)
+  // 2 byte buffer to allow for max 9 byte remaining
+  uint8_t rand_buflen = R_SIZE + 2;
+  uint8_t rand_buffer[R_SIZE + 2] = {0};
+  uint8_t rand_bufrem = csprng_state_mat.ctx[25];
+  uint8_t rand_pos = 0;
+#endif
+  uint64_t w_window = 0;
+  int remaining_window_bits = 0;
+
+#if defined(OPT_KEYGEN_BLOCKS)
+  // Put any remaining unsqueezed bytes into here for clean chunks later
+  if (rand_bufrem != 0) {
+    csprng_randombytes(rand_buffer, rand_bufrem, csprng_state_mat);
+    sampled += rand_bufrem;
+  }
+  // Init w_window
+  // Using remaining window bits to store bytes for now
+  remaining_window_bits = rand_bufrem < 8 ? rand_bufrem : 8;
+  for (int i = 0; i < remaining_window_bits; i++) {
+    w_window |= ((uint64_t)rand_buffer[i]) << 8 * i;
+    rand_pos++;
+    rand_bufrem--;
+  }
+  // Adjust to bits
+  remaining_window_bits *= 8;
+#endif
+
+  //  FZ_ELEM *e_bar = s_e_bar;
+  // #if defined(RSDP)
+  //  // Once again this only works in RSDP because FZ_ELEM and FP_ELEM are same
+  //  // size
+  //  FP_ELEM *s = &s_e_bar[K];
+  // #else
+  //  FP_ELEM sparse_e_bar[N] = {0};
+  // #endif
+
+  // #if defined(RSDPG)
+  //   fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], W_mat);
+  //   fz_dz_norm_n(e_bar);
+  //   // if (memcmp(e_bar, orig_e_bar, N * sizeof(FZ_ELEM)) != 0) {
+  //   //   hal_send_str("e_bar wrong");
+  //   // }
+  // #endif
+
+  // Restrict the values
+  // Note: We don't do the restriction in the computation, because
+  // it should only be done once.
+  // for (int j = K; j < N; j++) {
+  //  s[j - K] = RESTR_TO_VAL(e_bar[j]);
+  //}
+  //  for (int j = 0; j < N; j++) {
+  // #if defined(RSDP)
+  //    e_bar[j] = RESTR_TO_VAL(e_bar[j]);
+  // #elif defined(RSDPG)
+  //    sparse_e_bar[j] = (FP_ELEM)RESTR_TO_VAL(e_bar[j]);
+  //    if (j >= K) {
+  //      s[j - K] = sparse_e_bar[j];
+  //    }
+  // #endif
+  //  }
+
+#if defined(OPT_DSP)
+  // The four rows we are currently processing
+  FZ_ELEM W_rows[N - RSDPG_M][4];
+  uint8_t rows_gen = 0;
+#endif
+
+  // Compute
+  for (int i = 0; i < RSDPG_M; i++) {
+    for (int j = 0; j < N - RSDPG_M; j++) {
+/*
+ * NOTE: CONSTANT TIME
+ *  This loop will not be constant time because of rejection
+ *  sampling of possible random values to finds one in field.
+ *  Part of original CROSS spec.
+ */
+#if defined(OPT_DSP)
+      // Use the same loop for computation
+      // Is this AND an issue for security/efficiency?
+      if (i != 0 && rows_gen == 0) {
+        // Do dsp over four rows
+        uint64_t col_accum = 0;
+
+        uint32_t e_G_val = *((uint32_t *)&e_G_bar[i - 4]);
+        uint32_t W_val = *((uint32_t *)&W_rows[j][0]);
+
+        // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
+        uint32_t bottom_e_G = __UXTB16(e_G_val);
+        uint32_t bottom_W = __UXTB16(W_val);
+        // Extract value e[i], e[i+2], V_tr[i], V_tr[i+2]
+        uint32_t top_e_G = __UXTB16(__ROR(e_G_val, 8));
+        uint32_t top_W = __UXTB16(__ROR(W_val, 8));
+
+        // Calculate sum
+        col_accum = __SMLALD(bottom_e_G, bottom_W, col_accum);
+        col_accum = __SMLALD(top_e_G, top_W, col_accum);
+
+        // Reduce the accumulator
+        col_accum = FZRED_DOUBLE(col_accum);
+
+        // Store and reduce modulo Z
+        e_bar[j] = FZRED_DOUBLE(((uint64_t)e_bar[j] + col_accum));
+      }
+#endif
+      // Try generate random value
+      // Are they generated column first or row first?
+      // If we have less than 32 remaining
+      do {
+        if (remaining_window_bits <= 32) {
+#if defined(OPT_KEYGEN_BLOCKS)
+          // If we have run out of random buffer, generate more
+          if (rand_bufrem <= 4) {
+            // Copy the remaining bytes to the front
+            memcpy(rand_buffer, &rand_buffer[rand_pos], rand_bufrem);
+            rand_pos = 0;
+            // Generate another block
+            csprng_randombytes(&rand_buffer[rand_bufrem], R_SIZE,
+                               csprng_state_mat);
+            sampled += R_SIZE;
+            // Update remaining
+            rand_bufrem += R_SIZE;
+          }
+#endif
+          uint32_t replace_window = 0;
+#if defined(OPT_KEYGEN_BLOCKS)
+          // Have to do this to flip it for right shift
+          for (uint8_t k = 0; k < 4; k++) {
+            replace_window |= ((uint32_t)rand_buffer[rand_pos]) << 8 * k;
+            rand_pos++;
+          }
+#else
+          //  Get new random bytes
+          csprng_randombytes((unsigned char *)&replace_window,
+                             sizeof(replace_window), csprng_state_mat);
+          sampled += sizeof(replace_window);
+#endif
+          // put on sub buffer
+          w_window |= ((uint64_t)replace_window) << remaining_window_bits;
+          // add to remaining window
+          remaining_window_bits += 32;
+#if defined(OPT_KEYGEN_BLOCKS)
+          // Update remaining
+          rand_bufrem -= 4;
+#endif
+        }
+        w = w_window & mask;
+        // shift window
+        w_window = w_window >> elem_size;
+        // update counter
+        remaining_window_bits -= elem_size;
+        // Rejection sampling if not in field
+        // If it is in the field
+        if (w < Z) {
+          break;
+        }
+      } while (1);
+
+#if defined(OPT_DSP)
+      W_rows[j][rows_gen] = w;
+#else
+      // Calculate e_bar
+      e_bar[j] = FZRED_DOUBLE((FZ_DOUBLEPREC)e_bar[j] +
+                              (FZ_DOUBLEPREC)e_G_bar[i] * (FZ_DOUBLEPREC)w);
+#endif
+    }
+#if defined(OPT_DSP)
+    rows_gen += 1;
+    if (rows_gen == 4) {
+      rows_gen = 0;
+    }
+#endif
+  }
+#if defined(OPT_DSP)
+  // TODO: Handle remaining
+  // Use the same loop for computation
+  for (int j = 0; j < N - RSDPG_M; j++) {
+    uint64_t col_accum = 0;
+    if (rows_gen == 0) {
+      // Do dsp over two/four rows
+      uint32_t e_G_val = *((uint32_t *)&e_G_bar[RSDPG_M - 4]);
+      uint32_t W_val = *((uint32_t *)&W_rows[j][0]);
+
+      // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
+      uint32_t bottom_e_G = __UXTB16(e_G_val);
+      uint32_t bottom_W = __UXTB16(W_val);
+      // Extract value e[i], e[i+2], V_tr[i], V_tr[i+2]
+      uint32_t top_e_G = __UXTB16(__ROR(e_G_val, 8));
+      uint32_t top_W = __UXTB16(__ROR(W_val, 8));
+
+      // Calculate
+      col_accum = __SMLALD(bottom_e_G, bottom_W, col_accum);
+      col_accum = __SMLALD(top_e_G, top_W, col_accum);
+
+      col_accum = FZRED_DOUBLE(col_accum);
+    } else {
+      int i_w = 0;
+      for (int i = RSDPG_M - rows_gen; i < RSDPG_M; i++) {
+        col_accum = FZRED_DOUBLE(col_accum + ((FZ_DOUBLEPREC)e_G_bar[i] *
+                                              (FZ_DOUBLEPREC)W_rows[j][i_v]));
+        i_w++;
+      }
+    }
+    e_bar[j] = FZRED_DOUBLE(((uint64_t)e_bar[j] + col_accum));
+  }
+#endif
+  // Fix randomness sampled
+  /* NOTE: Using raw Keccak functions here instead of xof/csprng because
+   * we don't actually care about the output. We just want to make sure
+   * a fixed amount of bytes are sampled for correctness of the random
+   * state when sampling V next.
+   */
+  size_t rem_to_squeeze = to_squeeze - sampled;
+  if (rem_to_squeeze > 0) {
+    if (rem_to_squeeze >= csprng_state_mat->ctx[25]) {
+      rem_to_squeeze -= csprng_state_mat->ctx[25];
+      while (rem_to_squeeze > R_SIZE) {
+        KeccakF1600_StatePermute(csprng_state_mat->ctx);
+        rem_to_squeeze -= R_SIZE;
+      }
+      KeccakF1600_StatePermute(csprng_state_mat->ctx);
+      csprng_state_mat->ctx[25] = R_SIZE - rem_to_squeeze;
+    } else {
+      csprng_state_mat->ctx[25] -= rem_to_squeeze;
+    }
+  }
+}
+
 // Calculate the syndrome from the public key seed. The syndrome
 // pointer `s` should already be loaded with the values of e[k+j]. That
 // way we may compute:
@@ -187,19 +440,41 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
   csprng_initialize(&csprng_state_mat, seed_pk, KEYPAIR_SEED_LENGTH_BYTES,
                     dsc_csprng_seed_pk);
 
+  // Set up main calculation vectors
+  FZ_ELEM *e_bar = s_e_bar;
+#if defined(RSDP)
+  // Once again this only works in RSDP because FZ_ELEM and FP_ELEM are same
+  // size
+  FP_ELEM *s = &s_e_bar[K];
+#else
+  FP_ELEM sparse_e_bar[N] = {0};
+#endif
+
 // Generate W_mat matrix first
 #if defined(RSDPG)
-#if defined(OPT_DSP)
-  FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M];
-#else
-  FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
+  // #if defined(OPT_DSP)
+  //   FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M];
+  // #else
+  //   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
+  // #endif
+  //   csprng_fz_mat(W_mat, &csprng_state_mat);
+  //  if (memcmp(W_mat, orig_W_mat, RSDPG_M * (N - RSDPG_M) * sizeof(FZ_ELEM))
+  //  !=
+  //      0) {
+  //    hal_send_str("W_mat wrong");
+  //  }
+  csprng_fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], &csprng_state_mat);
+  fz_dz_norm_n(e_bar);
 #endif
-  csprng_fz_mat(W_mat, &csprng_state_mat);
-  // if (memcmp(W_mat, orig_W_mat, RSDPG_M * (N - RSDPG_M) * sizeof(FZ_ELEM)) !=
-  //     0) {
-  //   hal_send_str("W_mat wrong");
-  // }
+
+#if defined(RSDPG)
+  // fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], W_mat);
+  // fz_dz_norm_n(e_bar);
+  //  if (memcmp(e_bar, orig_e_bar, N * sizeof(FZ_ELEM)) != 0) {
+  //    hal_send_str("e_bar wrong");
+  //  }
 #endif
+
   /* The on the fly element. */
   const FP_ELEM mask = ((FP_ELEM)1 << BITS_TO_REPRESENT(P - 1)) - 1;
   // This is either 9 or 7 depending on RSDPG vs RSDP
@@ -237,23 +512,6 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
   }
   // Adjust to bits
   remaining_window_bits *= 8;
-#endif
-
-  FZ_ELEM *e_bar = s_e_bar;
-#if defined(RSDP)
-  // Once again this only works in RSDP because FZ_ELEM and FP_ELEM are same
-  // size
-  FP_ELEM *s = &s_e_bar[K];
-#else
-  FP_ELEM sparse_e_bar[N] = {0};
-#endif
-
-#if defined(RSDPG)
-  fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], W_mat);
-  fz_dz_norm_n(e_bar);
-  // if (memcmp(e_bar, orig_e_bar, N * sizeof(FZ_ELEM)) != 0) {
-  //   hal_send_str("e_bar wrong");
-  // }
 #endif
 
   // Restrict the values
@@ -511,21 +769,18 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   //  This is a vector structured:
   //   - s_e_bar[K..N] := s
   //   - s_e_bar[0..K] := e[0..K]
-  //  The full thing is calculated as e, then because we only need e[0..K] for
-  //  the rest of the syndrome calculation, we can overlap the end of the
-  //  vector with the new s values in the computation.
-  FZ_ELEM s_e_bar[N];
+  //  The full thing is calculated as e, then because we only need e[0..K]
+  //  for the rest of the syndrome calculation, we can overlap the end of
+  //  the vector with the new s values in the computation.
+  FZ_ELEM s_e_bar[N] = {0};
 #if defined(RSDP)
   // This only works because sizeof(FZ_ELEM) == sizeof(FP_ELEM) in RSDP
   FP_ELEM *s = &s_e_bar[K];
   csprng_fz_vec(s_e_bar, &csprng_state_e_bar);
 #elif defined(RSDPG)
   FP_ELEM s[N - K];
-  // FZ_ELEM e_G_bar[RSDPG_M];
   //  Put e_G_bar at the tail of s_e_bar
-  //  csprng_fz_inf_w(e_G_bar, &csprng_state_e_bar);
   csprng_fz_inf_w(&s_e_bar[N - RSDPG_M], &csprng_state_e_bar);
-  // memcpy(&s_e_bar[N - RSDPG_M], e_G_bar, RSDPG_M);
 #endif
 #else
   //  Original Implementation
@@ -632,7 +887,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
   // THIS IS BFS, DO BFS
-  // Still need to track the global node index for proper domain separation
+  // Still need to track the global node index for proper domain
+  // separation
   uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
   uint16_t npl_cum = 0;
   uint16_t partition_size;
@@ -707,10 +963,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       // asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
       msb = __builtin_clz(partition_size);
       // Highest power of 2 that divides it (maybe implement in assembly
-      // later?) 31 because registers are 32 bit (CLZ) counts leading bits in
-      // register
-      // uint32_t bit_check = 1 << 31;
-      // uint32_t find_bit_len = partition_size << msb;
+      // later?) 31 because registers are 32 bit (CLZ) counts leading bits
+      // in register uint32_t bit_check = 1 << 31; uint32_t find_bit_len =
+      // partition_size << msb;
       //// uint8_t block_len = 0;
       // while ((bit_check & find_bit_len) > 0) {
       //   find_bit_len = find_bit_len << 1;
@@ -786,8 +1041,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
        2. No hidden nodes
         If there are no hidden leaves, we can publish the seed.
        3. All hidden nodes
-        In this case we publish the responses of all the leaves as there is
-        no chance of revisiting this subtree.
+        In this case we publish the responses of all the leaves as there
+       is no chance of revisiting this subtree.
       */
 
       // Mixed
@@ -801,7 +1056,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         // Calculate seed
         if (i == 0) {
           // ADD THE LEFT NODE TO THE PROCESSING QUEUE
-          /* prepare the CSPRseed_storage input to expand the father node */
+          /* prepare the CSPRseed_storage input to expand the father node
+           */
           memcpy(csprng_input, &seed_storage[node.seed_i * SEED_LENGTH_BYTES],
                  SEED_LENGTH_BYTES);
           /* Generate the children (stored contiguously).
@@ -1070,8 +1326,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   const int offset_salt =
       DENSELY_PACKED_FP_SYN_SIZE + DENSELY_PACKED_FZ_RSDP_G_VEC_SIZE;
 #endif
-  /* cmt_0_i_input is syndrome || v_bar resp. v_G_bar || salt ; place salt at
-   * the end */
+  /* cmt_0_i_input is syndrome || v_bar resp. v_G_bar || salt ; place salt
+   * at the end */
   memcpy(cmt_0_i_input + offset_salt, sig->salt, SALT_LENGTH_BYTES);
 
   uint8_t cmt_1_i_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
@@ -1196,7 +1452,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         fp_vec_by_fp_matrix(s_prime, u, V_tr);
         fp_dz_norm_synd(s_prime);
 
-        /* cmt_0_i_input contains s_prime || v_bar resp. v_G_bar || salt */
+        /* cmt_0_i_input contains s_prime || v_bar resp. v_G_bar || salt
+         */
         pack_fp_syn(cmt_0_i_input, s_prime);
 
 #if defined(RSDP)
@@ -1369,7 +1626,14 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   FP_ELEM y[T][N];
   for (int i = 0; i < T; i++) {
+#if defined(OPT_E_BAR_PRIME)
+    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
+    // Calculate y
+    fp_vec_by_restr_vec_scaled(u_prime[i], e_bar_prime_i, chall_1[i],
+                               u_prime[i]);
+#else
     fp_vec_by_restr_vec_scaled(y[i], e_bar_prime[i], chall_1[i], u_prime[i]);
+#endif
     fp_dz_norm(y[i]);
   }
 
