@@ -168,10 +168,11 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 
 #if defined(OPT_KEYGEN)
 
-#if defined(RSPDG)
+#if defined(RSDPG)
 void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
                                   CSPRNG_STATE_T *csprng_state_mat) {
-  // Generate the matrix on the fly
+  // FZ_ELEM overwrite_save_W_mat[N - RSDPG_M][RSDPG_M] = {0};
+  //  Generate the matrix on the fly
   /* The on the fly element. */
   const FZ_ELEM mask = ((FZ_ELEM)1 << BITS_TO_REPRESENT(Z - 1)) - 1;
   // This is either 9 or 7 depending on RSDPG vs RSDP
@@ -193,7 +194,7 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 #define R_BYTES R_SIZE / 8
   // 2 byte buffer to allow for max 9 byte remaining
   // uint8_t rand_buflen = R_SIZE + 2;
-  uint8_t rand_buffer[R_BYTES + 2] = {0};
+  uint8_t rand_buffer[R_BYTES + 4] = {0};
   uint8_t rand_bufrem = csprng_state_mat->ctx[25];
   uint8_t rand_pos = 0;
 #endif
@@ -223,6 +224,19 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
   FZ_ELEM W_rows[N - RSDPG_M][4];
   uint8_t rows_gen = 0;
 #endif
+
+  // CSPRNG_STATE_T orig_csprng_state_mat;
+  // FZ_ELEM orig_W_mat[N - RSDPG_M][RSDPG_M] = {0};
+  // FZ_ELEM orig_e_bar[N] = {0};
+  // memcpy(&orig_csprng_state_mat, csprng_state_mat, sizeof(CSPRNG_STATE_T));
+  // csprng_fz_mat(orig_W_mat, &orig_csprng_state_mat);
+  // memcpy(&overwrite_save_W_mat[0], &orig_W_mat[0],
+  //        (N - RSDPG_M) * (RSDPG_M) * sizeof(FZ_ELEM));
+  // if (memcmp(&overwrite_save_W_mat[0], &orig_W_mat[0],
+  //            (N - RSDPG_M) * RSDPG_M * sizeof(FZ_ELEM)) == 0) {
+  //   hal_send_str("memcpy works");
+  // }
+  //   fz_inf_w_by_fz_matrix(orig_e_bar, e_G_bar, orig_W_mat);
 
   // Compute
   for (int i = 0; i < RSDPG_M; i++) {
@@ -267,45 +281,43 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
       do {
         if (remaining_window_bits <= 32 && sampled < to_squeeze) {
           size_t rem_to_sample = to_squeeze - sampled;
-          size_t sample_size;
+          uint32_t replace_window = 0;
+          size_t window_size = rem_to_sample < sizeof(replace_window)
+                                   ? rem_to_sample
+                                   : sizeof(replace_window);
 #if defined(OPT_KEYGEN_BLOCKS)
-          sample_size = rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
-          // If we have run out of random buffer, generate more
-          if (rand_bufrem <= sample_size) {
+          //  If we don't have enough random buffer for the window
+          if (rand_bufrem < window_size) {
             // Copy the remaining bytes to the front
             memcpy(rand_buffer, &rand_buffer[rand_pos], rand_bufrem);
             rand_pos = 0;
             // Generate another block
+            size_t sample_size =
+                rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
             csprng_randombytes(&rand_buffer[rand_bufrem], sample_size,
                                csprng_state_mat);
             sampled += sample_size;
             // Update remaining
             rand_bufrem += sample_size;
           }
-#endif
-          uint32_t replace_window = 0;
-          sample_size = rem_to_sample < sizeof(replace_window)
-                            ? rem_to_sample
-                            : sizeof(replace_window);
-#if defined(OPT_KEYGEN_BLOCKS)
           // Have to do this to flip it for right shift
-          for (uint8_t k = 0; k < sample_size; k++) {
+          for (uint8_t k = 0; k < window_size; k++) {
             replace_window |= ((uint32_t)rand_buffer[rand_pos]) << 8 * k;
             rand_pos++;
           }
 #else
           //  Get new random bytes
-          csprng_randombytes((unsigned char *)&replace_window, sample_size,
+          csprng_randombytes((unsigned char *)&replace_window, window_size,
                              csprng_state_mat);
-          sampled += sample_size;
+          sampled += window_size;
 #endif
           // put on sub buffer
           w_window |= ((uint64_t)replace_window) << remaining_window_bits;
           // add to remaining window
-          remaining_window_bits += sample_size * 8;
+          remaining_window_bits += window_size * 8;
 #if defined(OPT_KEYGEN_BLOCKS)
           // Update remaining
-          rand_bufrem -= sample_size;
+          rand_bufrem -= window_size;
 #endif
         }
         w = w_window & mask;
@@ -375,9 +387,6 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
    * state when sampling V next. Thus instead of squeezing the output,
    * we can just permute the state.
    */
-  if (sampled > to_squeeze) {
-    hal_send_str("Something wrong");
-  }
   size_t rem_to_squeeze = to_squeeze - sampled;
   if (rem_to_squeeze > 0) {
     if (rem_to_squeeze >= csprng_state_mat->ctx[25]) {
@@ -392,6 +401,10 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
       csprng_state_mat->ctx[25] -= rem_to_squeeze;
     }
   }
+  // if (memcmp(&overwrite_save_W_mat[0], &orig_W_mat[0],
+  //            (N - RSDPG_M) * RSDPG_M * sizeof(FZ_ELEM)) != 0) {
+  //   hal_send_str("Warning, overwrite!");
+  // }
 }
 #endif
 
@@ -530,6 +543,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
         uint32_t e_val = *((uint32_t *)&sparse_e_bar[i - 2]);
         uint32_t V_tr_val = *((uint32_t *)&V_rows[j][0]);
 #endif
+// Calculate
 #if defined(RSDP)
         // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
         uint32_t bottom_e = __UXTB16(e_val);
@@ -538,7 +552,6 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
         uint32_t top_e = __UXTB16(__ROR(e_val, 8));
         uint32_t top_V_tr = __UXTB16(__ROR(V_tr_val, 8));
 #endif
-// Calculate
 #if defined(RSDP)
         col_accum = __SMLALD(bottom_e, bottom_V_tr, col_accum);
         col_accum = __SMLALD(top_e, top_V_tr, col_accum);
