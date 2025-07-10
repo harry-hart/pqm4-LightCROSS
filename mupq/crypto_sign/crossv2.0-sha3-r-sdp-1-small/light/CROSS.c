@@ -168,6 +168,7 @@ static void expand_sk(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 
 #if defined(OPT_KEYGEN)
 
+#if defined(RSPDG)
 void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
                                   CSPRNG_STATE_T *csprng_state_mat) {
   // Generate the matrix on the fly
@@ -392,6 +393,7 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
     }
   }
 }
+#endif
 
 // Calculate the syndrome from the public key seed. The syndrome
 // pointer `s` should already be loaded with the values of e[k+j]. That
