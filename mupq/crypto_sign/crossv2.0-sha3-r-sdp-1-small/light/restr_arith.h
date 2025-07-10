@@ -114,7 +114,7 @@ static void fz_inf_w_by_fz_matrix(FZ_ELEM res[N], const FZ_ELEM e[RSDPG_M],
   for (int j = 0; j < N - RSDPG_M; j++) {
     uint64_t col_accum = 0;
     int i = 0;
-    for (; i < RSDPG_M - 3; i += 2) {
+    for (; i < RSDPG_M - 3; i += 4) {
       uint32_t e_val = *((uint32_t *)&e[i]);
       uint32_t W_mat_val = *((uint32_t *)&W_mat[j][i]);
       // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]

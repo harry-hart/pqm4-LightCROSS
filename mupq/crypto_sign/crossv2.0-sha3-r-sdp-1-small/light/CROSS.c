@@ -256,6 +256,13 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
   uint8_t rows_gen = 0;
 #endif
 
+  CSPRNG_STATE_T orig_csprng_state_mat;
+  FZ_ELEM orig_W_mat[N - RSDPG_M][RSDPG_M] = {0};
+  FZ_ELEM orig_e_bar[N] = {0};
+  memcpy(&orig_csprng_state_mat, csprng_state_mat, sizeof(CSPRNG_STATE_T));
+  csprng_fz_mat(orig_W_mat, &orig_csprng_state_mat);
+  fz_inf_w_by_fz_matrix(orig_e_bar, e_G_bar, orig_W_mat);
+
   // Compute
   for (int i = 0; i < RSDPG_M; i++) {
     for (int j = 0; j < N - RSDPG_M; j++) {
@@ -367,14 +374,14 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
   for (int j = 0; j < N - RSDPG_M; j++) {
     uint64_t col_accum = 0;
     if (rows_gen == 0) {
-      // Do dsp over two/four rows
+      // Do dsp over four rows
       uint32_t e_G_val = *((uint32_t *)&e_G_bar[RSDPG_M - 4]);
       uint32_t W_val = *((uint32_t *)&W_rows[j][0]);
 
-      // Extract value e[i+1], e[i+3], V_tr[i+1], V_tr[i+3]
+      // Extract value e_G[i+1], e_G[i+3], W[i+1], W[i+3]
       uint32_t bottom_e_G = __UXTB16(e_G_val);
       uint32_t bottom_W = __UXTB16(W_val);
-      // Extract value e[i], e[i+2], V_tr[i], V_tr[i+2]
+      // Extract value e_G[i], e_G[i+2], W[i], W[i+2]
       uint32_t top_e_G = __UXTB16(__ROR(e_G_val, 8));
       uint32_t top_W = __UXTB16(__ROR(W_val, 8));
 
@@ -387,7 +394,7 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
       int i_w = 0;
       for (int i = RSDPG_M - rows_gen; i < RSDPG_M; i++) {
         col_accum = FZRED_DOUBLE(col_accum + ((FZ_DOUBLEPREC)e_G_bar[i] *
-                                              (FZ_DOUBLEPREC)W_rows[j][i_v]));
+                                              (FZ_DOUBLEPREC)W_rows[j][i_w]));
         i_w++;
       }
     }
@@ -398,7 +405,8 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
   /* NOTE: Using raw Keccak functions here instead of xof/csprng because
    * we don't actually care about the output. We just want to make sure
    * a fixed amount of bytes are sampled for correctness of the random
-   * state when sampling V next.
+   * state when sampling V next. Thus instead of squeezing the output,
+   * we can just permute the state.
    */
   size_t rem_to_squeeze = to_squeeze - sampled;
   if (rem_to_squeeze > 0) {
