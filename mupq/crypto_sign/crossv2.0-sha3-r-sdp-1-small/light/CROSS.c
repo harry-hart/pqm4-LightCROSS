@@ -189,9 +189,10 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 
   FZ_ELEM w;
 #if defined(OPT_KEYGEN_BLOCKS)
+#define R_BYTES R_SIZE / 8
   // 2 byte buffer to allow for max 9 byte remaining
-  uint8_t rand_buflen = R_SIZE + 2;
-  uint8_t rand_buffer[R_SIZE + 2] = {0};
+  // uint8_t rand_buflen = R_SIZE + 2;
+  uint8_t rand_buffer[R_BYTES + 2] = {0};
   uint8_t rand_bufrem = csprng_state_mat->ctx[25];
   uint8_t rand_pos = 0;
 #endif
@@ -216,52 +217,11 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
   remaining_window_bits *= 8;
 #endif
 
-  //  FZ_ELEM *e_bar = s_e_bar;
-  // #if defined(RSDP)
-  //  // Once again this only works in RSDP because FZ_ELEM and FP_ELEM are same
-  //  // size
-  //  FP_ELEM *s = &s_e_bar[K];
-  // #else
-  //  FP_ELEM sparse_e_bar[N] = {0};
-  // #endif
-
-  // #if defined(RSDPG)
-  //   fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], W_mat);
-  //   fz_dz_norm_n(e_bar);
-  //   // if (memcmp(e_bar, orig_e_bar, N * sizeof(FZ_ELEM)) != 0) {
-  //   //   hal_send_str("e_bar wrong");
-  //   // }
-  // #endif
-
-  // Restrict the values
-  // Note: We don't do the restriction in the computation, because
-  // it should only be done once.
-  // for (int j = K; j < N; j++) {
-  //  s[j - K] = RESTR_TO_VAL(e_bar[j]);
-  //}
-  //  for (int j = 0; j < N; j++) {
-  // #if defined(RSDP)
-  //    e_bar[j] = RESTR_TO_VAL(e_bar[j]);
-  // #elif defined(RSDPG)
-  //    sparse_e_bar[j] = (FP_ELEM)RESTR_TO_VAL(e_bar[j]);
-  //    if (j >= K) {
-  //      s[j - K] = sparse_e_bar[j];
-  //    }
-  // #endif
-  //  }
-
 #if defined(OPT_DSP)
   // The four rows we are currently processing
   FZ_ELEM W_rows[N - RSDPG_M][4];
   uint8_t rows_gen = 0;
 #endif
-
-  // CSPRNG_STATE_T orig_csprng_state_mat;
-  // FZ_ELEM orig_W_mat[N - RSDPG_M][RSDPG_M] = {0};
-  // FZ_ELEM orig_e_bar[N] = {0};
-  // memcpy(&orig_csprng_state_mat, csprng_state_mat, sizeof(CSPRNG_STATE_T));
-  // csprng_fz_mat(orig_W_mat, &orig_csprng_state_mat);
-  // fz_inf_w_by_fz_matrix(orig_e_bar, e_G_bar, orig_W_mat);
 
   // Compute
   for (int i = 0; i < RSDPG_M; i++) {
@@ -304,41 +264,47 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
       // Are they generated column first or row first?
       // If we have less than 32 remaining
       do {
-        if (remaining_window_bits <= 32) {
+        if (remaining_window_bits <= 32 && sampled < to_squeeze) {
+          size_t rem_to_sample = to_squeeze - sampled;
+          size_t sample_size;
 #if defined(OPT_KEYGEN_BLOCKS)
+          sample_size = rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
           // If we have run out of random buffer, generate more
-          if (rand_bufrem <= 4) {
+          if (rand_bufrem <= sample_size) {
             // Copy the remaining bytes to the front
             memcpy(rand_buffer, &rand_buffer[rand_pos], rand_bufrem);
             rand_pos = 0;
             // Generate another block
-            csprng_randombytes(&rand_buffer[rand_bufrem], R_SIZE,
+            csprng_randombytes(&rand_buffer[rand_bufrem], sample_size,
                                csprng_state_mat);
-            sampled += R_SIZE;
+            sampled += sample_size;
             // Update remaining
-            rand_bufrem += R_SIZE;
+            rand_bufrem += sample_size;
           }
 #endif
           uint32_t replace_window = 0;
+          sample_size = rem_to_sample < sizeof(replace_window)
+                            ? rem_to_sample
+                            : sizeof(replace_window);
 #if defined(OPT_KEYGEN_BLOCKS)
           // Have to do this to flip it for right shift
-          for (uint8_t k = 0; k < 4; k++) {
+          for (uint8_t k = 0; k < sample_size; k++) {
             replace_window |= ((uint32_t)rand_buffer[rand_pos]) << 8 * k;
             rand_pos++;
           }
 #else
           //  Get new random bytes
-          csprng_randombytes((unsigned char *)&replace_window,
-                             sizeof(replace_window), csprng_state_mat);
-          sampled += sizeof(replace_window);
+          csprng_randombytes((unsigned char *)&replace_window, sample_size,
+                             csprng_state_mat);
+          sampled += sample_size;
 #endif
           // put on sub buffer
           w_window |= ((uint64_t)replace_window) << remaining_window_bits;
           // add to remaining window
-          remaining_window_bits += 32;
+          remaining_window_bits += sample_size * 8;
 #if defined(OPT_KEYGEN_BLOCKS)
           // Update remaining
-          rand_bufrem -= 4;
+          rand_bufrem -= sample_size;
 #endif
         }
         w = w_window & mask;
@@ -408,6 +374,9 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
    * state when sampling V next. Thus instead of squeezing the output,
    * we can just permute the state.
    */
+  if (sampled > to_squeeze) {
+    hal_send_str("Something wrong");
+  }
   size_t rem_to_squeeze = to_squeeze - sampled;
   if (rem_to_squeeze > 0) {
     if (rem_to_squeeze >= csprng_state_mat->ctx[25]) {
@@ -460,27 +429,8 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 
 // Generate W_mat matrix first
 #if defined(RSDPG)
-  // #if defined(OPT_DSP)
-  //   FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M];
-  // #else
-  //   FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M];
-  // #endif
-  //   csprng_fz_mat(W_mat, &csprng_state_mat);
-  //  if (memcmp(W_mat, orig_W_mat, RSDPG_M * (N - RSDPG_M) * sizeof(FZ_ELEM))
-  //  !=
-  //      0) {
-  //    hal_send_str("W_mat wrong");
-  //  }
   csprng_fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], &csprng_state_mat);
   fz_dz_norm_n(e_bar);
-#endif
-
-#if defined(RSDPG)
-  // fz_inf_w_by_fz_matrix(e_bar, &e_bar[N - RSDPG_M], W_mat);
-  // fz_dz_norm_n(e_bar);
-  //  if (memcmp(e_bar, orig_e_bar, N * sizeof(FZ_ELEM)) != 0) {
-  //    hal_send_str("e_bar wrong");
-  //  }
 #endif
 
   /* The on the fly element. */
@@ -497,7 +447,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #define R_SIZE 136
 #endif
   // 2 byte buffer to allow for max 9 byte remaining
-  uint8_t rand_buflen = R_SIZE + 2;
+  // uint8_t rand_buflen = R_SIZE + 2;
   uint8_t rand_buffer[R_SIZE + 2] = {0};
   uint8_t rand_bufrem = csprng_state_mat.ctx[25];
   uint8_t rand_pos = 0;
