@@ -1,4 +1,4 @@
-,,,Key Gen. [bytes],Key Gen. [bytes],Key Gen. [bytes],Sign [bytes],Sign [bytes],Sign [bytes],Verify [bytes],Verify [bytes],Verify [bytes]
+,,,Key Gen. [kbytes],Key Gen. [kbytes],Key Gen. [kbytes],Sign [kbytes],Sign [kbytes],Sign [kbytes],Verify [kbytes],Verify [kbytes],Verify [kbytes]
 impl.,,,ref,light,diff [%],ref,light,diff [%],ref,light,diff [%]
 prob.,lvl,var.,,,,,,,,,
 sdp,1,balance,8112,1528,-81.16,210016,86000,-59.05,113184,36216,-68.0
@@ -15,7 +15,7 @@ sdpg,1,fast,3984,1624,-59.24,77768,40280,-48.2,42168,12368,-70.67
 sdpg,1,small,3984,1624,-59.24,309608,131408,-57.56,184632,64400,-65.12
 sdpg,3,balance,7440,1792,-75.91,240896,103584,-57.0,145156,53912,-62.86
 sdpg,3,fast,7440,1792,-75.91,170424,86512,-49.24,91312,24760,-72.88
-sdpg,3,small,7440,1792,-75.91,453168,191080,-57.83,270912,96060,-64.54
+sdpg,3,small,7440,1792,-75.91,453168,191080,-57.83,270912,96148,-64.51
 sdpg,5,balance,11776,2024,-82.81,423232,179192,-57.66,255760,92984,-63.64
 sdpg,5,fast,11776,2024,-82.81,300704,151032,-49.77,159872,41816,-73.84
 sdpg,5,small,0,2024,,0,314196,,0,158704,

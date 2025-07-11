@@ -5,7 +5,8 @@ import subprocess
 
 PARAM_F = "../mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/parameters.h"
 PARAM_R = r'\/* *\#define *(OPT_\w*)\s*$'
-OPTS = ["OPT_KEYGEN", "OPT_MERKLE", "OPT_HASH_CMT1", "OPT_HASH_Y", "OPT_V_BAR", "OPT_E_BAR_PRIME", "OPT_OTF_MERKLE", "OPT_GGM", "OPT_DSP", "OPT_Y_U_OVERLAP", "OPT_KEYGEN_BLOCKS"]
+#OPTS = ["OPT_KEYGEN", "OPT_MERKLE", "OPT_HASH_CMT1", "OPT_HASH_Y", "OPT_V_BAR", "OPT_E_BAR_PRIME", "OPT_OTF_MERKLE", "OPT_GGM", "OPT_DSP", "OPT_Y_U_OVERLAP", "OPT_KEYGEN_BLOCKS"]
+OPTS = ["OPT_GGM", "OPT_DSP", "OPT_Y_U_OVERLAP", "OPT_KEYGEN_BLOCKS"]
 
 
 def main():

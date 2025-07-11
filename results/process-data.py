@@ -131,9 +131,11 @@ def k_formatter(value):
         sizes = ["", "k", "m", "g"]
         size = 0
         # Cast to int
-        v = int(value)
+        v = float(value)
+        # Convert to kb as base
+        v /= 1000.0
         while v > 1000:
-            v /= 1000
+            v /= 1000.0
             size += 1
         # Round to 2 d.p.
         if size > 0:
@@ -195,7 +197,10 @@ def main():
             pretty_table.columns.set_names([None, "impl."], inplace=True)
             new_levs = []
             for l in pretty_table.columns.levels[0]:
-                new_levs.append(l.replace("Generation", "Gen."))
+                new_l = l.replace("Generation", "Gen.")
+                new_l = new_l.replace("bytes", "kbytes")
+                new_l = new_l.replace("cycles", "kcycles")
+                new_levs.append(new_l)
             pretty_table.columns = pretty_table.columns.set_levels(levels=new_levs, level=0)
             pretty_table.index.rename(["prob.","lvl","var."], inplace=True)
             print("After rename")
