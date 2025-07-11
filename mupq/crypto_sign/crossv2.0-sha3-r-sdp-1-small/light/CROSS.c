@@ -968,7 +968,6 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
     uint8_t left_calculated = 0;
     // Check both partitions for hidden nodes
     for (int i = 0; i < 2; i++) {
-      uint8_t hidden_nodes = 0;
       uint16_t child_partition_start =
           i == 0 ? node.partition_start : partition;
       uint16_t child_partition_end = i == 0 ? partition : node.partition_end;
@@ -981,55 +980,61 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       }
 
 // 0 = mixed, 1 = reveal, 2 = publish rsps
-#if defined(OPT_MERKLE_GGM_COMBO)
-      uint8_t node_state = 1;
+#if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
+      uint8_t node_state = 0;
 #else
       uint8_t node_state =
           child_node_i == nodes_to_reveal[nodes_revealed - 1 - published_nodes];
 #endif
 
 //  If there is a chance of publishing responses
-#if !defined(OPT_MERKLE_GGM_COMBO)
+#if !defined(OPT_MERKLE_GGM_COMBO) && defined(OPT_OTF_MERKLE)
       if (node_state != 1 && highest_streak >= child_partition_size) {
 #endif
         while (flag_index < flag_len &&
                flags[flag_index].pos < child_partition_start) {
           flag_index++;
         }
-        if (flag_index == flag_len) {
-          node_state = 0;
+        if (flag_index == flag_len ||
+            flags[flag_index].pos >= child_partition_end) {
+          node_state = 1;
         } else {
           node_state = 2;
-          for (uint16_t leaf_i = child_partition_start;
-               leaf_i < child_partition_end; leaf_i++) {
-            if (indices_to_publish[leaf_i] != FLAG_VALUE) {
-              node_state = 0;
-              break;
-            }
-            // flag_index++;
-#if defined(OPT_MERKLE_GGM_COMBO)
-            if (highest_streak < child_partition_size) {
-              break;
-            }
+          // Assume they are all flags (hide)
+          if (highest_streak < child_partition_size) {
+            node_state = 0;
+          } else {
+            for (uint16_t leaf_i = child_partition_start;
+                 leaf_i < child_partition_end; leaf_i++) {
+              if (indices_to_publish[leaf_i] != FLAG_VALUE) {
+                node_state = 0;
+                break;
+              }
+              // flag_index++;
+#if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
+              if (highest_streak < child_partition_size) {
+                break;
+              }
 #endif
-          }
-          if (node_state == 2) {
-            flag_index += child_partition_size;
+            }
+            if (node_state == 2) {
+              flag_index += child_partition_size;
+            }
           }
         }
-#if !defined(OPT_MERKLE_GGM_COMBO)
+#if !defined(OPT_MERKLE_GGM_COMBO) && defined(OPT_OTF_MERKLE)
       }
 #endif
 
       /* Deal with the three possible cases:
-       1. Mixed hidden and revealed leaves
+      1. Mixed hidden and revealed leaves
         In this case we cannot reveal the seed as it would reveal hidden
         leaves. We also cannot publish the rsp's as it is not optimal.
-       2. No hidden nodes
+      2. No hidden nodes
         If there are no hidden leaves, we can publish the seed.
-       3. All hidden nodes
+      3. All hidden nodes
         In this case we publish the responses of all the leaves as there
-       is no chance of revisiting this subtree.
+      is no chance of revisiting this subtree.
       */
 
       // Mixed
@@ -1685,7 +1690,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #elif defined(OPT_V_BAR)
   FZ_ELEM *v_bar[1] = {0};
 #endif
-#if defined(OPT_MERKLE_GGM_COMBO)
+#if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
   uint16_t nodes_published[1] = {0};
   uint16_t nodes_to_reveal = 0;
 #endif
@@ -1712,7 +1717,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
       assert(published_rsps < T - W);
-#if defined(OPT_HASH_Y) && !defined(OPT_Y_U_OVERLAP)
+#if defined(OPT_HASH_Y)
+#if !defined(OPT_Y_U_OVERLAP)
       // Have to recalculate y
       FP_ELEM y_i[N];
       // Calculate y
@@ -1726,8 +1732,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
       fp_dz_norm(y_i);
       pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
-#elif defined(OPT_Y_U_OVERLAP)
+#else
       pack_fp_vec(sig->resp_0[published_rsps].y, u_prime[i]);
+#endif
 #else
       pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
 #endif
