@@ -43,24 +43,24 @@
 /*
  * Original Optimisations
  */
-#define OPT_KEYGEN
-//   Note this is overidden if OPT_OTF_MERKLE is defined
-#define OPT_MERKLE
+// #define OPT_KEYGEN
+//    Note this is overidden if OPT_OTF_MERKLE is defined
+// #define OPT_MERKLE
 #define OPT_HASH_CMT1
 #define OPT_HASH_Y
 /*
  * New Optimisations
  */
 // Note this is overidden if OPT_E_BAR_PRIME is defined
-#define OPT_V_BAR
-#define OPT_E_BAR_PRIME
-#define OPT_OTF_MERKLE
-#define OPT_GGM
-//   The only ARM specific optimisation
-#define OPT_DSP
-#define OPT_Y_U_OVERLAP
-#define OPT_KEYGEN_BLOCKS
-// #define OPT_MERKLE_GGM_COMBO
+// #define OPT_V_BAR
+// #define OPT_E_BAR_PRIME
+// #define OPT_OTF_MERKLE
+// #define OPT_GGM
+//    The only ARM specific optimisation
+// #define OPT_DSP
+// #define OPT_Y_U_OVERLAP
+// #define OPT_KEYGEN_BLOCKS
+//  #define OPT_MERKLE_GGM_COMBO
 /*
  * Debugging Flags
  */
