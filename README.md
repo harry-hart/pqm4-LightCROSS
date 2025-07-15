@@ -13,6 +13,7 @@ This implementation achieves the following improvements over the reference:
 - Key Generation: 58-95\% Smaller
 - Signing: 48-60\% Smaller
 - Verifying: 62-77\% Smaller
+
 **Speed:**
 - Key Generation: 22-33\% Slower
 - Signing: 0-24\% Faster
