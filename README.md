@@ -61,3 +61,4 @@ Compilation error `expected identifier or '(' before '.' token`:
   `python3 ./scripts/fix-symlink.py -d ./mupq/crypto_sign` and 
   `python3 ./scripts/fix-symlink.py -d ./crypto_sign`
   and check if that has repaired the symlinks. Unsure if this works on Windows.
+

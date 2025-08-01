@@ -386,6 +386,224 @@ int seed_path(
 
 /*****************************************************************************/
 
+#if defined(OPT_SEED_LEAVES)
+void subtree_seed_leaves(unsigned char rounds_seeds[T * SEED_LENGTH_BYTES],
+                         const unsigned char root_seed[SEED_LENGTH_BYTES],
+                         const unsigned char salt[SALT_LENGTH_BYTES],
+                         uint16_t leaves_seen, uint16_t leaf_level,
+                         uint16_t node_idx, uint8_t level) {
+
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t off[TREE_MAX_DEPTH + 1] = TREE_OFFSETS;
+  // NOTE: Store node seed of depth x at index x - 1 because we need not store
+  // root (depth 0)
+  uint8_t level_flags[TREE_MAX_DEPTH] = {0};
+  uint8_t level_seeds[TREE_MAX_DEPTH][SEED_LENGTH_BYTES] = {0};
+
+  // uint16_t leaves_seen = 0;
+  // uint16_t leaf_level = TREE_MAX_DEPTH;
+
+  // Current seed
+  // uint8_t working_seed[SEED_LENGTH_BYTES] = {0};
+  // uint16_t node_idx = 1;
+
+  // Init vars
+  // uint8_t level = 1;
+  // Calculate first two subtrees
+  const uint32_t csprng_input_len = SALT_LENGTH_BYTES + SEED_LENGTH_BYTES;
+  unsigned char csprng_input[csprng_input_len];
+  CSPRNG_STATE_T tree_csprng_state;
+  memcpy(csprng_input + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
+  /* prepare the CSPRNG input to expand the father node */
+  memcpy(csprng_input, root_seed, SEED_LENGTH_BYTES);
+
+  /* Domain separation using father node index */
+  uint16_t domain_sep = CSPRNG_DOMAIN_SEP_CONST;
+
+  /* Generate the children (stored contiguously).
+   * By construction, the tree has always two children */
+  csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
+                    domain_sep);
+  csprng_randombytes(csprng_input, SEED_LENGTH_BYTES, &tree_csprng_state);
+  csprng_randombytes(level_seeds[level - 1], SEED_LENGTH_BYTES,
+                     &tree_csprng_state);
+  level_flags[level - 1] = 1;
+
+  // Doing a DFS
+  while (level > 0) {
+    /* Domain separation using father node index */
+    uint16_t domain_sep = CSPRNG_DOMAIN_SEP_CONST + node_idx;
+    csprng_initialize(&tree_csprng_state, csprng_input, csprng_input_len,
+                      domain_sep);
+    // If we are at just above leaf level
+    if (level == leaf_level - 1) {
+      // Add children to round seeds
+      csprng_randombytes(rounds_seeds[leaves_seen * SEED_LENGTH_BYTES],
+                         2 * SEED_LENGTH_BYTES, &tree_csprng_state);
+      leaves_seen += 2;
+      // Go up to next available seed
+      while (level > 0) {
+        if (level_flags[level - 1]) {
+          // Found a node
+          memcpy(csprng_input, level_seeds[level - 1], SEED_LENGTH_BYTES);
+          level_flags[level - 1] = 0;
+          // Calculate node index
+          uint16_t start_idx = (1 << level) - 1 - off[level];
+          // If it is a perfect power
+          if ((partition_size & (partition_size - 1)) == 0) {
+            node_idx = start_idx + 1;
+          }
+          // Else
+          else {
+            // Step 1: Calculate lowest power of two
+            uint8_t zbits = 1;
+            uint16_t subtree_seen = leaves_seen >> 1;
+            while (seen_copy & 1 == 0) {
+              subtree_seen >>= 1;
+              zbits++;
+            }
+            subtree_seen = leaves_seen - (1 << zbits);
+            // Step 2: Get the offset from the left subtree_seen
+            subtree_seen = subtree_seen >> zbits;
+            // Step 3: Final index
+            node_idx = start_idx + subtree_seen + 1;
+          }
+          break;
+        }
+        level--;
+      }
+    }
+    // Else generate children, left is new working child, right is saved
+    else {
+      // Children are on the next level
+      level++;
+      csprng_randombytes(csprng_input, SEED_LENGTH_BYTES, &tree_csprng_state);
+      csprng_randombytes(level_seeds[level - 1], SEED_LENGTH_BYTES,
+                         &tree_csprng_state);
+      // Left child node index
+      node_idx = node_idx * 2 + 1 - off[level];
+    }
+  }
+}
+
+struct TreeNode {
+  uint16_t node_idx;
+  uint16_t partition_size;
+  uint16_t partition_start;
+  unsigned seed : 1;
+}
+
+uint8_t
+rebuild_tree(unsigned char rounds_seeds[T * SEED_LENGTH_BYTES],
+             const unsigned char indices_to_publish[T],
+             const unsigned char *stored_seeds,
+             const unsigned char salt[SALT_LENGTH_BYTES]) {
+  uint8_t level = 0;
+  uint16_t seeds_calculated = 0;
+  uint16_t partitions[TREE_NODES_TO_STORE] = {0};
+  uint16_t nodes_stored = 0;
+
+  uint16_t partition_size = 0;
+
+  uint16_t node_i = 0;
+
+  uint16_t subtree_leaves = 0;
+
+  // Init queue
+  uint8_t seed_storage[(T >> 1) * SEED_LENGTH_BYTES] = {0};
+  struct Queue seed_queue = Queue_init(seed_storage, SEED_LENGTH_BYTES);
+  uint8_t node_storage[(T >> 1) * sizeof(struct TreeNode)] = {0};
+  struct Queue node_queue = Queue_init(node_storage, sizeof(struct TreeNode));
+
+  // Add root to queue
+  struct TreeNode root = {0, T, 0, 0};
+  Queue_push(node_queue, &root);
+
+  // Working vars
+  struct TreeNode working_node;
+
+  // BFS Queue
+  while (!Queue_isEmpty(node_queue)) {
+    // Get head
+    Queue_popleft(node_queue, &working_node);
+
+    // Calculate partition
+    uint16_t partition = 0;
+    if ((partition_size & (working_node.partition_size - 1)) == 0) {
+      partition = working_node.partition_size >> 1;
+    } else {
+      // Count leading zeroes to find msb
+      uint8_t msb = 0;
+      // asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
+      msb = __builtin_clz(working_node.partition_size);
+      // Highest power of 2 that divides it (maybe implement in assembly
+      // later?) 31 because registers are 32 bit (CLZ) counts leading bits
+      // in register uint32_t bit_check = 1 << 31; uint32_t find_bit_len =
+      // partition_size << msb;
+      partition = 1 << (31 - msb);
+    }
+    partition += working_node.partition_start;
+
+    //
+  }
+
+  for (int i = T - 1; i >= 0; i--) {
+    if (indices_to_publish[i]) {
+      // Continue streak
+      subtree_leaves++;
+    } else if (subtree_leaves > 0) {
+      // Calculate round seeds
+      nodes_stored++;
+      // Reset
+      subtree_leaves = 0;
+    }
+  }
+
+  while (level >= TREE_MAX_DEPTH) {
+
+    // Calculate partition
+    uint16_t partition = 0;
+    if ((partition_size & (partition_size - 1)) == 0) {
+      partition = partition_size >> 1;
+    } else {
+      // Count leading zeroes to find msb
+      uint8_t msb = 0;
+      // asm("CLZ %1, %0" : "=r"(msb) : "r"(partition_size));
+      msb = __builtin_clz(working_node.partition_size);
+      // Highest power of 2 that divides it (maybe implement in assembly
+      // later?) 31 because registers are 32 bit (CLZ) counts leading bits
+      // in register uint32_t bit_check = 1 << 31; uint32_t find_bit_len =
+      // partition_size << msb;
+      partition = 1 << (31 - msb);
+    }
+    partition += working_node.partition_start;
+
+    // Main loop to check indices
+    uint8_t partition_flag = 0;
+    for (int i = 0; i < working_node.partition_size; i++) {
+      if (indices_to_publish[i] == NOT_TO_PUBLISH) {
+        partition_flag += 1;
+      } else if (indices_to_publish[i] == TO_PUBLISH) {
+        partition_flag += 2;
+      }
+      if (partition_flag == 3) {
+        // Mixed
+        if (i < partition) {
+          // Left child
+          i = partition;
+        } else {
+          // Right child
+          break;
+        }
+      } else if (i == partition - 1) {
+
+      } else if (i == working_node.partition_size - 1) {
+      }
+    }
+  }
+}
+#else
 uint8_t
 rebuild_tree(unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES],
              const unsigned char indices_to_publish[T],
