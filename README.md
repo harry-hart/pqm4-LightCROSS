@@ -62,3 +62,9 @@ Compilation error `expected identifier or '(' before '.' token`:
   `python3 ./scripts/fix-symlink.py -d ./crypto_sign`
   and check if that has repaired the symlinks. Unsure if this works on Windows.
 
+- [ ] Add automatic KAT testing
+  - [ ] Use updated KAT code for CROSS
+- [ ] Apply merkle optimisations in signing to verifying
+- [ ] Optimise SeedLeaves
+- [ ] Optimise RebuildLeaves
+- [ ] Optimise RecomputeRoot
