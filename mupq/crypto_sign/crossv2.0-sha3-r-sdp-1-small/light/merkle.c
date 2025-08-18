@@ -38,6 +38,7 @@
 
 #include "hal.h"
 #include "sendfn.h"
+
 #if defined(NO_TREES)
 
 #define TO_PUBLISH 1
@@ -288,6 +289,7 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
 #endif
 
 /*****************************************************************************/
+#if !defined(OPT_OTF_MERKLE)
 #if defined(OPT_MERKLE)
 uint8_t
 recompute_root(uint8_t root[HASH_DIGEST_LENGTH], uint8_t *tree,
@@ -379,6 +381,7 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 #endif
   return (error == 0);
 }
+#endif
 
 #if defined(OPT_OTF_MERKLE)
 /*****************************************************************************/
@@ -646,5 +649,89 @@ uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
   return published;
 }
 
+uint8_t
+recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
+               uint8_t recomputed_leaves[T][HASH_DIGEST_LENGTH],
+               const uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
+               const uint8_t leaves_to_reveal[T]) {
+// Notes:
+// - Can overwrite cmt_0 as it is never used again
+// - COMPUTED = 1, NOT_COMPUTED = 0
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
+  uint8_t flags[T + 1] = {NOT_COMPUTED};
+  uint8_t level = TREE_MAX_DEPTH;
+  uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t leaves_left = T;
+
+  // For GGM
+  uint8_t node_i = 0;
+
+  // Set the first level of flags
+  for (int i = 0; i < T; i++) {
+    if (leaves_to_reveal[i] == CHALLENGE_PROOF_VALUE) {
+      flags[i] = COMPUTED;
+    }
+  }
+
+  while (level > 0) {
+    // How many leaves to not touch in the cmt_0 buffer
+    leaves_left = leaves_left - lpl[level];
+    // The length of the remaining left buffer
+    // uint16_t sub_len = T - leaves_left;
+    // The end of the buffer on the left
+    // uint16_t right_shift = sub_len - npl[level];
+    // Because of the step, have to offset the parents
+    uint16_t parent_offset = 0;
+    // uint16_t start_pos = npl[level] + offset - leaves_left;
+    // uint16_t end_pos = offset - leaves_left;
+    for (int i = T - leaves_left - 1; i > (T - leaves_left - npl[level]) - 1;
+         i -= 2) {
+
+      // If there are differing siblings, must add the non computable one
+      if (flags[i] && !flags[i - 1]) {
+        memcpy(recomputed_leaves[i - 1], mtp + node_i * HASH_DIGEST_LENGTH,
+               HASH_DIGEST_LENGTH);
+        node_i++;
+      } else if (!flags[i] && flags[i - 1]) {
+        memcpy(recomputed_leaves[i], mtp + node_i * HASH_DIGEST_LENGTH,
+               HASH_DIGEST_LENGTH);
+        node_i++;
+      }
+
+      // Set parent flag to the right
+      // Explanation:
+      //  If either of the children are computed, the non-computed one has
+      //  been added to the proof, thus allowing the parent to be computed.
+      if (flags[i] || flags[i - 1]) {
+        flags[i + parent_offset] = COMPUTED;
+        // Hash em if we got em
+        hash(recomputed_leaves[(i + parent_offset)], recomputed_leaves[i - 1],
+             2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+      } else {
+        // If we can already compute parent given info, don't bother hashing,
+        // otherwise
+        flags[i + parent_offset] = NOT_COMPUTED;
+      }
+      parent_offset = parent_offset + 1;
+    }
+    level--;
+  }
+  memcpy(root, recomputed_leaves[T - 1], HASH_DIGEST_LENGTH);
+  // Check for correct zero padding in the remaining parth of the Merkle
+  // proof to prevent trivial forgery
+  uint8_t error = 0;
+  for (int i = node_i * HASH_DIGEST_LENGTH;
+       i < TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH; i++) {
+    error |= mtp[i];
+  }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  send_unsignedll("tree_proof:", t1 - t0);
+#endif
+  return (error == 0);
+}
 #endif // OPT_OTF_MERKLE
 #endif // NO_TREES

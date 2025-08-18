@@ -39,10 +39,6 @@
 #include "hal.h"
 #include "sendfn.h"
 
-#if defined(OPT_OTF_MERKLE)
-#include "wikisort.h"
-#endif
-
 #if defined(NO_TREES)
 
 #define TO_PUBLISH 1
