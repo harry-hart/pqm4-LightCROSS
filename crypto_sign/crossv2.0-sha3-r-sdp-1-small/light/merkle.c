@@ -38,6 +38,11 @@
 
 #include "hal.h"
 #include "sendfn.h"
+
+#if defined(OPT_OTF_MERKLE)
+#include "wikisort.h"
+#endif
+
 #if defined(NO_TREES)
 
 #define TO_PUBLISH 1
@@ -288,6 +293,7 @@ tree_proof(uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
 #endif
 
 /*****************************************************************************/
+#if !defined(OPT_OTF_MERKLE)
 #if defined(OPT_MERKLE)
 uint8_t
 recompute_root(uint8_t root[HASH_DIGEST_LENGTH], uint8_t *tree,
@@ -379,6 +385,7 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 #endif
   return (error == 0);
 }
+#endif
 
 #if defined(OPT_OTF_MERKLE)
 /*****************************************************************************/
@@ -646,5 +653,248 @@ uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
   return published;
 }
 
+uint8_t
+recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
+               uint8_t recomputed_leaves[T][HASH_DIGEST_LENGTH],
+               const uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
+               const uint8_t leaves_to_reveal[T]) {
+// Notes:
+// - Can overwrite cmt_0 as it is never used again
+// - COMPUTED = 1, NOT_COMPUTED = 0
+#if defined(OPT_PROFILE)
+  uint64_t t0 = hal_get_time();
+#endif
+  uint8_t flags[T + 1] = {NOT_COMPUTED};
+  uint8_t level = TREE_MAX_DEPTH;
+  uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t published = 0;
+  uint16_t leaves_left = T;
+
+  // For GGM
+  uint8_t node_i = 0;
+  // uint16_t tot_nodes = 0;
+  // for (int l = 0; l < level + 1; l++) {
+  //  tot_nodes += npl[l];
+  //}
+
+  // Set the first level of flags
+  for (int i = 0; i < T; i++) {
+    if (leaves_to_reveal[i] == CHALLENGE_PROOF_VALUE) {
+      flags[i] = COMPUTED;
+    }
+  }
+
+  while (level > 0) {
+    // TEMP:
+    // tot_nodes -= npl[level];
+
+    // How many leaves to not touch in the cmt_0 buffer
+    leaves_left = leaves_left - lpl[level];
+    // The length of the remaining left buffer
+    // uint16_t sub_len = T - leaves_left;
+    // The end of the buffer on the left
+    // uint16_t right_shift = sub_len - npl[level];
+    // Because of the step, have to offset the parents
+    uint16_t parent_offset = 0;
+    // uint16_t start_pos = npl[level] + offset - leaves_left;
+    // uint16_t end_pos = offset - leaves_left;
+    for (int i = T - leaves_left - 1; i > (T - leaves_left - npl[level]) - 1;
+         i -= 2) {
+
+      // If there are differing siblings, must add the non computable one
+      if (flags[i] && !flags[i - 1]) {
+        memcpy(recomputed_leaves[i - 1], mtp + node_i * HASH_DIGEST_LENGTH,
+               HASH_DIGEST_LENGTH);
+        // published++;
+        //  For GGM
+        // nodes_published[node_i] =
+        //     (tot_nodes - 1) + (i - (T - leaves_left - npl[level] - 1)) - 1;
+        node_i++;
+      } else if (!flags[i] && flags[i - 1]) {
+        memcpy(recomputed_leaves[i], mtp + node_i * HASH_DIGEST_LENGTH,
+               HASH_DIGEST_LENGTH);
+        // published++;
+        //// For GGM
+        // nodes_published[node_i] =
+        //     (tot_nodes - 1) + (i - (T - leaves_left - npl[level] - 1));
+        node_i++;
+      }
+
+      // Set parent flag to the right
+      // Explanation:
+      //  If either of the children are computed, the non-computed one has
+      //  been added to the proof, thus allowing the parent to be computed.
+      if (flags[i] || flags[i - 1]) {
+        flags[i + parent_offset] = COMPUTED;
+        // Hash em if we got em
+        hash(recomputed_leaves[(i + parent_offset)], recomputed_leaves[i - 1],
+             2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+      } else {
+        // If we can already compute parent given info, don't bother hashing,
+        // otherwise
+        // NOTE: We use the cmt_0 as hash storage because it is not reused after
+        // this function.
+        flags[i + parent_offset] = NOT_COMPUTED;
+      }
+
+      parent_offset = parent_offset + 1;
+    }
+    if (level == 0) {
+      break;
+    }
+    level--;
+  }
+  memcpy(root, recomputed_leaves[T - 1], HASH_DIGEST_LENGTH);
+  // Check for correct zero padding in the remaining parth of the Merkle
+  // proof to prevent trivial forgery
+  uint8_t error = 0;
+  for (int i = node_i * HASH_DIGEST_LENGTH;
+       i < TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH; i++) {
+    error |= mtp[i];
+  }
+#if defined(OPT_PROFILE)
+  uint64_t t1 = hal_get_time();
+  send_unsignedll("tree_proof:", t1 - t0);
+#endif
+  return (error == 0);
+}
+#if 0
+bool compare(Test t1, Test t2) { return t1.value < t2.value; }
+uint8_t
+recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
+               uint8_t recomputed_leaves[T][HASH_DIGEST_LENGTH],
+               const uint8_t mtp[HASH_DIGEST_LENGTH * TREE_NODES_TO_STORE],
+               const uint8_t leaves_to_reveal[T]) {
+  // If we have done all the leaves on this level.
+  // Find the next level with leaves
+  // We can do this because from left to right the tree leaves should have
+  // monotonically descending depths.
+  uint8_t hash_buffer[(TREE_MAX_DEPTH + 1) * HASH_DIGEST_LENGTH];
+  // At most ~10 bits will be used
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t flag = 0;
+  uint16_t hash_flag = 0;
+  uint8_t level = TREE_MAX_DEPTH;
+  uint16_t leaves_seen = 0;
+  uint16_t leaves_this_block = lpl[level];
+
+  uint16_t hidden_leaf_streak = 0;
+
+  uint16_t proof_index = 0;
+
+  // Re-sort proof
+  Test strks[W] = {0};
+  uint16_t strk_i = 0;
+  uint16_t strk = 0;
+  for (uint16_t l = T - 1; l >= 0; l--) {
+    if (leaves_to_reveal[l] == CHALLENGE_PROOF_VALUE) {
+      strk++;
+    } else if (strk > 0) {
+      Test val = {.value = strk, .index = strk_i};
+      strks[strk_i] = val;
+      strk_i++;
+      strk = 0;
+    }
+  }
+
+  // This array keeps track of the order so that another array can be sorted
+  // uint16_t twin_array[strk_i];
+  // for (int i = 0; i < strk_i; i++) {
+  //  twin_array[i] = i;
+  //}
+  WikiSort(strks, strk_i, compare);
+
+  for (uint16_t i = lpl[level]; i > 0; i--) {
+    while (leaves_seen == leaves_this_block) {
+      leaves_seen = 0;
+      level--;
+      leaves_this_block = lpl[level];
+    }
+    // Set the current hash and level
+    uint8_t curr_hash[HASH_DIGEST_LENGTH] = {0};
+    uint8_t curr_level = level - 1;
+    uint8_t curr_hash_state = 1;
+    if (leaves_to_reveal[i] == CHALLENGE_PROOF_VALUE) {
+      // If we have the leaf
+      memcpy(curr_hash, &recomputed_leaves[i], HASH_DIGEST_LENGTH);
+    } else {
+      curr_hash_state = 0;
+    }
+    // if (leaves_to_reveal[i] == CHALLENGE_PROOF_VALUE) {
+    //   hidden_leaf_streak++;
+    // } else {
+    //   if (hidden_leaf_streak > 0) {
+    //     level = LOG2(hidden_leaf_streak);
+    //   }
+    //   memcpy(curr_hash, recomputed_leaves[i], HASH_DIGEST_LENGTH);
+    // }
+
+    //  Adjust for 0-index
+    // Look for an empty spot to insert hash
+    while ((flag & (1 << curr_level)) > 0) {
+      if ((hash_flag & (1 << curr_level)) > 0) {
+        hash_flag -= (1 << curr_level);
+        if (curr_hash_state == 0) {
+          flag -= (1 << curr_level);
+          curr_level--;
+          continue;
+        } else {
+          // The hash is in the proof
+          memcpy(&hash_buffer[(curr_level)*HASH_DIGEST_LENGTH],
+                 &mtp[proof_index * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH);
+          proof_index++;
+        }
+      }
+      // When we encounter a hash at our level, hash with it
+      if (!curr_hash_state) {
+        // 1. First concatenate
+        memcpy(&hash_buffer[(curr_level + 1) * HASH_DIGEST_LENGTH],
+               &mtp[proof_index * HASH_DIGEST_LENGTH], HASH_DIGEST_LENGTH);
+        proof_index++;
+      } else {
+        // 1. First concatenate
+        memcpy(&hash_buffer[(curr_level + 1) * HASH_DIGEST_LENGTH], curr_hash,
+               HASH_DIGEST_LENGTH);
+      }
+      // 2. Then hash
+      hash(curr_hash, &hash_buffer[curr_level * HASH_DIGEST_LENGTH],
+           2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+      // 3. Then clear flag because the hash has been used
+      flag -= (1 << curr_level);
+      // 4. We now have a hash
+      curr_hash_state = 1;
+      // If we hit the top of the tree, return the digest in leaf_value
+      if (curr_level == 0) {
+        memcpy(root, &curr_hash, HASH_DIGEST_LENGTH);
+#if defined(OPT_PROFILE)
+        uint64_t t1 = hal_get_time();
+        send_unsignedll("tree_root:", t1 - t0);
+#endif
+        // Check for correct zero padding in the remaining parth of the Merkle
+        // proof to prevent trivial forgery
+        uint8_t error = 0;
+        for (int i = proof_index * HASH_DIGEST_LENGTH;
+             i < TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH; i++) {
+          error |= mtp[i];
+        }
+        return (error == 0);
+      }
+      // 4. Go up a level
+      curr_level--;
+    }
+    // After finding a place to insert, put in state
+    if (curr_hash_state) {
+      memcpy(&hash_buffer[curr_level * HASH_DIGEST_LENGTH], curr_hash,
+             HASH_DIGEST_LENGTH);
+    } else {
+      hash_flag |= (1 << curr_level);
+    }
+    flag |= (1 << curr_level);
+    leaves_seen++;
+  }
+  return 0;
+}
+#endif
 #endif // OPT_OTF_MERKLE
 #endif // NO_TREES

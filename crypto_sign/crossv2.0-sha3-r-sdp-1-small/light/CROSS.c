@@ -1861,7 +1861,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t cmt_1_i_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_i_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
-#if defined(OPT_MERKLE) && !defined(NO_TREES)
+#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
   uint8_t merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH] = {0};
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
@@ -1903,7 +1903,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   int is_signature_ok = 1;
   uint8_t is_packed_padd_ok = 1;
 
-#if defined(OPT_MERKLE) && !defined(NO_TREES)
+#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
   {
     const uint16_t cons_leaves[TREE_SUBROOTS] = TREE_CONSECUTIVE_LEAVES;
     const uint16_t leaves_start_indices[TREE_SUBROOTS] =
@@ -2026,7 +2026,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           fp_dz_norm_synd(s_prime);
           pack_fp_syn(cmt_0_i_input, s_prime);
 
-#if defined(OPT_MERKLE) && !defined(NO_TREES)
+#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
           // Add directly to tree
           hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
                cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
@@ -2035,7 +2035,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
         }
-#if defined(OPT_MERKLE) && !defined(NO_TREES)
+#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
         i++;
       } /* end for iterating on ZKID iterations */
     }
@@ -2048,7 +2048,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
 
-#if defined(OPT_MERKLE) && !defined(NO_TREES)
+#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
   uint8_t is_mtree_padding_ok =
       recompute_root(digest_cmt0_cmt1, merkle_tree, sig->proof, chall_2);
 #else
