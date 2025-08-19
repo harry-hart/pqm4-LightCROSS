@@ -88,12 +88,7 @@ static inline void csprng_randombytes(unsigned char *const x,
 
 /******************************************************************************/
 
-/* global csprng state employed to have deterministic randombytes for testing */
-extern CSPRNG_STATE_T platform_csprng_state;
-/* extracts xlen bytes from the global CSPRNG */
-static inline void randombytes(unsigned char *x, unsigned long long xlen) {
-  csprng_randombytes(x, xlen, &platform_csprng_state);
-}
+static inline void randombytes(unsigned char *x, unsigned long long xlen);
 
 /************************* HASH functions ********************************/
 
