@@ -35,6 +35,7 @@
 #define CSPRNG_HASH_H
 
 #include "parameters.h"
+#include "randombytes.h"
 #include "sha3.h"
 
 #if defined(OPT_DEBUG) || defined(OPT_PROFILE)
