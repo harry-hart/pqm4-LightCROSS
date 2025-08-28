@@ -24,6 +24,10 @@ can be customised by turning various compiler flags in the `parameters.h` file o
 
 ## Instructions
 
+Note: All of the scripts were written and run with python-3.12.11. Some parts of the
+scripts require features only available in python-3.12 or later. Please check your
+python version if you have any errors.
+
 ### Benchmarking
 
 1. Activate the python environment defined by `requirements.txt`, can be done with:
@@ -54,5 +58,6 @@ Compilation error `expected identifier or '(' before '.' token`:
   Especially if it shows what look like relative paths in the error body. This means
   that the symlinks are broken in the repository. Usually it will be in two places the
   `mupq/crypto_sign` and `crypto_sign` directories. Run 
-  `python3 ./scripts/fix-symlink.py -d ./mupq/crypto_sign` and `./scripts/fix-symlink.py -d ./crypto_sign`
+  `python3 ./scripts/fix-symlink.py -d ./mupq/crypto_sign` and 
+  `python3 ./scripts/fix-symlink.py -d ./crypto_sign`
   and check if that has repaired the symlinks. Unsure if this works on Windows.
