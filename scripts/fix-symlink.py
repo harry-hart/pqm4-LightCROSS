@@ -21,7 +21,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-d", "--directory", help="Directory to run in, default CWD.", default=".")
-    parser.add_argument("-p", "--pattern", help="Only fix symlink files that match this pattern. Default '.*\.[ch]'", default=r".*\.[ch]$")
+    parser.add_argument("-p", "--pattern", help="Only fix symlink files that match this pattern. Default '.*\\.[ch]'", default=r".*\.[ch]$")
 
     args = parser.parse_args()
     pat = args.pattern
