@@ -88,7 +88,7 @@ static inline void csprng_randombytes(unsigned char *const x,
 
 /******************************************************************************/
 
-static inline void randombytes(unsigned char *x, unsigned long long xlen);
+// static inline void randombytes(uint8_t *x, size_t xlen);
 
 /************************* HASH functions ********************************/
 

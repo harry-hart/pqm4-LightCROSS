@@ -35,6 +35,7 @@
 #define CSPRNG_HASH_H
 
 #include "parameters.h"
+#include "randombytes.h"
 #include "sha3.h"
 
 #if defined(OPT_DEBUG) || defined(OPT_PROFILE)
@@ -88,7 +89,7 @@ static inline void csprng_randombytes(unsigned char *const x,
 
 /******************************************************************************/
 
-static inline void randombytes(unsigned char *x, unsigned long long xlen);
+// static inline void randombytes(unsigned char *x, unsigned long long xlen);
 
 /************************* HASH functions ********************************/
 
