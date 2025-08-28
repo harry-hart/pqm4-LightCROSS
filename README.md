@@ -54,5 +54,5 @@ Compilation error `expected identifier or '(' before '.' token`:
   Especially if it shows what look like relative paths in the error body. This means
   that the symlinks are broken in the repository. Usually it will be in two places the
   `mupq/crypto_sign` and `crypto_sign` directories. Run 
-  `./scripts/fix-symlink.py -d mupq/crypto_sign` and `./scripts/fix-symlink.py -d crypto_sign`
+  `python3 ./scripts/fix-symlink.py -d ./mupq/crypto_sign` and `./scripts/fix-symlink.py -d ./crypto_sign`
   and check if that has repaired the symlinks. Unsure if this works on Windows.
