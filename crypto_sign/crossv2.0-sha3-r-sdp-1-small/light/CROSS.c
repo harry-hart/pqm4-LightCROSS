@@ -43,6 +43,8 @@
 #include "parameters.h"
 #include "seedtree.h"
 
+#include "randombytes.h"
+
 #if defined(OPT_DEBUG) || defined(OPT_PROFILE)
 #include "hal.h"
 #include "sendfn.h"

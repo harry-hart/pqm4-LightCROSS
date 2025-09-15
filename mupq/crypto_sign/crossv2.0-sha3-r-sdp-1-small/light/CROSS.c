@@ -889,7 +889,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   // Populate queue
   struct GGMNode root = {0, 0, T, 0, 0};
   // struct GGMNode queue[T - W];
-  struct GGMNode queue[T >> 1];
+  struct GGMNode queue[(T >> 1) + 1];
   queue[0] = root;
   //  Set up first node seed
   memcpy(seed_storage, root_seed, SEED_LENGTH_BYTES);
@@ -916,9 +916,14 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   }
   uint8_t flag_len = flag_index;
   flag_index = 0;
+  uint16_t last_partition_end = 0;
 
 #if defined(OPT_MERKLE_GGM_COMBO)
   uint32_t mtp_proof_empty = HASH_DIGEST_LENGTH * (TREE_NODES_TO_STORE - 1);
+#endif
+
+#if defined(OPT_DEBUG)
+  hal_send_str("Published nodes: [");
 #endif
 
   // While queue not empty
@@ -931,11 +936,13 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
     head = head == ring_max ? 0 : (head + 1);
 
     // If we have moved to the next level
-    if ((node.node_i + 1) - npl_cum > npl[curr_level]) {
+    // if ((node.node_i + 1) > npl[curr_level] + npl_cum) {
+    if (node.partition_start < last_partition_end) {
       npl_cum += npl[curr_level];
       flag_index = 0;
       curr_level++;
     }
+    last_partition_end = node.partition_end;
 
     // Compute partition split
     // IF IT IS A PERFECT POWER OF 2
@@ -973,6 +980,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       uint16_t child_partition_end = i == 0 ? partition : node.partition_end;
       uint16_t child_partition_size =
           child_partition_end - child_partition_start;
+      // TODO: FIx this for when npl_cum > node.node_i
       uint16_t child_node_i =
           npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
       if (i == 1) {
@@ -983,13 +991,17 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
       uint8_t node_state = 0;
 #else
-      uint8_t node_state =
-          child_node_i == nodes_to_reveal[nodes_revealed - 1 - published_nodes];
+      uint8_t node_state = 0;
+      if (published_nodes < nodes_revealed) {
+        node_state = child_node_i ==
+                     nodes_to_reveal[nodes_revealed - 1 - published_nodes];
+      }
 #endif
 
 //  If there is a chance of publishing responses
 #if !defined(OPT_MERKLE_GGM_COMBO) && defined(OPT_OTF_MERKLE)
-      if (node_state != 1 && highest_streak >= child_partition_size) {
+      // if (node_state != 1 && highest_streak >= child_partition_size) {
+      if (node_state != 1) {
 #endif
         while (flag_index < flag_len &&
                flags[flag_index].pos < child_partition_start) {
@@ -1001,26 +1013,28 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         } else {
           node_state = 2;
           // Assume they are all flags (hide)
-          if (highest_streak < child_partition_size) {
-            node_state = 0;
-          } else {
-            for (uint16_t leaf_i = child_partition_start;
-                 leaf_i < child_partition_end; leaf_i++) {
-              if (indices_to_publish[leaf_i] != FLAG_VALUE) {
-                node_state = 0;
-                break;
-              }
-              // flag_index++;
+          // if (highest_streak < child_partition_size) {
+          //  node_state = 0;
+          //} else {
+          for (uint16_t leaf_i = child_partition_start;
+               leaf_i < child_partition_end; leaf_i++) {
+            // We know there is at least one flag in here by the earlier check
+            // so must be mixed.
+            if (indices_to_publish[leaf_i] != FLAG_VALUE) {
+              node_state = 0;
+              break;
+            }
+            // flag_index++;
 #if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
-              if (highest_streak < child_partition_size) {
-                break;
-              }
+            if (highest_streak < child_partition_size) {
+              break;
+            }
 #endif
-            }
-            if (node_state == 2) {
-              flag_index += child_partition_size;
-            }
           }
+          if (node_state == 2) {
+            flag_index += child_partition_size;
+          }
+          //}
         }
 #if !defined(OPT_MERKLE_GGM_COMBO) && defined(OPT_OTF_MERKLE)
       }
@@ -1096,6 +1110,13 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         //    npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
         // if (i == 1)
         //  published_nodes_index[published_nodes] += 1;
+#if defined(OPT_DEBUG)
+        if (published_nodes == 0) {
+          send_unsigned("", child_node_i);
+        } else {
+          send_unsigned(", ", child_node_i);
+        }
+#endif
 
         // If all the leaves are to be
         // revealed If it is leaf level
@@ -1109,6 +1130,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                  HASH_DIGEST_LENGTH);
 #endif
         } else {
+
           if (i == 0 || !left_calculated) {
             /* prepare the CSPRNG input to expand the father node */
             memcpy(csprng_input, &seed_storage[node.seed_i * SEED_LENGTH_BYTES],
@@ -1119,6 +1141,12 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                               csprng_input_len, domain_sep);
             // Publish node
             // Always have to calculate left
+#if defined(OPT_DEBUG)
+            if (published_nodes > TREE_NODES_TO_STORE) {
+              hal_send_str("Too many nodes\n");
+              return -1;
+            }
+#endif
             csprng_randombytes(sig->path + published_nodes * SEED_LENGTH_BYTES,
                                SEED_LENGTH_BYTES, &tree_csprng_state);
           }
@@ -1276,13 +1304,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
   // Limit scope for seed_tree
 #if defined(OPT_GGM) && !defined(NO_TREES)
-  {
+  //{
 #endif
-    uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
-    gen_seed_tree(seed_tree, root_seed, sig->salt);
-    seed_leaves(round_seeds, seed_tree);
+  uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
+  gen_seed_tree(seed_tree, root_seed, sig->salt);
+  seed_leaves(round_seeds, seed_tree);
 #if defined(OPT_GGM) && !defined(NO_TREES)
-  }
+  //}
 #endif
 #endif
 #if defined(OPT_PROFILE)
@@ -1651,7 +1679,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(DETERMINISTIC)
   // WARNING: NOT SECURE, ONLY FOR DEBUGGING USE
   // Fix the challenge 2 value
-  memset(chall_2 + (T - W), 1, W);
+  // memset(chall_2 + (T - W), 1, W);
+  memset(chall_2, 1, W);
+  // chall_2[0] = 1;
+  //  chall_2[1] = 1;
+  //  chall_2[T - 2] = 0;
+  // chall_2[T - 3] = 0;
 #else
   expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
 #endif
@@ -1700,9 +1733,31 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                  v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
                  nodes_published, nodes_to_reveal);
 #elif defined(RSDPG)
+#if defined(OPT_DEBUG)
+  hal_send_str("chall_2: [");
+  for (int i = 0; i < T; i++) {
+    if (i == 0) {
+      send_unsigned("", chall_2[i]);
+    } else {
+      send_unsigned(", ", chall_2[i]);
+    }
+  }
+  hal_send_str("]\n");
+#endif
+
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
                  v_bar[0], chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1,
                  e_bar_prime[0], nodes_published, nodes_to_reveal);
+
+#if defined(OPT_DEBUG)
+  uint8_t test_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES] = {0};
+  int published_nodes = seed_path(test_path, seed_tree, chall_2);
+  for (int i = 0; i < TREE_NODES_TO_STORE; i++) {
+    if (memcmp(&test_path[i], &sig->path[i], SEED_LENGTH_BYTES) != 0) {
+      hal_send_str("build_response failed");
+    }
+  }
+#endif
 #endif
 #else
 #if defined(NO_TREES)
@@ -1826,7 +1881,10 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #if defined(DETERMINISTIC)
   // WARNING: NOT SECURE, ONLY FOR DEBUGGING USE
   // Fix the challenge 2 value
-  memset(chall_2 + T - W, 1, W);
+  // memset(chall_2 + T - W, 1, W);
+  memset(chall_2, 1, W);
+  // chall_2[0] = 1;
+  // chall_2[T - 1] = 0;
 #else
   expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
 #endif

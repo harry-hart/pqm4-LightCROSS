@@ -7,508 +7,508 @@
 -- Configuring done (0.2s)
 -- Generating done (0.2s)
 -- Build files have been written to: /home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/kat/build
-[  0%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/merkle.c.o
-[  0%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/merkle.c.o
-[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/merkle.c.o
-[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/merkle.c.o
 [  1%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/merkle.c.o
-[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/ref/merkle.c.o
+[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/merkle.c.o
+[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/merkle.c.o
+[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/merkle.c.o
+[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/merkle.c.o
+[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/merkle.c.o
 [  1%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/merkle.c.o
-[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/merkle.c.o
-[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/merkle.c.o
-[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/ref/merkle.c.o
+[  1%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/ref/merkle.c.o
 [  2%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/merkle.c.o
-[  2%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/merkle.c.o
-[  2%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/seedtree.c.o
-[  2%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/seedtree.c.o
-[  2%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/seedtree.c.o
+[  2%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/ref/merkle.c.o
+[  2%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/merkle.c.o
+[  2%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/merkle.c.o
 [  3%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/ref/seedtree.c.o
-[  3%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/ref/seedtree.c.o
-[  3%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/seedtree.c.o
+[  3%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/seedtree.c.o
+[  3%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/seedtree.c.o
+[  3%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/seedtree.c.o
 [  4%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/seedtree.c.o
+[  4%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/seedtree.c.o
+[  4%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/ref/seedtree.c.o
 [  4%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/seedtree.c.o
+[  4%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/seedtree.c.o
 [  4%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/seedtree.c.o
 [  5%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/seedtree.c.o
-[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/seedtree.c.o
-[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/seedtree.c.o
-[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/CROSS.c.o
+[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/seedtree.c.o
 [  5%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/CROSS.c.o
-[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/CROSS.c.o
 [  5%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/ref/CROSS.c.o
-[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/CROSS.c.o
+[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/CROSS.c.o
+[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/CROSS.c.o
+[  5%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/CROSS.c.o
 [  5%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/ref/CROSS.c.o
-[  6%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/CROSS.c.o
-[  6%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/CROSS.c.o
-[  6%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/CROSS.c.o
-[  6%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/CROSS.c.o
-[  6%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/CROSS.c.o
-[  7%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/CROSS.c.o
-[  7%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[  7%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[  6%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/CROSS.c.o
+[  7%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/CROSS.c.o
+[  7%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/CROSS.c.o
+[  7%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/CROSS.c.o
+[  7%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/CROSS.c.o
+[  7%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/CROSS.c.o
 [  8%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[  9%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[  8%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
 [  9%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[  9%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[  9%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[  9%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
 [  9%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[  9%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[  9%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
 [ 10%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 10%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 10%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 10%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 10%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 10%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 10%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 10%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
 [ 11%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 11%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 11%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 11%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 11%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 11%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 11%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 11%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
 [ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
 [ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/csprng_hash.c.o
+[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
 [ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/ref/csprng_hash.c.o
+[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/csprng_hash.c.o
 [ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/csprng_hash.c.o
+[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 12%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/csprng_hash.c.o
+[ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/csprng_hash.c.o
+[ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/csprng_hash.c.o
+[ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/csprng_hash.c.o
 [ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/ref/csprng_hash.c.o
-[ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/csprng_hash.c.o
-[ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/csprng_hash.c.o
-[ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/pack_unpack.c.o
-[ 14%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/csprng_hash.c.o
+[ 13%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/csprng_hash.c.o
 [ 14%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/csprng_hash.c.o
 [ 15%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/ref/pack_unpack.c.o
+[ 15%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/pack_unpack.c.o
 [ 15%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/csprng_hash.c.o
-[ 15%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/csprng_hash.c.o
-[ 16%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/csprng_hash.c.o
-[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/csprng_hash.c.o
-[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/pack_unpack.c.o
-[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/pack_unpack.c.o
-[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/pack_unpack.c.o
-[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/pack_unpack.c.o
+[ 15%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/pack_unpack.c.o
+[ 15%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/pack_unpack.c.o
+[ 16%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/csprng_hash.c.o
+[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/csprng_hash.c.o
+[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/pack_unpack.c.o
 [ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/ref/pack_unpack.c.o
+[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/pack_unpack.c.o
 [ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/pack_unpack.c.o
+[ 17%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/pack_unpack.c.o
 [ 18%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/pack_unpack.c.o
-[ 18%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/pack_unpack.c.o
+[ 18%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/pack_unpack.c.o
 [ 18%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/pack_unpack.c.o
-[ 18%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/pack_unpack.c.o
-[ 18%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/sign.c.o
 [ 18%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/ref/sign.c.o
-[ 18%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
 [ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/ref/sign.c.o
-[ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/sign.c.o
+[ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/sign.c.o
 [ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
 [ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/ref/sign.c.o
-[ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/sign.c.o
+[ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/sign.c.o
 [ 20%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/ref/sign.c.o
-[ 20%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/ref/sign.c.o
-[ 20%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 20%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/ref/sign.c.o
-[ 20%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 19%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/ref/sign.c.o
+[ 20%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 21%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/sign.c.o
+[ 21%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/ref/sign.c.o
 [ 21%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/ref/sign.c.o
-[ 21%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 22%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/ref/sign.c.o
-[ 22%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 22%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
 [ 22%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 22%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/sign.c.o
 [ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 24%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/src/hal-x86.c.o
-[ 24%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/src/hal-x86.c.o
-[ 24%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 24%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 24%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 25%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/src/hal-x86.c.o
-[ 25%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/src/hal-x86.c.o
-[ 25%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/src/rng.c.o
-[ 25%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 26%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/src/rng.c.o
-[ 26%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/src/hal-x86.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/src/hal-x86.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/src/hal-x86.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/src/rng.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/src/hal-x86.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/src/rng.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/src/hal-x86.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/src/hal-x86.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/src/rng.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/src/rng.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/src/rng.c.o
-[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/src/hal-x86.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/src/hal-x86.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/ref/sign.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/src/hal-x86.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/src/hal-x86.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/ref/sign.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/src/rng.c.o
+[ 23%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 24%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/src/rng.c.o
+[ 24%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/src/hal-x86.c.o
+[ 24%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/src/hal-x86.c.o
+[ 25%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/src/rng.c.o
+[ 26%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/src/hal-x86.c.o
+[ 26%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/src/hal-x86.c.o
+[ 26%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/src/hal-x86.c.o
+[ 26%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 26%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/src/hal-x86.c.o
 [ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/src/rng.c.o
+[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/src/rng.c.o
+[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/src/rng.c.o
+[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/src/rng.c.o
+[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/src/rng.c.o
+[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/src/hal-x86.c.o
+[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/src/rng.c.o
 [ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/src/hal-x86.c.o
-[ 28%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/src/rng.c.o
-[ 28%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/src/rng.c.o
-[ 28%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/src/rng.c.o
+[ 27%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/src/rng.c.o
+[ 28%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/src/hal-x86.c.o
+[ 28%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/src/PQCgenKAT_sign.c.o
 [ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/src/rng.c.o
-[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/src/PQCgenKAT_sign.c.o
-[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_ref.dir/src/PQCgenKAT_sign.c.o
-[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/src/PQCgenKAT_sign.c.o
-[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/src/PQCgenKAT_sign.c.o
-[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/src/PQCgenKAT_sign.c.o
+[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/src/rng.c.o
 [ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_ref.dir/src/PQCgenKAT_sign.c.o
+[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_ref.dir/src/PQCgenKAT_sign.c.o
 [ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_ref.dir/src/PQCgenKAT_sign.c.o
+[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_ref.dir/src/PQCgenKAT_sign.c.o
+[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_ref.dir/src/PQCgenKAT_sign.c.o
 [ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_ref.dir/src/PQCgenKAT_sign.c.o
-[ 29%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/src/PQCgenKAT_sign.c.o
-[ 30%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/src/PQCgenKAT_sign.c.o
-[ 31%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/src/PQCgenKAT_sign.c.o
-[ 31%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_fast_ref
-[ 31%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/src/PQCgenKAT_sign.c.o
-[ 31%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_small_ref
+[ 30%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_ref.dir/src/PQCgenKAT_sign.c.o
+[ 30%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_ref.dir/src/PQCgenKAT_sign.c.o
+[ 31%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_ref.dir/src/PQCgenKAT_sign.c.o
 [ 32%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_fast_ref
-[ 32%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_fast_ref
-[ 32%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_balance_ref
-[ 32%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_balance_ref
-[ 32%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_small_ref
-[ 32%] Built target CROSS_KATgen_cat_1_sdpg_fast_ref
-[ 33%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_fast_ref
-[ 34%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_small_ref
-[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/merkle.c.o
-[ 34%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_small_ref
-[ 34%] Built target CROSS_KATgen_cat_1_sdp_small_ref
-[ 34%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_balance_ref
-[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/seedtree.c.o
-[ 34%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_balance_ref
+[ 32%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_ref.dir/src/PQCgenKAT_sign.c.o
+[ 33%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_small_ref
+[ 33%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_balance_ref
+[ 33%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_ref.dir/src/PQCgenKAT_sign.c.o
+[ 33%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_balance_ref
+[ 33%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_fast_ref
+[ 33%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_balance_ref
+[ 34%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_small_ref
+[ 34%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_fast_ref
 [ 34%] Built target CROSS_KATgen_cat_1_sdp_fast_ref
+[ 34%] Built target CROSS_KATgen_cat_3_sdp_balance_ref
+[ 34%] Built target CROSS_KATgen_cat_3_sdp_small_ref
+[ 34%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_small_ref
+[ 34%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_fast_ref
+[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/merkle.c.o
+[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/merkle.c.o
+[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/seedtree.c.o
+[ 34%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_balance_ref
+[ 34%] Built target CROSS_KATgen_cat_3_sdp_fast_ref
+[ 34%] Built target CROSS_KATgen_cat_1_sdp_balance_ref
+[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/merkle.c.o
+[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/merkle.c.o
+[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/seedtree.c.o
+[ 34%] Built target CROSS_KATgen_cat_3_sdpg_fast_ref
+[ 34%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/seedtree.c.o
+[ 34%] Built target CROSS_KATgen_cat_1_sdpg_balance_ref
+[ 34%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_small_ref
 [ 35%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/CROSS.c.o
-[ 35%] Built target CROSS_KATgen_cat_3_sdp_fast_ref
+[ 35%] Built target CROSS_KATgen_cat_1_sdpg_small_ref
+[ 35%] Built target CROSS_KATgen_cat_1_sdp_small_ref
+[ 35%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/CROSS.c.o
 [ 35%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 35%] Built target CROSS_KATgen_cat_3_sdpg_small_ref
-[ 35%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 35%] Built target CROSS_KATgen_cat_1_sdp_balance_ref
-[ 35%] Built target CROSS_KATgen_cat_3_sdp_balance_ref
-[ 35%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/csprng_hash.c.o
-[ 35%] Built target CROSS_KATgen_cat_3_sdp_small_ref
-[ 35%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/sign.c.o
-[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/pack_unpack.c.o
-[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/merkle.c.o
-[ 36%] Built target CROSS_KATgen_cat_3_sdpg_fast_ref
-[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/seedtree.c.o
-[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/src/hal-x86.c.o
-[ 36%] Built target CROSS_KATgen_cat_1_sdpg_small_ref
-[ 36%] Built target CROSS_KATgen_cat_1_sdpg_balance_ref
-[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/src/rng.c.o
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 36%] Built target CROSS_KATgen_cat_1_sdpg_fast_ref
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/seedtree.c.o
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/merkle.c.o
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/csprng_hash.c.o
+[ 36%] Built target CROSS_KATgen_cat_3_sdpg_balance_ref
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/pack_unpack.c.o
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/seedtree.c.o
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/CROSS.c.o
+[ 36%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/CROSS.c.o
 [ 37%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/CROSS.c.o
-[ 37%] Built target CROSS_KATgen_cat_3_sdpg_balance_ref
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/src/PQCgenKAT_sign.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/merkle.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/merkle.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/seedtree.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/seedtree.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/merkle.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/CROSS.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/csprng_hash.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/seedtree.c.o
-[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/ref/merkle.c.o
+[ 37%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 37%] Built target CROSS_KATgen_cat_3_sdpg_small_ref
+[ 37%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/sign.c.o
+[ 37%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 37%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/ref/merkle.c.o
+[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
 [ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/merkle.c.o
+[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/src/hal-x86.c.o
 [ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/seedtree.c.o
+[ 38%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
 [ 39%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/ref/seedtree.c.o
-[ 39%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/CROSS.c.o
-[ 39%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/merkle.c.o
-[ 39%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/seedtree.c.o
-[ 39%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 39%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/pack_unpack.c.o
+[ 39%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/CROSS.c.o
 [ 40%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 40%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/CROSS.c.o
-[ 40%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_small_ref
-[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/sign.c.o
+[ 40%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/src/rng.c.o
+[ 40%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 40%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/csprng_hash.c.o
+[ 40%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 40%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/merkle.c.o
 [ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/ref/CROSS.c.o
-[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/merkle.c.o
-[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/seedtree.c.o
-[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/CROSS.c.o
-[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/CROSS.c.o
-[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/csprng_hash.c.o
-[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/CROSS.c.o
-[ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 43%] Built target CROSS_KATgen_cat_5_sdp_small_ref
-[ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 41%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/csprng_hash.c.o
+[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/pack_unpack.c.o
+[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/pack_unpack.c.o
+[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/src/PQCgenKAT_sign.c.o
+[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/csprng_hash.c.o
+[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/csprng_hash.c.o
+[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/pack_unpack.c.o
+[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/seedtree.c.o
+[ 42%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
 [ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/pack_unpack.c.o
-[ 44%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 45%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/sign.c.o
+[ 43%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/sign.c.o
+[ 44%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/ref/sign.c.o
+[ 44%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/ref/sign.c.o
+[ 44%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/csprng_hash.c.o
+[ 44%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 44%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/merkle.c.o
+[ 44%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 44%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/CROSS.c.o
+[ 45%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
 [ 45%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/src/hal-x86.c.o
+[ 45%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 45%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/seedtree.c.o
+[ 45%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
 [ 45%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/ref/csprng_hash.c.o
-[ 45%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/csprng_hash.c.o
-[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/csprng_hash.c.o
+[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/pack_unpack.c.o
+[ 46%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_small_ref
+[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/sign.c.o
+[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/src/hal-x86.c.o
+[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
 [ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/src/rng.c.o
-[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/merkle.c.o
-[ 46%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/ref/sign.c.o
-[ 47%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/ref/pack_unpack.c.o
-[ 47%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/pack_unpack.c.o
-[ 48%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/seedtree.c.o
-[ 48%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/pack_unpack.c.o
-[ 48%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/csprng_hash.c.o
-[ 48%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/merkle.c.o
-[ 48%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/csprng_hash.c.o
-[ 49%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/seedtree.c.o
-[ 49%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 49%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 49%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/pack_unpack.c.o
-[ 49%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/pack_unpack.c.o
+[ 47%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/src/hal-x86.c.o
+[ 47%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/src/hal-x86.c.o
+[ 48%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/ref/pack_unpack.c.o
+[ 49%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/CROSS.c.o
+[ 49%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/src/rng.c.o
 [ 49%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/ref/sign.c.o
-[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/src/hal-x86.c.o
-[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/CROSS.c.o
-[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/ref/sign.c.o
-[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/CROSS.c.o
+[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/src/rng.c.o
+[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/src/rng.c.o
+[ 50%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/src/PQCgenKAT_sign.c.o
 [ 51%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_ref.dir/src/PQCgenKAT_sign.c.o
-[ 51%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/csprng_hash.c.o
-[ 51%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 51%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/ref/sign.c.o
-[ 51%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/src/rng.c.o
-[ 51%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 51%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/merkle.c.o
-[ 52%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 52%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/sign.c.o
-[ 52%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/src/hal-x86.c.o
-[ 53%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/pack_unpack.c.o
-[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/sign.c.o
-[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/seedtree.c.o
-[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 55%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/src/rng.c.o
-[ 56%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/src/hal-x86.c.o
-[ 56%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/src/hal-x86.c.o
-[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/src/hal-x86.c.o
+[ 52%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 52%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/merkle.c.o
+[ 52%] Built target CROSS_KATgen_cat_5_sdpg_small_ref
+[ 53%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_ref.dir/src/PQCgenKAT_sign.c.o
+[ 53%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/csprng_hash.c.o
+[ 53%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 53%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/merkle.c.o
+[ 53%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 53%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/src/hal-x86.c.o
+[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/seedtree.c.o
+[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/src/hal-x86.c.o
+[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/pack_unpack.c.o
+[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/src/PQCgenKAT_sign.c.o
+[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/src/rng.c.o
+[ 54%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/merkle.c.o
+[ 55%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/seedtree.c.o
+[ 55%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_balance_ref
+[ 56%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/src/rng.c.o
+[ 56%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_balance_ref
+[ 56%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/csprng_hash.c.o
+[ 56%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/src/PQCgenKAT_sign.c.o
+[ 56%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/CROSS.c.o
+[ 56%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_small_ref
+[ 56%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/seedtree.c.o
+[ 56%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-balance/light/sign.c.o
+[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/pack_unpack.c.o
+[ 57%] Built target CROSS_KATgen_cat_5_sdp_balance_ref
+[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/CROSS.c.o
+[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 57%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_fast_ref
 [ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/src/rng.c.o
-[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/sign.c.o
-[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/src/rng.c.o
 [ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/CROSS.c.o
-[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_ref.dir/src/PQCgenKAT_sign.c.o
-[ 57%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_balance_ref
-[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/src/rng.c.o
-[ 58%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 58%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 58%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 58%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/src/hal-x86.c.o
-[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/csprng_hash.c.o
-[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/src/PQCgenKAT_sign.c.o
-[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/src/rng.c.o
-[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/csprng_hash.c.o
-[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/pack_unpack.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/pack_unpack.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/src/hal-x86.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_ref.dir/src/PQCgenKAT_sign.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/src/PQCgenKAT_sign.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_ref.dir/src/PQCgenKAT_sign.c.o
-[ 60%] Built target CROSS_KATgen_cat_5_sdp_balance_ref
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/sign.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/src/rng.c.o
-[ 60%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_fast_ref
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_small_light.dir/src/PQCgenKAT_sign.c.o
-[ 60%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_fast_ref
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/src/hal-x86.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/csprng_hash.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/sign.c.o
-[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/pack_unpack.c.o
+[ 57%] Built target CROSS_KATgen_cat_5_sdpg_balance_ref
+[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_ref.dir/src/PQCgenKAT_sign.c.o
+[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 57%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/merkle.c.o
+[ 58%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/src/hal-x86.c.o
+[ 58%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_small_light
+[ 58%] Built target CROSS_KATgen_cat_5_sdp_small_ref
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-fast/light/sign.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/seedtree.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/src/rng.c.o
+[ 59%] Built target CROSS_KATgen_cat_5_sdp_fast_ref
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/csprng_hash.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/pack_unpack.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/src/hal-x86.c.o
+[ 59%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/src/rng.c.o
+[ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
 [ 60%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-fast/light/sign.c.o
-[ 61%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/src/rng.c.o
-[ 61%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 61%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/src/hal-x86.c.o
-[ 62%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_small_ref
-[ 62%] Built target CROSS_KATgen_cat_5_sdpg_fast_ref
-[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/src/rng.c.o
-[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/src/PQCgenKAT_sign.c.o
-[ 63%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_balance_light
-[ 64%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/src/PQCgenKAT_sign.c.o
-[ 64%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_balance_ref
-[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 65%] Built target CROSS_KATgen_cat_5_sdp_fast_ref
-[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/src/hal-x86.c.o
-[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/merkle.c.o
-[ 65%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_small_light
-[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/src/rng.c.o
-[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/merkle.c.o
-[ 65%] Built target CROSS_KATgen_cat_5_sdpg_small_ref
-[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/src/PQCgenKAT_sign.c.o
-[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/merkle.c.o
-[ 66%] Built target CROSS_KATgen_cat_1_sdp_balance_light
-[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/seedtree.c.o
-[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/seedtree.c.o
-[ 66%] Built target CROSS_KATgen_cat_5_sdpg_balance_ref
-[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/CROSS.c.o
-[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/seedtree.c.o
-[ 66%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_small_light
-[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/src/PQCgenKAT_sign.c.o
+[ 61%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/csprng_hash.c.o
+[ 62%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/CROSS.c.o
+[ 62%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_fast_ref
+[ 62%] Built target CROSS_KATgen_cat_1_sdp_small_light
+[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_fast_light.dir/src/PQCgenKAT_sign.c.o
+[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/csprng_hash.c.o
+[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/src/hal-x86.c.o
+[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/pack_unpack.c.o
+[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-small/light/sign.c.o
+[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdp_balance_light.dir/src/PQCgenKAT_sign.c.o
+[ 63%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 64%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/pack_unpack.c.o
+[ 64%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/src/rng.c.o
+[ 64%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 64%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/csprng_hash.c.o
+[ 64%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/pack_unpack.c.o
+[ 64%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_fast_light.dir/src/PQCgenKAT_sign.c.o
+[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/sign.c.o
+[ 65%] Built target CROSS_KATgen_cat_5_sdpg_fast_ref
+[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-1-balance/light/sign.c.o
+[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 65%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/src/hal-x86.c.o
+[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/src/rng.c.o
+[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/src/hal-x86.c.o
 [ 66%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_fast_light
-[ 66%] Built target CROSS_KATgen_cat_1_sdp_small_light
-[ 66%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/CROSS.c.o
-[ 67%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/CROSS.c.o
-[ 67%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 67%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 67%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/csprng_hash.c.o
-[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/merkle.c.o
-[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/merkle.c.o
-[ 68%] Built target CROSS_KATgen_cat_1_sdpg_small_light
-[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 68%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_balance_light
-[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/seedtree.c.o
-[ 68%] Built target CROSS_KATgen_cat_1_sdp_fast_light
-[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/csprng_hash.c.o
-[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/seedtree.c.o
-[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/CROSS.c.o
-[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/csprng_hash.c.o
-[ 70%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_fast_light
+[ 67%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/src/rng.c.o
+[ 67%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 67%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/merkle.c.o
+[ 67%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_small_light.dir/src/PQCgenKAT_sign.c.o
+[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_1_sdpg_balance_light.dir/src/PQCgenKAT_sign.c.o
+[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/merkle.c.o
+[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/seedtree.c.o
+[ 68%] Linking C executable bin/CROSS_KATgen_cat_1_sdp_balance_light
+[ 68%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/CROSS.c.o
+[ 69%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_fast_light
+[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/src/hal-x86.c.o
+[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/seedtree.c.o
+[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/CROSS.c.o
+[ 69%] Built target CROSS_KATgen_cat_1_sdp_fast_light
+[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/src/rng.c.o
+[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 69%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 70%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/csprng_hash.c.o
+[ 70%] Built target CROSS_KATgen_cat_1_sdp_balance_light
+[ 70%] Built target CROSS_KATgen_cat_1_sdpg_fast_light
 [ 70%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/pack_unpack.c.o
-[ 70%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 71%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 71%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/pack_unpack.c.o
-[ 71%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/merkle.c.o
-[ 71%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/pack_unpack.c.o
-[ 71%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/seedtree.c.o
-[ 71%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/merkle.c.o
-[ 72%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/seedtree.c.o
-[ 72%] Built target CROSS_KATgen_cat_1_sdpg_balance_light
-[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/sign.c.o
+[ 70%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/sign.c.o
+[ 71%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/src/PQCgenKAT_sign.c.o
+[ 71%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 71%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_balance_light
+[ 72%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/src/hal-x86.c.o
+[ 72%] Linking C executable bin/CROSS_KATgen_cat_1_sdpg_small_light
+[ 72%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/src/rng.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/merkle.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/seedtree.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/merkle.c.o
 [ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/CROSS.c.o
-[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-fast/light/sign.c.o
-[ 74%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-small/light/sign.c.o
-[ 74%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/CROSS.c.o
-[ 74%] Built target CROSS_KATgen_cat_1_sdpg_fast_light
-[ 74%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/seedtree.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/CROSS.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/merkle.c.o
+[ 73%] Built target CROSS_KATgen_cat_1_sdpg_small_light
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 73%] Built target CROSS_KATgen_cat_1_sdpg_balance_light
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/csprng_hash.c.o
+[ 73%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/src/PQCgenKAT_sign.c.o
+[ 74%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/csprng_hash.c.o
+[ 74%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 74%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/seedtree.c.o
+[ 74%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_small_light
 [ 75%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/CROSS.c.o
-[ 75%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 75%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 75%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 75%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/src/hal-x86.c.o
-[ 76%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/src/hal-x86.c.o
+[ 75%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 75%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/merkle.c.o
+[ 75%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 76%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/seedtree.c.o
+[ 76%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/pack_unpack.c.o
+[ 76%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/CROSS.c.o
 [ 76%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/merkle.c.o
-[ 76%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/csprng_hash.c.o
-[ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/seedtree.c.o
-[ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/src/rng.c.o
+[ 76%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/merkle.c.o
+[ 76%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-3-balance/light/sign.c.o
 [ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/pack_unpack.c.o
-[ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/src/hal-x86.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/src/rng.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/src/rng.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/csprng_hash.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/CROSS.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/src/PQCgenKAT_sign.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_fast_light.dir/src/PQCgenKAT_sign.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/merkle.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/pack_unpack.c.o
-[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 79%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_small_light.dir/src/PQCgenKAT_sign.c.o
-[ 79%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/sign.c.o
-[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/csprng_hash.c.o
-[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/seedtree.c.o
-[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/sign.c.o
+[ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-balance/light/sign.c.o
+[ 77%] Built target CROSS_KATgen_cat_3_sdp_small_light
+[ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/seedtree.c.o
+[ 77%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/CROSS.c.o
+[ 77%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_fast_light
+[ 78%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 79%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/seedtree.c.o
+[ 79%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/src/hal-x86.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/csprng_hash.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/pack_unpack.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/csprng_hash.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/sign.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/src/rng.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/CROSS.c.o
 [ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/pack_unpack.c.o
-[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/sign.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/csprng_hash.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdp_balance_light.dir/src/PQCgenKAT_sign.c.o
+[ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
 [ 80%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/merkle.c.o
-[ 81%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/src/hal-x86.c.o
-[ 81%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 81%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/csprng_hash.c.o
-[ 81%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/CROSS.c.o
-[ 81%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/seedtree.c.o
-[ 81%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_small_light
-[ 82%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_balance_light
-[ 82%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/src/rng.c.o
-[ 83%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 83%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_fast_light
-[ 83%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/merkle.c.o
-[ 83%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 84%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/pack_unpack.c.o
+[ 80%] Built target CROSS_KATgen_cat_3_sdp_fast_light
+[ 82%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/src/hal-x86.c.o
+[ 82%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/pack_unpack.c.o
+[ 82%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 82%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 83%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 83%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/pack_unpack.c.o
+[ 83%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-small/light/sign.c.o
+[ 83%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/src/hal-x86.c.o
+[ 84%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/csprng_hash.c.o
+[ 84%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/src/rng.c.o
 [ 84%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/csprng_hash.c.o
-[ 84%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/src/hal-x86.c.o
-[ 85%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/CROSS.c.o
-[ 85%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/src/hal-x86.c.o
-[ 85%] Built target CROSS_KATgen_cat_3_sdp_small_light
+[ 84%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/seedtree.c.o
+[ 84%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/sign.c.o
+[ 85%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 85%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/src/rng.c.o
 [ 86%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/pack_unpack.c.o
-[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/src/rng.c.o
-[ 87%] Built target CROSS_KATgen_cat_3_sdp_fast_light
-[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/src/PQCgenKAT_sign.c.o
-[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-3-fast/light/sign.c.o
-[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/src/rng.c.o
-[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/src/PQCgenKAT_sign.c.o
-[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/seedtree.c.o
-[ 88%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 88%] Built target CROSS_KATgen_cat_3_sdp_balance_light
-[ 88%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 88%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 88%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 88%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/sign.c.o
-[ 88%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/merkle.c.o
+[ 86%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/pack_unpack.c.o
+[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/CROSS.c.o
+[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/merkle.c.o
+[ 87%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 88%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/merkle.c.o
+[ 89%] Linking C executable bin/CROSS_KATgen_cat_3_sdp_balance_light
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/seedtree.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/src/hal-x86.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/CROSS.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/src/rng.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/seedtree.c.o
 [ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/src/hal-x86.c.o
-[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/CROSS.c.o
-[ 89%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_balance_light
-[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/csprng_hash.c.o
 [ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_small_light.dir/src/PQCgenKAT_sign.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_balance_light.dir/src/PQCgenKAT_sign.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-small/light/sign.c.o
 [ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/src/rng.c.o
-[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/csprng_hash.c.o
-[ 90%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/src/PQCgenKAT_sign.c.o
-[ 90%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/seedtree.c.o
-[ 91%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 91%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/pack_unpack.c.o
-[ 91%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/pack_unpack.c.o
-[ 91%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/src/hal-x86.c.o
-[ 91%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_small_light
-[ 92%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/sign.c.o
-[ 92%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/src/rng.c.o
-[ 93%] Built target CROSS_KATgen_cat_3_sdpg_balance_light
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/CROSS.c.o
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/csprng_hash.c.o
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/src/PQCgenKAT_sign.c.o
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/src/hal-x86.c.o
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-fast/light/sign.c.o
-[ 93%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_small_light
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/pack_unpack.c.o
-[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/src/rng.c.o
-[ 94%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/src/PQCgenKAT_sign.c.o
-[ 95%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/sign.c.o
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 96%] Built target CROSS_KATgen_cat_5_sdp_small_light
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/src/PQCgenKAT_sign.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdp-5-balance/light/sign.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 89%] Built target CROSS_KATgen_cat_3_sdp_balance_light
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/CROSS.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 89%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/src/hal-x86.c.o
+[ 90%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/src/rng.c.o
+[ 90%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 90%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/src/hal-x86.c.o
+[ 90%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/csprng_hash.c.o
+[ 91%] Building C object CMakeFiles/CROSS_KATgen_cat_3_sdpg_fast_light.dir/src/PQCgenKAT_sign.c.o
+[ 92%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/src/rng.c.o
+[ 93%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 94%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_fast_light
+[ 94%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_balance_light.dir/src/PQCgenKAT_sign.c.o
+[ 94%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_balance_light
+[ 94%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_small_light
+[ 94%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
+[ 94%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/pack_unpack.c.o
+[ 94%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_small_light.dir/src/PQCgenKAT_sign.c.o
+[ 95%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-small/light/sign.c.o
+[ 95%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 95%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
+[ 95%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 95%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/csprng_hash.c.o
+[ 95%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/src/hal-x86.c.o
+[ 95%] Built target CROSS_KATgen_cat_3_sdpg_balance_light
+[ 95%] Built target CROSS_KATgen_cat_3_sdpg_small_light
+[ 95%] Built target CROSS_KATgen_cat_5_sdp_fast_light
+[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/csprng_hash.c.o
+[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/pack_unpack.c.o
+[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/pack_unpack.c.o
+[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/sign.c.o
 [ 96%] Linking C executable bin/CROSS_KATgen_cat_3_sdpg_fast_light
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/src/hal-x86.c.o
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/src/hal-x86.c.o
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/src/rng.c.o
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/keccakf1600.c.o
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/src/rng.c.o
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/common/fips202.c.o
-[ 96%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdp_fast_light.dir/src/PQCgenKAT_sign.c.o
-[ 96%] Built target CROSS_KATgen_cat_3_sdpg_small_light
-[ 96%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_balance_light
-[ 97%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/csprng_hash.c.o
-[ 97%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/src/PQCgenKAT_sign.c.o
-[ 97%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/pack_unpack.c.o
-[ 97%] Built target CROSS_KATgen_cat_3_sdpg_fast_light
-[ 97%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-fast/light/sign.c.o
-[ 97%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
-[ 98%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/src/hal-x86.c.o
-[ 98%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_small_light
-[ 98%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/src/rng.c.o
-[ 98%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/src/PQCgenKAT_sign.c.o
-[ 98%] Built target CROSS_KATgen_cat_5_sdp_balance_light
-[ 99%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_fast_light
+[ 97%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/crypto_sign/crossv2.0-sha3-r-sdpg-5-balance/light/sign.c.o
+[ 97%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/src/rng.c.o
+[ 98%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_small_light.dir/src/PQCgenKAT_sign.c.o
+[ 98%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 98%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/home/harryhart/Source/Projects/pqm4-LightCROSS/mupq/pqclean/common/randombytes.c.o
+[ 99%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/src/hal-x86.c.o
+[ 99%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_balance_light
+[ 99%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/src/rng.c.o
+[ 99%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_fast_light.dir/src/PQCgenKAT_sign.c.o
+[ 99%] Linking C executable bin/CROSS_KATgen_cat_5_sdp_small_light
+[ 99%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/src/hal-x86.c.o
+[ 99%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/src/rng.c.o
+[ 99%] Building C object CMakeFiles/CROSS_KATgen_cat_5_sdpg_balance_light.dir/src/PQCgenKAT_sign.c.o
+[ 99%] Built target CROSS_KATgen_cat_3_sdpg_fast_light
+[ 99%] Built target CROSS_KATgen_cat_5_sdp_small_light
+[ 99%] Built target CROSS_KATgen_cat_5_sdp_balance_light
+[ 99%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_small_light
+[ 99%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_fast_light
+[ 99%] Built target CROSS_KATgen_cat_5_sdpg_small_light
 [100%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_balance_light
-[100%] Built target CROSS_KATgen_cat_5_sdpg_small_light
-[100%] Linking C executable bin/CROSS_KATgen_cat_5_sdpg_fast_light
-[100%] Built target CROSS_KATgen_cat_5_sdp_fast_light
 [100%] Built target CROSS_KATgen_cat_5_sdpg_fast_light
 [100%] Built target CROSS_KATgen_cat_5_sdpg_balance_light
 Generating ref answers
@@ -532,62 +532,58 @@ Generating KATs for build/bin/CROSS_KATgen_cat_5_sdpg_small_ref
 Generating KATs for build/bin/CROSS_KATgen_cat_5_sdp_small_ref
 Generating light answers
 Generating KATs for build/bin/CROSS_KATgen_cat_1_sdp_balance_light
-crypto_sign_open returned <-1>
 Generating KATs for build/bin/CROSS_KATgen_cat_1_sdp_fast_light
 Generating KATs for build/bin/CROSS_KATgen_cat_1_sdpg_balance_light
 Generating KATs for build/bin/CROSS_KATgen_cat_1_sdpg_fast_light
 Generating KATs for build/bin/CROSS_KATgen_cat_1_sdpg_small_light
 Generating KATs for build/bin/CROSS_KATgen_cat_1_sdp_small_light
 Generating KATs for build/bin/CROSS_KATgen_cat_3_sdp_balance_light
-crypto_sign_open returned <-1>
 Generating KATs for build/bin/CROSS_KATgen_cat_3_sdp_fast_light
 Generating KATs for build/bin/CROSS_KATgen_cat_3_sdpg_balance_light
-crypto_sign_open returned <-1>
 Generating KATs for build/bin/CROSS_KATgen_cat_3_sdpg_fast_light
 Generating KATs for build/bin/CROSS_KATgen_cat_3_sdpg_small_light
 Generating KATs for build/bin/CROSS_KATgen_cat_3_sdp_small_light
 Generating KATs for build/bin/CROSS_KATgen_cat_5_sdp_balance_light
-crypto_sign_open returned <-1>
 Generating KATs for build/bin/CROSS_KATgen_cat_5_sdp_fast_light
 Generating KATs for build/bin/CROSS_KATgen_cat_5_sdpg_balance_light
 Generating KATs for build/bin/CROSS_KATgen_cat_5_sdpg_fast_light
 Generating KATs for build/bin/CROSS_KATgen_cat_5_sdpg_small_light
 Generating KATs for build/bin/CROSS_KATgen_cat_5_sdp_small_light
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_106_36454.req
-fa4fa476a12eac04064228ab2fca6322495708309e9787055a07762bd9ac71eadde35bc7028e3e5e1855b413d1bb010182d64403307dde28ee3fd8a9f49b50ea  PQCsignKAT_106_36454.rsp
+2a95149a121e54578269ef2414778ef84b8cd4cff40c7b76786572ee10e23c5da5bdc0eb483ea267e67e561e25c512e350f718383423a4928fc69e51dde6cd02  PQCsignKAT_106_36454.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_106_40100.req
-4a7fa806f44fd3047d4865b68e5b5981614569df18c066d5e4097a27d8eae77d77f6d231e967b1f17268c0261eceaca0ea1428f42d2f2a037a8ed67f742510e1  PQCsignKAT_106_40100.rsp
+954678933ca40596abce6ce6acb427f5f6208c697f5a24bc5816eed8c108b335b45c64f6e65390717ff1e3ed2e77a691af57cec53a635a7108d3194c4794b6a4  PQCsignKAT_106_40100.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_106_48102.req
-992ae2c607616322cd728cb4accad5d56e19829275854455a9a4f2cce8dc00387c7e8c9f16ddefc38a0459bcfea3a96e8b5865a2180d71e023a9a31db7134f38  PQCsignKAT_106_48102.rsp
+4c6937b50b58c984a78ed009aaa880bd05ffcd73b6938c1e0ca7d8d290809dc1ece3ba6f865ab7e5961a8270a9a5f4f37c7d492475332d1c7d6d3adbbbc34e07  PQCsignKAT_106_48102.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_115_28391.req
-b5e59908eddcd82ee95074ae8ac294a906b101a126bcf8f692b014d704b80fc41c2effecb34e09e47480359d30ba08493312b3327dc42d0e8ee35a483a208d5e  PQCsignKAT_115_28391.rsp
+dc3c394b011abe7365f5c24f0356a9fe5b57af724089cb15fa11bda1f8869b88709d0f79ae8c25e5bf10bd3d3bd71276e1b1244ce9baddb7ed6dc4e5536c0ac1  PQCsignKAT_115_28391.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_115_29853.req
-0f3485821dd2f20858a6575c008230a02e2278f86c4f8f4db47e3a00d255ffc3c91e66ea87e4202861031f4fd5a7884a0fbacdcd25e9fee9a1d7d5f3067bb4f0  PQCsignKAT_115_29853.rsp
+a4d0825ccd197f948f282920130df8376780e8a93847da5852bd0ada740ccd3de82506c987d983e6e67f0b951f7fe4e8b966e2b9cf2cf4e064ec99d70c72494b  PQCsignKAT_115_29853.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_115_41406.req
-34409d43367cc3d3fcdd23e17b8fc34064364482a134fd74d1a73b2f727c5a0ccf88e43570a9f9f75cce62f4704e5c587acacc879eea4e55f5befdae6fb98ae3  PQCsignKAT_115_41406.rsp
+777368f762b7e120e2fec39076f03874dffd21f2af916f58b0020e7a078d5fba737553168bd549e44e73c0fd43a2f465530fdf4a384bfaf23da0cb4d831e3a81  PQCsignKAT_115_41406.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_153_50818.req
-54da98e3c0bf8a98989958dcfa0aa0e5f64cb13dc829f6b40b9f20b85ef1eee39e191c82b36d239e944e3888760b75bc9780651b54007a1da99d017635fc1f0a  PQCsignKAT_153_50818.rsp
+b22279275934bdc1dab530fa9c93469fea1f94e02a21a50344e9cdc1199dc7011866cc09d350d498ff5c4f2bae1a20958f999de3ebfbc1ebb852dc38bb4013a1  PQCsignKAT_153_50818.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_153_53527.req
-fdb83af8a2da3a9d26db5ee86144e656a8d85ce73cdd19acd2ddaa2428005a8ce118a2dc55c28a8d18cbbf4245961bec2d291227ef453ccdd73fedd0dff371bb  PQCsignKAT_153_53527.rsp
+c3614935870ca25c5be51ec502ac21f3417dea681be2d2f50e02c656a6849832665900002bd0fea95c1490310d52073ce67a545e24d14012236a1cc26736c402  PQCsignKAT_153_53527.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_153_74590.req
-919dbc3bad529ad30d5397b1589e4c752c00bbb0cf9f9aa9d7de1c3d0e7a694844e0f40ccd1076b0a91a70c67f095bb64c9522b40b265d8c21dd1bb20094c161  PQCsignKAT_153_74590.rsp
+7b1ece541f38bdbcd7777c9c505e3786423fdfc3361b34f3c2a924ecc39e6233e2b334cd9682c9d8e2dcac1ab6d3756117148459e9d1fbec8acf6c83df98b7f6  PQCsignKAT_153_74590.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_54_11980.req
-39731038ba15312ddeb913810754df3f7f0fe92215403666029d1094d8ceb1ac5b903c60564207a4fbea34ee54621e504acfb69954b8dc8e4f04d58417736cf6  PQCsignKAT_54_11980.rsp
+ca21983d171dd0f3c7a496704545bbca2700b2ee341b86873b4f233ea184551be55a55047e75ad11b7449fce187252d9653f6c9cfbf3cbb360199cc3953e0115  PQCsignKAT_54_11980.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_54_8960.req
-7e5491cb54e0f74cba9acaf636b463047944185f85acb4885e7e2c52843b2ebee45a36211ca440a6d30aab41309855338bc565e466eb9d1fbd8fdbdb6c831db8  PQCsignKAT_54_8960.rsp
+c56fcb2a340f0f4a6084f1d858366d238cfed530abde46411a36929acb634119e7b13b2f67415fd40564caf533ddf329b135df3f02b8be0346287f9dbe6b9ef3  PQCsignKAT_54_8960.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_54_9120.req
-5ef96243ddae054a48d5288f5322dffee1207bfdac7a716bec5e82afcb198a0e99a719a80eddb010278d5deb1107a3cab749f549e98fab4f51e8b1dc1caa616d  PQCsignKAT_54_9120.rsp
+ff12a40973fb7251ef9cbb709f1359aeb61842f78e8b0999fa41f3a127c7d7c3cdbb65513cb5a67957a477e2f380ebf38960119ca20c448628b89cd8cc73e90a  PQCsignKAT_54_9120.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_77_12432.req
-d839c60cf99a7a8f6c3faa94353323f6ab51eb8daa0f895174a1107ae4ec011754ab0fb8a466035b2ffdcf34225144df83b8d3e6635d098d9f883e3b7058ea70  PQCsignKAT_77_12432.rsp
+2ca4d1880eb368bc88147c3b1cfe64c09772129dac6c441d1bf01d52c2fe467be0fede0b16f3085c9dc30c71c2222c144faedf4e70d01208fa02d54cd7820465  PQCsignKAT_77_12432.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_77_13152.req
-ec96dad70331d7a0fa68d7b6e4b9f06db0a77c796d121d9dc38a52eb84500fdf97a7de54102b737ea1b47238c1186d3831ba9760a86aa5920843c9bba829ea5e  PQCsignKAT_77_13152.rsp
+6422e8a82eafc49416305fc0333e0440f46abb1822aab437ee8afcc83d2b2ef11eef4c308361a32b29a2906a8444b0efb1c501b03e0050d080036ff8d5c065f2  PQCsignKAT_77_13152.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_77_18432.req
-8271b76d870b9aa497e07e3e40aa4b81e9ee9c4a8a71057f0f1678d3bad5a8cbee4b5b707ca2ab19ea575169650334ffcec59c01247a1e496149987de9e77d83  PQCsignKAT_77_18432.rsp
+75e8d995bb0f2418c134f8a6e25ab587b76c058c500b945ca29709a2d188eeca14022810a6633649bebc9d402352036dbbb4d88e6ee62e203900c3191269ae17  PQCsignKAT_77_18432.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_83_20452.req
-69e9ed33df4282f6bc3c7a8d4bbcb2897e1480f1572abf08fcc001f3f8f3e8963f378c6dede170b27a8693c5a153d58ddc3b4fa2ce3f95b059cba137c64a9efc  PQCsignKAT_83_20452.rsp
+92f4eda956d6bf013b130f9f0c0176bf0e78718bfb859b08a8772bb257a236ca0e9976f17b15c6b6231a4c87394e87c9304b6ba2559f8ae493ded7cee01128f0  PQCsignKAT_83_20452.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_83_22464.req
-b1e373188d4c25591e447c45dca2e07b2e54c6fff185ee290e7a7a17dccf1d6f251e187fb3a553b8b87cc689ffc41f2b718e239540ef6b5fc7311176bf68e514  PQCsignKAT_83_22464.rsp
+d1dc3cabefb8e8b007f42dbe273161e052bc8c2a6c69ea4da3c4109160aaf1f34c2dc468477cfb1f514af7af847c636f5f104e8e05024b5f11cc6c654e3e7001  PQCsignKAT_83_22464.rsp
 a87eccf3d19fd50883d3a2c21435ac031e998c7d20f9ba81da57a70b9709f99b77fef37cae8856740002e15c46d2873348a9b37ad07a59659076b5e8a46a8458  PQCsignKAT_83_26772.req
-76cc857109a98fd9c1e960a63dee12e4daadcb7595d4e4ec86dbd772768a4d1769fd5ef49f722b4ee57b679ce8fb740ffd0b99958771513c5a148427cc52d274  PQCsignKAT_83_26772.rsp
+e4a7241bf95a0e8834b8517e9e1e5ebba333f4bb48f2d18295ab914778e6eebd201b2d4a8f35cc58c14f2bdcbfc588a61408f65041f33ea1f8cac52a2f7abe20  PQCsignKAT_83_26772.rsp
 >> KAT generated
-42325cd340ef5b981175812464cb2aad71db2fcc4c9d4a6c12d0c1364a43e1a9  ./test_sha_512_sum_KATs
+26d29167b5330873119ed82b7d6279311fbb5281dc56d68a8bb0b3c3d32a6645  ./test_sha_512_sum_KATs

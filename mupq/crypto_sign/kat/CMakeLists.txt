@@ -99,11 +99,11 @@ foreach(impl ref light)
               # settings for benchmarking binary
               set(TARGET_BINARY_NAME CROSS_KATgen_cat_${category}_${RSDP_VARIANT}_${optimiz_target}_${impl})
               add_executable(${TARGET_BINARY_NAME} ${HEADERS} ${SOURCES}
-                                  ./lib/hal-x86.c ./lib/rng.c ./lib/PQCgenKAT_sign.c)
+                                  ./src/hal-x86.c ./src/rng.c ./src/PQCgenKAT_sign.c)
               target_include_directories(${TARGET_BINARY_NAME} PRIVATE
                                           ${BASE_DIR}
                                           ${COMMON_DIR}
-                                          ./include)
+                                          ./src)
               target_link_libraries(${TARGET_BINARY_NAME} m ssl crypto ${SANITIZE} ${KECCAK_EXTERNAL_LIB})
               set_target_properties(${TARGET_BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ./bin)
               set_property(TARGET ${TARGET_BINARY_NAME} APPEND PROPERTY
