@@ -88,7 +88,7 @@ foreach(impl ref light)
                   ${COMMON_DIR}/keccakf1600.c
                   ${COMMON_DIR}/fips202.c
                   ${BASE_DIR}/sign.c
-                  ${PQCLEAN_COMMON_DIR}/randombytes.c
+                  #${PQCLEAN_COMMON_DIR}/randombytes.c
               )
 
               if(optimiz_target STREQUAL SPEED)
