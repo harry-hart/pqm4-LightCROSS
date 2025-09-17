@@ -19,7 +19,7 @@ foreach(impl ref light)
           set(PARAM_TARGETS small balance fast)
           foreach(optimiz_target ${PARAM_TARGETS})
               set(COMMON_DIR ../../common)
-              set(PQCLEAN_COMMON_DIR ../../pqclean/common)
+              #set(PQCLEAN_COMMON_DIR ../../pqclean/common)
               set(BASE_DIR ../crossv2.0-sha3-r-${RSDP_VARIANT}-${category}-${optimiz_target}/${impl})
 #if(REFERENCE EQUAL 1)
 #message("Compiling portable reference code")
@@ -65,6 +65,7 @@ foreach(impl ref light)
                   ${BASE_DIR}/parameters.h
                   ${BASE_DIR}/seedtree.h
                   ${BASE_DIR}/merkle_tree.h
+                  ./src/randombytes.h
               )
 
               if(STANDALONE_KECCAK)
@@ -99,11 +100,11 @@ foreach(impl ref light)
               # settings for benchmarking binary
               set(TARGET_BINARY_NAME CROSS_KATgen_cat_${category}_${RSDP_VARIANT}_${optimiz_target}_${impl})
               add_executable(${TARGET_BINARY_NAME} ${HEADERS} ${SOURCES}
-                                  ./src/hal-x86.c ./src/rng.c ./src/PQCgenKAT_sign.c)
+                                  ./src/hal-x86.c ./src/randombytes.c ./src/PQCgenKAT_sign.c)
               target_include_directories(${TARGET_BINARY_NAME} PRIVATE
+                                          ./src
                                           ${BASE_DIR}
-                                          ${COMMON_DIR}
-                                          ./src)
+                                          ${COMMON_DIR})
               target_link_libraries(${TARGET_BINARY_NAME} m ssl crypto ${SANITIZE} ${KECCAK_EXTERNAL_LIB})
               set_target_properties(${TARGET_BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ./bin)
               set_property(TARGET ${TARGET_BINARY_NAME} APPEND PROPERTY
