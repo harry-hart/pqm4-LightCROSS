@@ -1,3 +1,5 @@
 light
 ref
 *.txt
+build
+*.log

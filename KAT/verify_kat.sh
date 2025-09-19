@@ -19,17 +19,12 @@ set -e
 generate_kat() {
     local kat_file=./test_sha_512_sum_KATs
     # Build CROSS
-    cd ../mupq/crypto_sign/kat
-    #rm -rf build 
-    #mkdir build
-    #cd build 
-    #echo "*" > .gitignore
-    #cmake ../ "$@"
+    cd kat
     ./build.sh
-    rm -rf ../../KAT/PQC*
+    rm -rf ../PQC*
     # Generate KAT
     ./gen_all_kat.sh
-    cd ../../../KAT/$@
+    cd ../$@
     sha512sum * > $kat_file
     cat $kat_file
     echo ">> KAT generated"
@@ -38,7 +33,6 @@ generate_kat() {
     rm $kat_file
     cd ..
     # Clean up
-    #rm -rf KAT/PQC*
 }
 ################################################################################
 
