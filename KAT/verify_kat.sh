@@ -38,15 +38,15 @@ generate_kat() {
 
 # Generate KAT for Reference Implementation
 echo ">> Generating KAT for Reference Implementation"
-generate_kat ref > "./reference_kat.txt"
+generate_kat ref > "./reference_kat.log"
 
 # Generate KAT for Optimized Implementation
 echo ">> Generating KAT for LightCROSS Implementation"
-generate_kat light > "./optimized_kat.txt"
+generate_kat light > "./optimized_kat.log"
 
 # Get the hashes
-kat_ref=$(tail -n 1 ./reference_kat.txt)
-kat_opt=$(tail -n 1 ./optimized_kat.txt)
+kat_ref=$(tail -n 1 ./reference_kat.log)
+kat_opt=$(tail -n 1 ./optimized_kat.log)
 
 # Check that the hashes match
 echo ">> Comparing the hashes"
