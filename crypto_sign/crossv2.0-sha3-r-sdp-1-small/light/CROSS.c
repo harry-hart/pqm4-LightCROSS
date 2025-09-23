@@ -1990,15 +1990,15 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
           /* CSPRNG is fed with concat(seed,salt,round index) represented
            * as a 2 bytes little endian unsigned integer */
-          const int csprng_input_length = SALT_LENGTH_BYTES + SEED_LENGTH_BYTES;
-          uint8_t csprng_input[csprng_input_length];
+          uint8_t csprng_input[SALT_LENGTH_BYTES + SEED_LENGTH_BYTES];
           memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt,
                  SALT_LENGTH_BYTES);
           memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
                  SEED_LENGTH_BYTES);
 
           /* expand seed[i] into seed_e and seed_u */
-          csprng_initialize(&csprng_state, csprng_input, csprng_input_length,
+          csprng_initialize(&csprng_state, csprng_input,
+                            SALT_LENGTH_BYTES + SEED_LENGTH_BYTES,
                             domain_sep_csprng);
 #if defined(RSDP)
           /* expand e_bar_prime */

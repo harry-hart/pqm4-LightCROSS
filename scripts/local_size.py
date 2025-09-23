@@ -6,13 +6,14 @@ import pathlib
 def get_locals(size_dict: dict):
     frame = gdb.selected_frame()
     fname = frame.name()
-    func_dict = size_dict.get(frame.name(), [])
-    if len(func_dict) > 0:
+    func_dict = size_dict.get(fname, {})
+    names = set()
+    if len(func_dict.items()) > 0:
         return
+    step = 0
     while frame.is_valid():
-        frame_dict = {} 
-        block = frame.block()
-        names = set()
+        block = gdb.selected_frame().block()
+        lnames = set()
         while block:
             if(block.is_global):
                 print()
@@ -20,14 +21,21 @@ def get_locals(size_dict: dict):
             for symbol in block:
                 if (symbol.is_argument or symbol.is_variable):
                     name = symbol.name
-                    if not name in names:
+                    if name not in lnames:
                         # Get size
-                        size = gdb.execute(f"p sizeof({name})", to_string=True).split()[-1]
+                        size = int(gdb.execute(f"p sizeof({name})", to_string=True).split()[-1])
                         print('{} size {}'.format(name, size))
-                        names.add(name)
-                        frame_dict[name] = size
+                        lnames.add(name)
+                        if name not in names:
+                            func_dict[name] = [0 for _ in range(step)]
+                        func_dict[name].append(size)
             block = block.superblock
-        func_dict.append(frame_dict)
+        # Old variables not mentioned
+        for name in names.difference(lnames):
+            func_dict[name].append(0)
+        #func_dict.append(frame_dict)
+        names = names.union(lnames)
+        step += 1
         gdb.execute("next", to_string=True)
     size_dict[fname] = func_dict
 
