@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 
 set(CC gcc)
 # set(CC clang)
-set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -pedantic -Wuninitialized -march=native -O0 -g3")
+set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -pedantic -Wuninitialized -march=native -O0 -g3 -fstack-usage")
 set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${SANITIZE} ${TEST_FLAGS}")
 message("Compilation flags:" ${CMAKE_C_FLAGS})
 
