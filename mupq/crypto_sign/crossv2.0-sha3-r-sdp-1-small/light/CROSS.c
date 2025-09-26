@@ -1330,7 +1330,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #endif
 
+#if defined(OPT_U_PRIME_EPH)
+  FP_ELEM u_prime_i[N];
+#else
   FP_ELEM u_prime[T][N];
+#endif
   FP_ELEM s_prime[N - K];
 
 #if defined(RSDP)
@@ -1463,12 +1467,21 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
     convert_restr_vec_to_fp(v, v_bar[i]);
     fz_dz_norm_n(v_bar[i]);
-/* expand u_prime */
 #endif
-        csprng_fp_vec(u_prime[i], &csprng_state);
+
+#if defined(OPT_U_PRIME_EPH)
+        /* expand u_prime */
+        csprng_fp_vec(u_prime_i, &csprng_state);
 
         FP_ELEM u[N];
-        fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
+        fp_vec_by_fp_vec_pointwise(u, v, u_prime_i);
+#else
+    /* expand u_prime */
+    csprng_fp_vec(u_prime[i], &csprng_state);
+
+    FP_ELEM u[N];
+    fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
+#endif
         fp_vec_by_fp_matrix(s_prime, u, V_tr);
         fp_dz_norm_synd(s_prime);
 
@@ -1599,31 +1612,102 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
     uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE];
 
+#if defined(OPT_U_PRIME_EPH)
+    uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+    memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
+           SEED_LENGTH_BYTES);
+    memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
+
+    uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+
+    /* expand seed[i] into seed_e and seed_u */
+    csprng_initialize(&csprng_state, csprng_input,
+                      SEED_LENGTH_BYTES + SALT_LENGTH_BYTES, domain_sep_csprng);
+    /* expand e_bar_prime */
+#endif
+
 #if defined(OPT_Y_U_OVERLAP)
 // Recalculate e_bar_prime from v_bar
-#if defined(OPT_E_BAR_PRIME)
+#if defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)
     fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
-    // Calculate y
+#elif defined(OPT_E_BAR_PRIME) && defined(OPT_U_PRIME_EPH)
+#if defined(RSDP)
+    csprng_fz_vec(e_bar_prime_i, &csprng_state);
+#elif defined(RSDPG)
+    csprng_fz_inf_w(e_bar_prime_i, &csprng_state);
+    fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
+    fz_dz_norm_n(e_bar_prime_i);
+#endif
+#elif defined(OPT_U_PRIME_EPH)
+#if CATEGORY_1
+    uint32_t r = SHAKE128_RATE;
+#else
+    uint32_t r = SHAKE256_RATE;
+#endif
+#if defined(RSDP)
+    size_t outlen = ROUND_UP(BITS_N_FZ_CT_RNG, 8) / 8;
+#else
+    size_t outlen = ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8;
+#endif
+    while (outlen > 0) {
+      KeccakF1600_StatePermute(csprng_state.ctx);
+      if (outlen < r) {
+        outlen = 0;
+        csprng_state.ctx[25] = r - outlen;
+      } else {
+        outlen -= r;
+      }
+    }
+#endif
+
+#if defined(OPT_E_BAR_PRIME)
+// Calculate y
+#if defined(OPT_U_PRIME_EPH)
+    fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime_i, chall_1[i], u_prime_i);
+#else
     fp_vec_by_restr_vec_scaled(u_prime[i], e_bar_prime_i, chall_1[i],
                                u_prime[i]);
+#endif
 #else
     // Calculate y
-    fp_vec_by_restr_vec_scaled(u_prime[i], e_bar_prime[i], chall_1[i],
-                               u_prime[i]);
+#if defined(OPT_U_PRIME_EPH)
+    fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime[i], chall_1[i],
+                               u_prime_i);
+#else
+    fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime[i], chall_1[i],
+                               u_prime_i);
 #endif
-    fp_dz_norm(u_prime[i]);
+#endif
 
+#if defined(OPT_U_PRIME_EPH)
+    fp_dz_norm(u_prime_i);
+    // Pack it
+    pack_fp_vec(packed_y_i, u_prime_i);
+#else
+    fp_dz_norm(u_prime[i]);
     // Pack it
     pack_fp_vec(packed_y_i, u_prime[i]);
+#endif
+
 #else
 // Recalculate e_bar_prime from v_bar
 #if defined(OPT_E_BAR_PRIME)
     fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
+#if defined(OPT_U_PRIME_EPH)
     // Calculate y
-    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
+    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime_i);
 #else
     // Calculate y
-    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
+    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
+#endif
+#else
+#if defined(OPT_U_PRIME_EPH)
+    // Calculate y
+    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime_i);
+#else
+    // Calculate y
+    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime_i]);
+#endif
 #endif
     fp_dz_norm(y_i);
 
