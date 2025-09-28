@@ -1253,6 +1253,57 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 }
 #endif
 
+/************** Sign Utils *****************/
+
+// Note in RSDPG e_bar_prime_i is e_G_bar_prime_i
+void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
+                         unsigned char *round_seed, uint8_t *salt, uint16_t i,
+                         CSPRNG_STATE_T *csprng_state) {
+  /* CSPRNG is fed with concat(seed,salt,round index) represented
+   * as a 2 bytes little endian unsigned integer */
+  uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+  memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i, SEED_LENGTH_BYTES);
+  memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
+
+  uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+
+  /* expand seed[i] into seed_e and seed_u */
+  csprng_initialize(csprng_state, csprng_input,
+                    SEED_LENGTH_BYTES + SALT_LENGTH_BYTES, domain_sep_csprng);
+
+#if defined(OPT_E_BAR_PRIME)
+  // Regenerate e_bar_prime
+#if defined(RSDP)
+  csprng_fz_vec(e_bar_prime_i, csprng_state);
+#elif defined(RSDPG)
+  csprng_fz_inf_w(e_bar_prime_i, csprng_state);
+#endif
+// skip e_bar_prime generation
+#else
+#if CATEGORY_1
+  uint32_t r = SHAKE128_RATE;
+#else
+  uint32_t r = SHAKE256_RATE;
+#endif
+#if defined(RSDP)
+  size_t outlen = ROUND_UP(BITS_N_FZ_CT_RNG, 8) / 8;
+#else
+  size_t outlen = ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8;
+#endif
+  while (outlen > 0) {
+    KeccakF1600_StatePermute(csprng_state.ctx);
+    if (outlen < r) {
+      outlen = 0;
+      csprng_state.ctx[25] = r - outlen;
+    } else {
+      outlen -= r;
+    }
+  }
+#endif
+
+  csprng_fp_vec(u_prime_i, csprng_state);
+}
+
 /*****************************************************************************/
 
 /* sign cannot fail */
@@ -1600,6 +1651,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_PROFILE)
   t0 = hal_get_time();
 #endif
+
 /* Computation of the first round of responses */
 #if defined(OPT_HASH_Y)
 
@@ -1612,107 +1664,63 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
     uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE];
 
-#if defined(OPT_U_PRIME_EPH)
-    uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
-    memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
-           SEED_LENGTH_BYTES);
-    memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
-
-    uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
-
-    /* expand seed[i] into seed_e and seed_u */
-    csprng_initialize(&csprng_state, csprng_input,
-                      SEED_LENGTH_BYTES + SALT_LENGTH_BYTES, domain_sep_csprng);
-    /* expand e_bar_prime */
+#if !defined(OPT_U_PRIME_EPH)
+    FP_ELEM u_prime_i = u_prime[i];
 #endif
 
-#if defined(OPT_Y_U_OVERLAP)
-// Recalculate e_bar_prime from v_bar
-#if defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)
-    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
-#elif defined(OPT_E_BAR_PRIME) && defined(OPT_U_PRIME_EPH)
+#if !defined(OPT_E_BAR_PRIME)
+    FZ_ELEM e_bar_prime_i = e_bar_prime[i];
+#endif
+
+#if defined(OPT_U_PRIME_EPH)
+// Need to regenerate u_prime
 #if defined(RSDP)
-    csprng_fz_vec(e_bar_prime_i, &csprng_state);
+    e_bar_prime_u_prime(e_bar_prime_i, u_prime_i, round_seeds[i], sig->salt, i,
+                        &csprng_state);
 #elif defined(RSDPG)
-    csprng_fz_inf_w(e_bar_prime_i, &csprng_state);
+    e_bar_prime_u_prime(e_G_bar_prime, u_prime_i, round_seeds[i], sig->salt, i,
+                        &csprng_state);
+#if defined(OPT_E_BAR_PRIME)
     fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
     fz_dz_norm_n(e_bar_prime_i);
 #endif
-#elif defined(OPT_U_PRIME_EPH)
-#if CATEGORY_1
-    uint32_t r = SHAKE128_RATE;
-#else
-    uint32_t r = SHAKE256_RATE;
 #endif
-#if defined(RSDP)
-    size_t outlen = ROUND_UP(BITS_N_FZ_CT_RNG, 8) / 8;
-#else
-    size_t outlen = ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8;
-#endif
-    while (outlen > 0) {
-      KeccakF1600_StatePermute(csprng_state.ctx);
-      if (outlen < r) {
-        outlen = 0;
-        csprng_state.ctx[25] = r - outlen;
-      } else {
-        outlen -= r;
-      }
-    }
+#elif defined(OPT_E_BAR_PRIME)
+    // Recalculate e_bar_prime from v_bar
+    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
 #endif
 
-#if defined(OPT_E_BAR_PRIME)
-// Calculate y
-#if defined(OPT_U_PRIME_EPH)
-    fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime_i, chall_1[i], u_prime_i);
-#else
-    fp_vec_by_restr_vec_scaled(u_prime[i], e_bar_prime_i, chall_1[i],
-                               u_prime[i]);
-#endif
-#else
     // Calculate y
-#if defined(OPT_U_PRIME_EPH)
-    fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime[i], chall_1[i],
-                               u_prime_i);
-#else
-    fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime[i], chall_1[i],
-                               u_prime_i);
-#endif
-#endif
-
-#if defined(OPT_U_PRIME_EPH)
+    fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime_i, chall_1[i], u_prime_i);
     fp_dz_norm(u_prime_i);
+
     // Pack it
     pack_fp_vec(packed_y_i, u_prime_i);
-#else
-    fp_dz_norm(u_prime[i]);
-    // Pack it
-    pack_fp_vec(packed_y_i, u_prime[i]);
-#endif
 
 #else
 // Recalculate e_bar_prime from v_bar
 #if defined(OPT_E_BAR_PRIME)
-    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
+  fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
 #if defined(OPT_U_PRIME_EPH)
-    // Calculate y
-    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime_i);
+  // Calculate y
+  fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime_i);
 #else
-    // Calculate y
-    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
+  // Calculate y
+  fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
 #endif
 #else
 #if defined(OPT_U_PRIME_EPH)
-    // Calculate y
-    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime_i);
+  // Calculate y
+  fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime_i);
 #else
-    // Calculate y
-    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime_i]);
+  // Calculate y
+  fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
 #endif
 #endif
-    fp_dz_norm(y_i);
+  fp_dz_norm(y_i);
 
-    // Pack it
-    pack_fp_vec(packed_y_i, y_i);
+  // Pack it
+  pack_fp_vec(packed_y_i, y_i);
 #endif
 
     // Add it to hash
@@ -1770,7 +1778,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   //  chall_2[T - 2] = 0;
   // chall_2[T - 3] = 0;
 #else
-  expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
+expand_digest_to_fixed_weight(chall_2, sig->digest_chall_2);
 #endif
 
 /* Computation of the second round of responses */
@@ -1780,11 +1788,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
 #if !defined(OPT_MERKLE_GGM_COMBO)
 #if defined(OPT_OTF_MERKLE)
-  uint16_t nodes_published[W] = {0};
-  uint16_t nodes_to_reveal =
-      tree_proof(sig->proof, cmt_0[0], chall_2, nodes_published);
+uint16_t nodes_published[W] = {0};
+uint16_t nodes_to_reveal =
+    tree_proof(sig->proof, cmt_0[0], chall_2, nodes_published);
 #else
-  tree_proof(sig->proof, merkle_tree_0, chall_2);
+tree_proof(sig->proof, merkle_tree_0, chall_2);
 #endif
 #endif
 #endif
@@ -1845,9 +1853,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #else
 #if defined(NO_TREES)
-  int published_nodes = seed_path(sig->path, round_seeds, chall_2);
+int published_nodes = seed_path(sig->path, round_seeds, chall_2);
 #else
-  int published_nodes = seed_path(sig->path, seed_tree, chall_2);
+int published_nodes = seed_path(sig->path, seed_tree, chall_2);
 #endif
 #endif
 
@@ -1856,7 +1864,29 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
       assert(published_rsps < T - W);
+
 #if defined(OPT_HASH_Y)
+      // Need to regenerate y
+#if defined(OPT_U_PRIME_EPH)
+      // Need to regenerate u_prime
+      // Set up csprng_input
+      uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+      memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i,
+             SEED_LENGTH_BYTES);
+      memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
+
+      uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+
+      /* expand seed[i] into seed_e and seed_u */
+      csprng_initialize(&csprng_state, csprng_input,
+                        SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
+                        domain_sep_csprng);
+
+      // Generate u_prime
+#else
+      FP_ELEM *u_prime_i = u_prime[i];
+#endif
+
 #if !defined(OPT_Y_U_OVERLAP)
       // Have to recalculate y
       FP_ELEM y_i[N];
@@ -1864,15 +1894,15 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_E_BAR_PRIME)
       fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
       // Calculate y
-      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
+      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime_i);
 #else
       // Calculate y
-      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
+      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime_i);
 #endif
       fp_dz_norm(y_i);
       pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
 #else
-      pack_fp_vec(sig->resp_0[published_rsps].y, u_prime[i]);
+      pack_fp_vec(sig->resp_0[published_rsps].y, u_prime_i);
 #endif
 #else
       pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
