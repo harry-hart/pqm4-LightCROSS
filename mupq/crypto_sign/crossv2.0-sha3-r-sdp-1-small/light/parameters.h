@@ -63,7 +63,7 @@
 #define OPT_KEYGEN_BLOCKS
 //  Experimental - Flag not recommended
 //  #define OPT_MERKLE_GGM_COMBO
-//  Extreme Memory Optimisations - May cause speed loss
+//  Extreme Memory Optimisations - May cause extreme speed loss
 #define OPT_U_PRIME_EPH
 /*
  * Debugging Flags

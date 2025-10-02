@@ -1372,6 +1372,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM e_bar_prime_i[N] = {0};
   FZ_ELEM v_bar[T][N];
+  FZ_ELEM e_bar_prime[T][N] = {0};
 #else
   FZ_ELEM e_bar_prime[T][N];
 #if defined(OPT_V_BAR)
@@ -1382,9 +1383,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(OPT_U_PRIME_EPH)
-  FP_ELEM u_prime_i[N];
+  FP_ELEM u_prime_i[N] = {0};
   // debugging
-  FP_ELEM u_prime[T][N];
+  FP_ELEM u_prime[T][N] = {0};
 #else
   FP_ELEM u_prime[T][N];
 #endif
@@ -1450,6 +1451,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
   CSPRNG_STATE_T csprng_state;
+  CSPRNG_STATE_T csprng_state_debug;
 
 #if defined(OPT_PROFILE)
   t0 = hal_get_time();
@@ -1482,12 +1484,20 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         csprng_initialize(&csprng_state, csprng_input,
                           SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
                           domain_sep_csprng);
+        csprng_initialize(&csprng_state_debug, csprng_input,
+                          SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
+                          domain_sep_csprng);
         /* expand e_bar_prime */
 
 #if defined(OPT_E_BAR_PRIME)
 #if defined(RSDP)
         csprng_fz_vec(e_bar_prime_i, &csprng_state);
 #elif defined(RSDPG)
+        // DEBUG
+        csprng_fz_inf_w(e_G_bar_prime, &csprng_state_debug);
+        fz_inf_w_by_fz_matrix(e_bar_prime[i], e_G_bar_prime, W_mat);
+        fz_dz_norm_n(e_bar_prime[i]);
+
         csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
         fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
         fz_dz_norm_m(v_G_bar[i]);
@@ -1529,12 +1539,17 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         FP_ELEM u[N];
         fp_vec_by_fp_vec_pointwise(u, v, u_prime_i);
         // debugging
-        // #else
         /* expand u_prime */
-        csprng_fp_vec(u_prime[i], &csprng_state);
+        csprng_fp_vec(u_prime[i], &csprng_state_debug);
 
-        // FP_ELEM u[N];
-        fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
+        FP_ELEM u_debug[N];
+        fp_vec_by_fp_vec_pointwise(u_debug, v, u_prime[i]);
+#else
+    /* expand u_prime */
+    csprng_fp_vec(u_prime[i], &csprng_state);
+
+    FP_ELEM u[N];
+    fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
 #endif
         fp_vec_by_fp_matrix(s_prime, u, V_tr);
         fp_dz_norm_synd(s_prime);
@@ -1668,11 +1683,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE];
 
 #if !defined(OPT_U_PRIME_EPH)
-    FP_ELEM u_prime_i = u_prime[i];
+    FP_ELEM *u_prime_i = &u_prime[i][0];
 #endif
 
 #if !defined(OPT_E_BAR_PRIME)
-    FZ_ELEM e_bar_prime_i = e_bar_prime[i];
+    FZ_ELEM *e_bar_prime_i = &e_bar_prime[i][0];
 #endif
 
 #if defined(OPT_U_PRIME_EPH)
@@ -1688,6 +1703,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     fz_dz_norm_n(e_bar_prime_i);
 #endif
 #endif
+    // debugging
+    if (memcmp(u_prime_i, &u_prime[i][0], N * sizeof(FP_ELEM)) != 0) {
+      hal_send_str("u_prime wrong #1");
+    }
+    if (memcmp(e_bar_prime_i, &e_bar_prime[i][0], N * sizeof(FZ_ELEM)) != 0) {
+      hal_send_str("e_bar_prime wrong #1");
+    }
 #elif defined(OPT_E_BAR_PRIME)
     // Recalculate e_bar_prime from v_bar
     fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
@@ -1853,11 +1875,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_HASH_Y)
 #if !defined(OPT_U_PRIME_EPH)
-      FP_ELEM u_prime_i = u_prime[i];
+      FP_ELEM *u_prime_i = &u_prime[i][0];
 #endif
 
 #if !defined(OPT_E_BAR_PRIME)
-      FZ_ELEM e_bar_prime_i = e_bar_prime[i];
+      FZ_ELEM *e_bar_prime_i = &e_bar_prime[i][0];
 #endif
 
 #if defined(OPT_U_PRIME_EPH)
@@ -1873,6 +1895,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       fz_dz_norm_n(e_bar_prime_i);
 #endif
 #endif
+      // debugging
+      if (memcmp(u_prime_i, &u_prime[i][0], N * sizeof(FP_ELEM)) != 0) {
+        hal_send_str("u_prime wrong #2");
+      }
+      if (memcmp(e_bar_prime_i, &e_bar_prime[i][0], N * sizeof(FZ_ELEM)) != 0) {
+        hal_send_str("e_bar_prime wrong #2");
+      }
 #elif defined(OPT_E_BAR_PRIME)
       // Recalculate e_bar_prime from v_bar
       fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
