@@ -1144,7 +1144,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_DEBUG)
             if (published_nodes > TREE_NODES_TO_STORE) {
               hal_send_str("Too many nodes\n");
-              return -1;
+              return;
             }
 #endif
             csprng_randombytes(sig->path + published_nodes * SEED_LENGTH_BYTES,
@@ -1372,7 +1372,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM e_bar_prime_i[N] = {0};
   FZ_ELEM v_bar[T][N];
-  FZ_ELEM e_bar_prime[T][N] = {0};
 #else
   FZ_ELEM e_bar_prime[T][N];
 #if defined(OPT_V_BAR)
@@ -1384,8 +1383,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_U_PRIME_EPH)
   FP_ELEM u_prime_i[N] = {0};
-  // debugging
-  FP_ELEM u_prime[T][N] = {0};
 #else
   FP_ELEM u_prime[T][N];
 #endif
@@ -1451,7 +1448,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
   CSPRNG_STATE_T csprng_state;
-  CSPRNG_STATE_T csprng_state_debug;
 
 #if defined(OPT_PROFILE)
   t0 = hal_get_time();
@@ -1484,20 +1480,12 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         csprng_initialize(&csprng_state, csprng_input,
                           SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
                           domain_sep_csprng);
-        csprng_initialize(&csprng_state_debug, csprng_input,
-                          SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
-                          domain_sep_csprng);
         /* expand e_bar_prime */
 
 #if defined(OPT_E_BAR_PRIME)
 #if defined(RSDP)
         csprng_fz_vec(e_bar_prime_i, &csprng_state);
 #elif defined(RSDPG)
-        // DEBUG
-        csprng_fz_inf_w(e_G_bar_prime, &csprng_state_debug);
-        fz_inf_w_by_fz_matrix(e_bar_prime[i], e_G_bar_prime, W_mat);
-        fz_dz_norm_n(e_bar_prime[i]);
-
         csprng_fz_inf_w(e_G_bar_prime, &csprng_state);
         fz_vec_sub_m(v_G_bar[i], e_G_bar, e_G_bar_prime);
         fz_dz_norm_m(v_G_bar[i]);
@@ -1538,12 +1526,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
         FP_ELEM u[N];
         fp_vec_by_fp_vec_pointwise(u, v, u_prime_i);
-        // debugging
-        /* expand u_prime */
-        csprng_fp_vec(u_prime[i], &csprng_state_debug);
-
-        FP_ELEM u_debug[N];
-        fp_vec_by_fp_vec_pointwise(u_debug, v, u_prime[i]);
 #else
     /* expand u_prime */
     csprng_fp_vec(u_prime[i], &csprng_state);
@@ -1703,13 +1685,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     fz_dz_norm_n(e_bar_prime_i);
 #endif
 #endif
-    // debugging
-    if (memcmp(u_prime_i, &u_prime[i][0], N * sizeof(FP_ELEM)) != 0) {
-      hal_send_str("u_prime wrong #1");
-    }
-    if (memcmp(e_bar_prime_i, &e_bar_prime[i][0], N * sizeof(FZ_ELEM)) != 0) {
-      hal_send_str("e_bar_prime wrong #1");
-    }
 #elif defined(OPT_E_BAR_PRIME)
     // Recalculate e_bar_prime from v_bar
     fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
@@ -1895,34 +1870,31 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       fz_dz_norm_n(e_bar_prime_i);
 #endif
 #endif
-      // debugging
-      if (memcmp(u_prime_i, &u_prime[i][0], N * sizeof(FP_ELEM)) != 0) {
-        hal_send_str("u_prime wrong #2");
-      }
-      if (memcmp(e_bar_prime_i, &e_bar_prime[i][0], N * sizeof(FZ_ELEM)) != 0) {
-        hal_send_str("e_bar_prime wrong #2");
-      }
+
 #elif defined(OPT_E_BAR_PRIME)
       // Recalculate e_bar_prime from v_bar
       fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
 #endif
 
-#if !defined(OPT_Y_U_OVERLAP)
+#if !defined(OPT_Y_U_OVERLAP) || defined(OPT_U_PRIME_EPH)
       // Have to recalculate y
+#if defined(OPT_U_PRIME_EPH)
+      // Calculate y
+      fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime_i, chall_1[i],
+                                 u_prime_i);
+      fp_dz_norm(u_prime_i);
+      // Pack it
+      pack_fp_vec(sig->resp_0[published_rsps].y, u_prime_i);
+#else
       FP_ELEM y_i[N];
       // Calculate y
-#if defined(OPT_E_BAR_PRIME)
-      fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
-      // Calculate y
       fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime_i);
-#else
-      // Calculate y
-      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime_i);
-#endif
       fp_dz_norm(y_i);
+      // Pack it
       pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
-#else
-      pack_fp_vec(sig->resp_0[published_rsps].y, u_prime_i);
+#endif
+#elif !defined(OPT_U_PRIME_EPH)
+      pack_fp_vec(sig->resp_0[published_rsps].y, u_prime[i]);
 #endif
 #else
       pack_fp_vec(sig->resp_0[published_rsps].y, y[i]);
