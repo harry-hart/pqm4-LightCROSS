@@ -809,7 +809,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   pack_fp_syn(PK->s, s);
 }
 
-/*****************************************************************************/
+/******************************* Sign Utils **********************************/
 
 #if defined(OPT_GGM)
 #define REVEAL_VALUE 1
@@ -839,6 +839,55 @@ struct GGMNode {
   uint16_t node_i;
 };
 
+// Note in RSDPG e_bar_prime_i is e_G_bar_prime_i
+void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
+                         unsigned char *round_seeds, uint8_t *salt, uint16_t i,
+                         CSPRNG_STATE_T *csprng_state) {
+  /* CSPRNG is fed with concat(seed,salt,round index) represented
+   * as a 2 bytes little endian unsigned integer */
+  uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+  memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i, SEED_LENGTH_BYTES);
+  memcpy(csprng_input + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
+
+  uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+
+  /* expand seed[i] into seed_e and seed_u */
+  csprng_initialize(csprng_state, csprng_input,
+                    SEED_LENGTH_BYTES + SALT_LENGTH_BYTES, domain_sep_csprng);
+
+#if defined(OPT_E_BAR_PRIME)
+  // Regenerate e_bar_prime
+#if defined(RSDP)
+  csprng_fz_vec(e_bar_prime_i, csprng_state);
+#elif defined(RSDPG)
+  csprng_fz_inf_w(e_bar_prime_i, csprng_state);
+#endif
+// skip e_bar_prime generation
+#else
+#if CATEGORY_1
+  uint32_t r = SHAKE128_RATE;
+#else
+  uint32_t r = SHAKE256_RATE;
+#endif
+#if defined(RSDP)
+  size_t outlen = ROUND_UP(BITS_N_FZ_CT_RNG, 8) / 8;
+#else
+  size_t outlen = ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8;
+#endif
+  while (outlen > 0) {
+    KeccakF1600_StatePermute(csprng_state.ctx);
+    if (outlen < r) {
+      outlen = 0;
+      csprng_state.ctx[25] = r - outlen;
+    } else {
+      outlen -= r;
+    }
+  }
+#endif
+
+  csprng_fp_vec(u_prime_i, csprng_state);
+}
+
 #if defined(RSDP)
 void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     const unsigned char *indices_to_publish,
@@ -854,7 +903,12 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                     FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
                     uint8_t *cmt_1, FZ_ELEM *e_bar_prime,
-                    uint16_t *nodes_to_reveal, uint8_t nodes_revealed) {
+                    uint16_t *nodes_to_reveal, uint8_t nodes_revealed,
+#if defined(OPT_DSP)
+                    FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M]) {
+#else
+                    FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M]) {
+#endif
 #endif
 // NOTES:
 // - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
@@ -871,6 +925,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_E_BAR_PRIME) || defined(OPT_V_BAR)
   // For OPT_E_BAR_PRIME and OPT_V_BAR (reuse variable because mutex)
   FZ_ELEM v_e_bar_prime_k[N] = {0};
+#if defined(OPT_U_PRIME_EPH)
+  FZ_ELEM v_bar_k[N] = {0};
+#endif
 #endif
   uint8_t cmt_1_k_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_k_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
@@ -879,6 +936,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   unsigned char csprng_input[csprng_input_len];
   CSPRNG_STATE_T tree_csprng_state;
   memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
+  // General use csprng state
+  CSPRNG_STATE_T csprng_state;
 
   // THIS IS BFS, DO BFS
   // Still need to track the global node index for proper domain
@@ -1151,7 +1210,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_DEBUG)
             if (published_nodes > TREE_NODES_TO_STORE) {
               hal_send_str("Too many nodes\n");
-              return -1;
+              return;
             }
 #endif
             csprng_randombytes(sig->path + published_nodes * SEED_LENGTH_BYTES,
@@ -1185,44 +1244,88 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
         for (int k = child_partition_start; k < child_partition_end; k++) {
           assert(published_rsps < T - W);
+          /*
+           * PRELIMINARY CALCULATIONS
+           */
           // The index of the
           uint8_t rsp_index = base_index + (k - child_partition_start);
-#if defined(OPT_HASH_Y) && !defined(OPT_Y_U_OVERLAP)
+
+#if !defined(OPT_U_PRIME_EPH)
+          FZ_ELEM *v_e_bar_prime_k = e_bar_prime[k * N];
+#if defined(OPT_E_BAR_PRIME)
+          FZ_ELEM *v_bar_k = &v_bar[k * N];
+#endif
+#endif
+
+#if defined(OPT_U_PRIME_EPH)
+// Need to regenerate u_prime
+#if defined(RSDP)
+          e_bar_prime_u_prime(v_e_bar_prime_k, u_prime, round_seeds, sig->salt,
+                              k, &csprng_state);
+#elif defined(RSDPG)
+          FZ_ELEM e_G_bar_prime[RSDPG_M];
+          e_bar_prime_u_prime(e_G_bar_prime, u_prime, round_seeds, sig->salt, k,
+                              &csprng_state);
+#if defined(OPT_E_BAR_PRIME)
+          fz_inf_w_by_fz_matrix(v_e_bar_prime_k, e_G_bar_prime, W_mat);
+          fz_dz_norm_n(v_e_bar_prime_k);
+#endif
+#endif
+          fz_vec_sub_n(v_bar_k, e_bar, v_e_bar_prime_k);
+          fz_dz_norm_n(v_bar_k);
+
+#elif defined(OPT_E_BAR_PRIME)
+          // Recalculate e_bar_prime from v_bar
+          fz_vec_sub_n(v_e_bar_prime_k, e_bar, v_bar_k);
+#endif
+
+          /*
+           * ADD Y TO RESPONSE
+           */
+#if defined(OPT_HASH_Y) &&                                                     \
+    (!defined(OPT_Y_U_OVERLAP) || defined(OPT_U_PRIME_EPH))
           // Have to recalculate y
+#if defined(OPT_U_PRIME_EPH)
+          // Calculate y
+          fp_vec_by_restr_vec_scaled(u_prime, v_e_bar_prime_k, chall_1[k],
+                                     u_prime);
+          fp_dz_norm(u_prime);
+          // Pack it
+          pack_fp_vec(sig->resp_0[rsp_index].y, u_prime);
+#else
           FP_ELEM y_k[N];
           // Calculate y
-#if defined(OPT_E_BAR_PRIME)
-          fz_vec_sub_n(v_e_bar_prime_k, e_bar, &v_bar[k * N]);
-          // Calculate l
           fp_vec_by_restr_vec_scaled(y_k, v_e_bar_prime_k, chall_1[k],
                                      &u_prime[k * N]);
-#else
-          // Calculate y
-          fp_vec_by_restr_vec_scaled(y_k, &e_bar_prime[k * N], chall_1[k],
-                                     &u_prime[k * N]);
-
-#endif
           fp_dz_norm(y_k);
+          // Pack it
           pack_fp_vec(sig->resp_0[rsp_index].y, y_k);
-#elif defined(OPT_Y_U_OVERLAP)
+#endif
+#elif !defined(OPT_U_PRIME_EPH)
           pack_fp_vec(sig->resp_0[rsp_index].y, &u_prime[k * N]);
 #else
         pack_fp_vec(sig->resp_0[rsp_index].y, &y[k * N]);
 #endif
 
+          /*
+           * ADD V_BAR TO RESPONSE
+           */
 #if defined(RSDP)
 #if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
           fz_vec_sub_n(v_e_bar_prime_k, e_bar, &e_bar_prime[k * N]);
           fz_dz_norm_n(v_e_bar_prime_k);
           pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_e_bar_prime_k);
 #else
-          pack_fz_vec(sig->resp_0[rsp_index].v_bar, &v_bar[k * N]);
+          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #endif
 #elif defined(RSDPG)
           pack_fz_rsdp_g_vec(sig->resp_0[rsp_index].v_G_bar,
                              &v_G_bar[k * RSDPG_M]);
 #endif
 
+          /*
+           * ADD CMT_1 TO RESPONSE
+           */
 #if defined(OPT_HASH_CMT1)
           // Calculate the cmt_1_i hash value again to avoid storing it
           // First make the input (Seed[i] | Salt | i + c)
@@ -1327,7 +1430,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM e_bar_prime_i[N] = {0};
+#if !defined(OPT_U_PRIME_EPH)
   FZ_ELEM v_bar[T][N];
+#else
+  FZ_ELEM v_bar_i[N];
+#endif
 #else
   FZ_ELEM e_bar_prime[T][N];
 #if defined(OPT_V_BAR)
@@ -1337,7 +1444,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 #endif
 
+#if defined(OPT_U_PRIME_EPH)
+  FP_ELEM u_prime_i[N] = {0};
+#else
   FP_ELEM u_prime[T][N];
+#endif
   FP_ELEM s_prime[N - K];
 
 #if defined(RSDP)
@@ -1434,6 +1545,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                           domain_sep_csprng);
         /* expand e_bar_prime */
 
+#if defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)
+        FZ_ELEM *v_bar_i = &v_bar[i];
+#endif
+
 #if defined(OPT_E_BAR_PRIME)
 #if defined(RSDP)
         csprng_fz_vec(e_bar_prime_i, &csprng_state);
@@ -1444,7 +1559,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
         fz_dz_norm_n(e_bar_prime_i);
 #endif
-        fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime_i);
+        fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime_i);
 #else
 #if defined(RSDP)
     csprng_fz_vec(e_bar_prime[i], &csprng_state);
@@ -1463,19 +1578,22 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
         FP_ELEM v[N];
-#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
         convert_restr_vec_to_fp(v, v_bar_i);
         fz_dz_norm_n(v_bar_i);
-/* expand u_prime */
-#else
-    convert_restr_vec_to_fp(v, v_bar[i]);
-    fz_dz_norm_n(v_bar[i]);
-/* expand u_prime */
-#endif
-        csprng_fp_vec(u_prime[i], &csprng_state);
+
+#if defined(OPT_U_PRIME_EPH)
+        /* expand u_prime */
+        csprng_fp_vec(u_prime_i, &csprng_state);
 
         FP_ELEM u[N];
-        fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
+        fp_vec_by_fp_vec_pointwise(u, v, u_prime_i);
+#else
+    /* expand u_prime */
+    csprng_fp_vec(u_prime[i], &csprng_state);
+
+    FP_ELEM u[N];
+    fp_vec_by_fp_vec_pointwise(u, v, u_prime[i]);
+#endif
         fp_vec_by_fp_matrix(s_prime, u, V_tr);
         fp_dz_norm_synd(s_prime);
 
@@ -1484,11 +1602,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         pack_fp_syn(cmt_0_i_input, s_prime);
 
 #if defined(RSDP)
-#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
         pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar_i);
-#else
-        pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar[i]);
-#endif
 #elif defined(RSDPG)
     pack_fz_rsdp_g_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_G_bar[i]);
 #endif
@@ -1594,6 +1708,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_PROFILE)
   t0 = hal_get_time();
 #endif
+
 /* Computation of the first round of responses */
 #if defined(OPT_HASH_Y)
 
@@ -1606,32 +1721,47 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
     uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE];
 
-#if defined(OPT_Y_U_OVERLAP)
-// Recalculate e_bar_prime from v_bar
+#if !defined(OPT_U_PRIME_EPH)
+    FP_ELEM *u_prime_i = &u_prime[i][0];
 #if defined(OPT_E_BAR_PRIME)
-    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
-    // Calculate y
-    fp_vec_by_restr_vec_scaled(u_prime[i], e_bar_prime_i, chall_1[i],
-                               u_prime[i]);
-#else
-    // Calculate y
-    fp_vec_by_restr_vec_scaled(u_prime[i], e_bar_prime[i], chall_1[i],
-                               u_prime[i]);
+    FZ_ELEM *v_bar_i = &v_bar[i];
 #endif
-    fp_dz_norm(u_prime[i]);
+#endif
+
+#if !defined(OPT_E_BAR_PRIME)
+    FZ_ELEM *e_bar_prime_i = &e_bar_prime[i][0];
+#endif
+
+#if defined(OPT_U_PRIME_EPH)
+// Need to regenerate u_prime
+#if defined(RSDP)
+    e_bar_prime_u_prime(e_bar_prime_i, u_prime_i, round_seeds, sig->salt, i,
+                        &csprng_state);
+#elif defined(RSDPG)
+    e_bar_prime_u_prime(e_G_bar_prime, u_prime_i, round_seeds, sig->salt, i,
+                        &csprng_state);
+#if defined(OPT_E_BAR_PRIME)
+    fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
+    fz_dz_norm_n(e_bar_prime_i);
+#endif
+#endif
+    fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime_i);
+    fz_dz_norm_n(v_bar_i);
+#elif defined(OPT_E_BAR_PRIME)
+    // Recalculate e_bar_prime from v_bar
+    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar_i);
+#endif
+
+#if defined(OPT_Y_U_OVERLAP)
+    // Calculate y
+    fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime_i, chall_1[i], u_prime_i);
+    fp_dz_norm(u_prime_i);
 
     // Pack it
-    pack_fp_vec(packed_y_i, u_prime[i]);
-#else
-// Recalculate e_bar_prime from v_bar
-#if defined(OPT_E_BAR_PRIME)
-    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
-    // Calculate y
-    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
+    pack_fp_vec(packed_y_i, u_prime_i);
 #else
     // Calculate y
-    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
-#endif
+    fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime_i);
     fp_dz_norm(y_i);
 
     // Pack it
@@ -1725,19 +1855,26 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   uint8_t *seed_storage = cmt_0[0];
 #endif
+
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM *e_bar_prime[1] = {0};
 #elif defined(OPT_V_BAR)
   FZ_ELEM *v_bar[1] = {0};
 #endif
+
 #if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
   uint16_t nodes_published[1] = {0};
   uint16_t nodes_to_reveal = 0;
 #endif
 
+#if defined(OPT_U_PRIME_EPH)
+  FP_ELEM *u_prime = u_prime_i;
+  FZ_ELEM *v_bar[1] = {0};
+#endif
+
 #if defined(RSDP)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
+                 v_bar[0], chall_1, u_prime, y[0], cmt_1, e_bar_prime[0],
                  nodes_published, nodes_to_reveal);
 #elif defined(RSDPG)
 #if defined(OPT_DEBUG)
@@ -1753,8 +1890,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1,
-                 e_bar_prime[0], nodes_published, nodes_to_reveal);
+                 v_bar[0], chall_1, u_prime, v_G_bar[0], y[0], cmt_1,
+                 e_bar_prime[0], nodes_published, nodes_to_reveal, W_mat);
 
 #if defined(OPT_DEBUG)
   uint8_t test_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES] = {0};
@@ -1779,22 +1916,57 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   for (int i = 0; i < T; i++) {
     if (chall_2[i] == 0) {
       assert(published_rsps < T - W);
+
 #if defined(OPT_HASH_Y)
-#if !defined(OPT_Y_U_OVERLAP)
+#if !defined(OPT_U_PRIME_EPH)
+      FP_ELEM *u_prime_i = &u_prime[i][0];
+#if defined(OPT_E_BAR_PRIME)
+      FZ_ELEM *v_bar_i = &v_bar[i];
+#endif
+#endif
+
+#if !defined(OPT_E_BAR_PRIME)
+      FZ_ELEM *e_bar_prime_i = &e_bar_prime[i][0];
+#endif
+
+#if defined(OPT_U_PRIME_EPH)
+// Need to regenerate u_prime
+#if defined(RSDP)
+      e_bar_prime_u_prime(e_bar_prime_i, u_prime_i, round_seeds, sig->salt, i,
+                          &csprng_state);
+#elif defined(RSDPG)
+      e_bar_prime_u_prime(e_G_bar_prime, u_prime_i, round_seeds, sig->salt, i,
+                          &csprng_state);
+#if defined(OPT_E_BAR_PRIME)
+      fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
+      fz_dz_norm_n(e_bar_prime_i);
+#endif
+#endif
+      fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime_i);
+      fz_dz_norm_n(v_bar_i);
+#elif defined(OPT_E_BAR_PRIME)
+      // Recalculate e_bar_prime from v_bar
+      fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar_i);
+#endif
+
+#if !defined(OPT_Y_U_OVERLAP) || defined(OPT_U_PRIME_EPH)
       // Have to recalculate y
+#if defined(OPT_U_PRIME_EPH)
+      // Calculate y
+      fp_vec_by_restr_vec_scaled(u_prime_i, e_bar_prime_i, chall_1[i],
+                                 u_prime_i);
+      fp_dz_norm(u_prime_i);
+      // Pack it
+      pack_fp_vec(sig->resp_0[published_rsps].y, u_prime_i);
+#else
       FP_ELEM y_i[N];
       // Calculate y
-#if defined(OPT_E_BAR_PRIME)
-      fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
-      // Calculate y
-      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime[i]);
-#else
-      // Calculate y
-      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime[i], chall_1[i], u_prime[i]);
-#endif
+      fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime_i);
       fp_dz_norm(y_i);
+      // Pack it
       pack_fp_vec(sig->resp_0[published_rsps].y, y_i);
-#else
+#endif
+#elif !defined(OPT_U_PRIME_EPH)
       pack_fp_vec(sig->resp_0[published_rsps].y, u_prime[i]);
 #endif
 #else
@@ -1805,10 +1977,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
       fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
       fz_dz_norm_n(v_bar_i);
-      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
-#else
-      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
 #endif
+      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
 #elif defined(RSDPG)
       pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
 #endif
