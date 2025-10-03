@@ -802,7 +802,7 @@ void CROSS_keygen(sk_t *SK, pk_t *PK) {
   pack_fp_syn(PK->s, s);
 }
 
-/*****************************************************************************/
+/******************************* Sign Utils **********************************/
 
 #if defined(OPT_GGM)
 #define REVEAL_VALUE 1
@@ -831,6 +831,55 @@ struct GGMNode {
   //  Node Index
   uint16_t node_i;
 };
+
+// Note in RSDPG e_bar_prime_i is e_G_bar_prime_i
+void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
+                         unsigned char *round_seeds, uint8_t *salt, uint16_t i,
+                         CSPRNG_STATE_T *csprng_state) {
+  /* CSPRNG is fed with concat(seed,salt,round index) represented
+   * as a 2 bytes little endian unsigned integer */
+  uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
+  memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i, SEED_LENGTH_BYTES);
+  memcpy(csprng_input + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
+
+  uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
+
+  /* expand seed[i] into seed_e and seed_u */
+  csprng_initialize(csprng_state, csprng_input,
+                    SEED_LENGTH_BYTES + SALT_LENGTH_BYTES, domain_sep_csprng);
+
+#if defined(OPT_E_BAR_PRIME)
+  // Regenerate e_bar_prime
+#if defined(RSDP)
+  csprng_fz_vec(e_bar_prime_i, csprng_state);
+#elif defined(RSDPG)
+  csprng_fz_inf_w(e_bar_prime_i, csprng_state);
+#endif
+// skip e_bar_prime generation
+#else
+#if CATEGORY_1
+  uint32_t r = SHAKE128_RATE;
+#else
+  uint32_t r = SHAKE256_RATE;
+#endif
+#if defined(RSDP)
+  size_t outlen = ROUND_UP(BITS_N_FZ_CT_RNG, 8) / 8;
+#else
+  size_t outlen = ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8;
+#endif
+  while (outlen > 0) {
+    KeccakF1600_StatePermute(csprng_state.ctx);
+    if (outlen < r) {
+      outlen = 0;
+      csprng_state.ctx[25] = r - outlen;
+    } else {
+      outlen -= r;
+    }
+  }
+#endif
+
+  csprng_fp_vec(u_prime_i, csprng_state);
+}
 
 #if defined(RSDP)
 void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
@@ -872,6 +921,8 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   unsigned char csprng_input[csprng_input_len];
   CSPRNG_STATE_T tree_csprng_state;
   memcpy(csprng_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
+  // General use csprng state
+  CSPRNG_STATE_T csprng_state;
 
   // THIS IS BFS, DO BFS
   // Still need to track the global node index for proper domain
@@ -1178,31 +1229,66 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
         for (int k = child_partition_start; k < child_partition_end; k++) {
           assert(published_rsps < T - W);
+          /*
+           * PRELIMINARY CALCULATIONS
+           */
           // The index of the
           uint8_t rsp_index = base_index + (k - child_partition_start);
-#if defined(OPT_HASH_Y) && !defined(OPT_Y_U_OVERLAP)
+
+#if !defined(OPT_U_PRIME_EPH)
+          FZ_ELEM *v_e_bar_prime_k = e_bar_prime[k * N];
+#endif
+
+#if defined(OPT_U_PRIME_EPH)
+// Need to regenerate u_prime
+#if defined(RSDP)
+          e_bar_prime_u_prime(v_e_bar_prime_k, u_prime, round_seeds, sig->salt,
+                              k, &csprng_state);
+#elif defined(RSDPG)
+          FZ_ELEM e_G_bar_prime[RSDPG_M];
+          e_bar_prime_u_prime(e_G_bar_prime, u_prime, round_seeds, sig->salt, k,
+                              &csprng_state);
+#if defined(OPT_E_BAR_PRIME)
+          fz_inf_w_by_fz_matrix(v_e_bar_prime_k, e_G_bar_prime, W_mat);
+          fz_dz_norm_n(v_e_bar_prime_k);
+#endif
+#endif
+#elif defined(OPT_E_BAR_PRIME)
+          // Recalculate e_bar_prime from v_bar
+          fz_vec_sub_n(v_e_bar_prime_k, e_bar, &v_bar[k * N]);
+#endif
+
+          /*
+           * ADD Y TO RESPONSE
+           */
+#if defined(OPT_HASH_Y) &&                                                     \
+    (!defined(OPT_Y_U_OVERLAP) || defined(OPT_U_PRIME_EPH))
           // Have to recalculate y
+#if defined(OPT_U_PRIME_EPH)
+          // Calculate y
+          fp_vec_by_restr_vec_scaled(u_prime, v_e_bar_prime_k, chall_1[k],
+                                     u_prime);
+          fp_dz_norm(u_prime);
+          // Pack it
+          pack_fp_vec(sig->resp_0[rsp_index].y, u_prime);
+#else
           FP_ELEM y_k[N];
           // Calculate y
-#if defined(OPT_E_BAR_PRIME)
-          fz_vec_sub_n(v_e_bar_prime_k, e_bar, &v_bar[k * N]);
-          // Calculate l
           fp_vec_by_restr_vec_scaled(y_k, v_e_bar_prime_k, chall_1[k],
                                      &u_prime[k * N]);
-#else
-          // Calculate y
-          fp_vec_by_restr_vec_scaled(y_k, &e_bar_prime[k * N], chall_1[k],
-                                     &u_prime[k * N]);
-
-#endif
           fp_dz_norm(y_k);
+          // Pack it
           pack_fp_vec(sig->resp_0[rsp_index].y, y_k);
-#elif defined(OPT_Y_U_OVERLAP)
+#endif
+#elif !defined(OPT_U_PRIME_EPH)
           pack_fp_vec(sig->resp_0[rsp_index].y, &u_prime[k * N]);
 #else
         pack_fp_vec(sig->resp_0[rsp_index].y, &y[k * N]);
 #endif
 
+          /*
+           * ADD V_BAR TO RESPONSE
+           */
 #if defined(RSDP)
 #if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
           fz_vec_sub_n(v_e_bar_prime_k, e_bar, &e_bar_prime[k * N]);
@@ -1216,6 +1302,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                              &v_G_bar[k * RSDPG_M]);
 #endif
 
+          /*
+           * ADD CMT_1 TO RESPONSE
+           */
 #if defined(OPT_HASH_CMT1)
           // Calculate the cmt_1_i hash value again to avoid storing it
           // First make the input (Seed[i] | Salt | i + c)
@@ -1252,57 +1341,6 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #endif
 }
 #endif
-
-/************** Sign Utils *****************/
-
-// Note in RSDPG e_bar_prime_i is e_G_bar_prime_i
-void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
-                         unsigned char *round_seeds, uint8_t *salt, uint16_t i,
-                         CSPRNG_STATE_T *csprng_state) {
-  /* CSPRNG is fed with concat(seed,salt,round index) represented
-   * as a 2 bytes little endian unsigned integer */
-  uint8_t csprng_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
-  memcpy(csprng_input, round_seeds + SEED_LENGTH_BYTES * i, SEED_LENGTH_BYTES);
-  memcpy(csprng_input + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
-
-  uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
-
-  /* expand seed[i] into seed_e and seed_u */
-  csprng_initialize(csprng_state, csprng_input,
-                    SEED_LENGTH_BYTES + SALT_LENGTH_BYTES, domain_sep_csprng);
-
-#if defined(OPT_E_BAR_PRIME)
-  // Regenerate e_bar_prime
-#if defined(RSDP)
-  csprng_fz_vec(e_bar_prime_i, csprng_state);
-#elif defined(RSDPG)
-  csprng_fz_inf_w(e_bar_prime_i, csprng_state);
-#endif
-// skip e_bar_prime generation
-#else
-#if CATEGORY_1
-  uint32_t r = SHAKE128_RATE;
-#else
-  uint32_t r = SHAKE256_RATE;
-#endif
-#if defined(RSDP)
-  size_t outlen = ROUND_UP(BITS_N_FZ_CT_RNG, 8) / 8;
-#else
-  size_t outlen = ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8;
-#endif
-  while (outlen > 0) {
-    KeccakF1600_StatePermute(csprng_state.ctx);
-    if (outlen < r) {
-      outlen = 0;
-      csprng_state.ctx[25] = r - outlen;
-    } else {
-      outlen -= r;
-    }
-  }
-#endif
-
-  csprng_fp_vec(u_prime_i, csprng_state);
-}
 
 /*****************************************************************************/
 
@@ -1802,10 +1840,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
   uint16_t nodes_published[1] = {0};
   uint16_t nodes_to_reveal = 0;
 #endif
+#if defined(OPT_U_PRIME_EPH)
+  FP_ELEM *u_prime = u_prime_i;
+#endif
 
 #if defined(RSDP)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime[0], y[0], cmt_1, e_bar_prime[0],
+                 v_bar[0], chall_1, u_prime, y[0], cmt_1, e_bar_prime[0],
                  nodes_published, nodes_to_reveal);
 #elif defined(RSDPG)
 #if defined(OPT_DEBUG)
@@ -1821,7 +1862,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime[0], v_G_bar[0], y[0], cmt_1,
+                 v_bar[0], chall_1, u_prime, v_G_bar[0], y[0], cmt_1,
                  e_bar_prime[0], nodes_published, nodes_to_reveal);
 
 #if defined(OPT_DEBUG)
