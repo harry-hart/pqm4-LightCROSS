@@ -896,7 +896,12 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     FZ_ELEM *e_bar, FZ_ELEM *v_bar, FP_ELEM *chall_1,
                     FP_ELEM *u_prime, FZ_ELEM *v_G_bar, FP_ELEM *y,
                     uint8_t *cmt_1, FZ_ELEM *e_bar_prime,
-                    uint16_t *nodes_to_reveal, uint8_t nodes_revealed) {
+                    uint16_t *nodes_to_reveal, uint8_t nodes_revealed,
+#if defined(OPT_DSP)
+                    FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M]) {
+#else
+                    FZ_ELEM W_mat[RSDPG_M][N - RSDPG_M]) {
+#endif
 #endif
 // NOTES:
 // - seed_storage actually only needs to be (SEED_LENGTH_BYTES * T) / 2
@@ -913,6 +918,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 #if defined(OPT_E_BAR_PRIME) || defined(OPT_V_BAR)
   // For OPT_E_BAR_PRIME and OPT_V_BAR (reuse variable because mutex)
   FZ_ELEM v_e_bar_prime_k[N] = {0};
+#if defined(OPT_U_PRIME_EPH)
+  FZ_ELEM v_bar_k[N] = {0};
+#endif
 #endif
   uint8_t cmt_1_k_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_k_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
@@ -1237,6 +1245,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
 #if !defined(OPT_U_PRIME_EPH)
           FZ_ELEM *v_e_bar_prime_k = e_bar_prime[k * N];
+#if defined(OPT_E_BAR_PRIME)
+          FZ_ELEM *v_bar_k = &v_bar[k * N];
+#endif
 #endif
 
 #if defined(OPT_U_PRIME_EPH)
@@ -1253,9 +1264,12 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           fz_dz_norm_n(v_e_bar_prime_k);
 #endif
 #endif
+          fz_vec_sub_n(v_bar_k, e_bar, v_e_bar_prime_k);
+          fz_dz_norm_n(v_bar_k);
+
 #elif defined(OPT_E_BAR_PRIME)
           // Recalculate e_bar_prime from v_bar
-          fz_vec_sub_n(v_e_bar_prime_k, e_bar, &v_bar[k * N]);
+          fz_vec_sub_n(v_e_bar_prime_k, e_bar, v_bar_k);
 #endif
 
           /*
@@ -1295,7 +1309,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           fz_dz_norm_n(v_e_bar_prime_k);
           pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_e_bar_prime_k);
 #else
-          pack_fz_vec(sig->resp_0[rsp_index].v_bar, &v_bar[k * N]);
+          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #endif
 #elif defined(RSDPG)
           pack_fz_rsdp_g_vec(sig->resp_0[rsp_index].v_G_bar,
@@ -1409,7 +1423,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM e_bar_prime_i[N] = {0};
+#if !defined(OPT_U_PRIME_EPH)
   FZ_ELEM v_bar[T][N];
+#else
+  FZ_ELEM v_bar_i[N];
+#endif
 #else
   FZ_ELEM e_bar_prime[T][N];
 #if defined(OPT_V_BAR)
@@ -1520,6 +1538,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                           domain_sep_csprng);
         /* expand e_bar_prime */
 
+#if defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)
+        FZ_ELEM *v_bar_i = &v_bar[i];
+#endif
+
 #if defined(OPT_E_BAR_PRIME)
 #if defined(RSDP)
         csprng_fz_vec(e_bar_prime_i, &csprng_state);
@@ -1530,7 +1552,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
         fz_dz_norm_n(e_bar_prime_i);
 #endif
-        fz_vec_sub_n(v_bar[i], e_bar, e_bar_prime_i);
+        fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime_i);
 #else
 #if defined(RSDP)
     csprng_fz_vec(e_bar_prime[i], &csprng_state);
@@ -1549,14 +1571,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
         FP_ELEM v[N];
-#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
         convert_restr_vec_to_fp(v, v_bar_i);
         fz_dz_norm_n(v_bar_i);
-/* expand u_prime */
-#else
-    convert_restr_vec_to_fp(v, v_bar[i]);
-    fz_dz_norm_n(v_bar[i]);
-#endif
 
 #if defined(OPT_U_PRIME_EPH)
         /* expand u_prime */
@@ -1579,11 +1595,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
         pack_fp_syn(cmt_0_i_input, s_prime);
 
 #if defined(RSDP)
-#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
         pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar_i);
-#else
-        pack_fz_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_bar[i]);
-#endif
 #elif defined(RSDPG)
     pack_fz_rsdp_g_vec(cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE, v_G_bar[i]);
 #endif
@@ -1704,6 +1716,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if !defined(OPT_U_PRIME_EPH)
     FP_ELEM *u_prime_i = &u_prime[i][0];
+#if defined(OPT_E_BAR_PRIME)
+    FZ_ELEM *v_bar_i = &v_bar[i];
+#endif
 #endif
 
 #if !defined(OPT_E_BAR_PRIME)
@@ -1723,9 +1738,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     fz_dz_norm_n(e_bar_prime_i);
 #endif
 #endif
+    fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime_i);
+    fz_dz_norm_n(v_bar_i);
 #elif defined(OPT_E_BAR_PRIME)
     // Recalculate e_bar_prime from v_bar
-    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
+    fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar_i);
 #endif
 
 #if defined(OPT_Y_U_OVERLAP)
@@ -1831,17 +1848,21 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #else
   uint8_t *seed_storage = cmt_0[0];
 #endif
+
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM *e_bar_prime[1] = {0};
 #elif defined(OPT_V_BAR)
   FZ_ELEM *v_bar[1] = {0};
 #endif
+
 #if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
   uint16_t nodes_published[1] = {0};
   uint16_t nodes_to_reveal = 0;
 #endif
+
 #if defined(OPT_U_PRIME_EPH)
   FP_ELEM *u_prime = u_prime_i;
+  FZ_ELEM *v_bar[1] = {0};
 #endif
 
 #if defined(RSDP)
@@ -1863,7 +1884,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
                  v_bar[0], chall_1, u_prime, v_G_bar[0], y[0], cmt_1,
-                 e_bar_prime[0], nodes_published, nodes_to_reveal);
+                 e_bar_prime[0], nodes_published, nodes_to_reveal, W_mat);
 
 #if defined(OPT_DEBUG)
   uint8_t test_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES] = {0};
@@ -1892,6 +1913,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_HASH_Y)
 #if !defined(OPT_U_PRIME_EPH)
       FP_ELEM *u_prime_i = &u_prime[i][0];
+#if defined(OPT_E_BAR_PRIME)
+      FZ_ELEM *v_bar_i = &v_bar[i];
+#endif
 #endif
 
 #if !defined(OPT_E_BAR_PRIME)
@@ -1910,11 +1934,13 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
       fz_dz_norm_n(e_bar_prime_i);
 #endif
+      fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime_i);
+      fz_dz_norm_n(v_bar_i);
 #endif
 
 #elif defined(OPT_E_BAR_PRIME)
       // Recalculate e_bar_prime from v_bar
-      fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar[i]);
+      fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar_i);
 #endif
 
 #if !defined(OPT_Y_U_OVERLAP) || defined(OPT_U_PRIME_EPH)
