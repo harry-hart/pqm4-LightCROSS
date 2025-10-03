@@ -58,7 +58,7 @@
 #define OPT_GGM
 //     The only ARM specific optimisation
 //     Disabled in the mupq generic C version
-// #define OPT_DSP
+#define OPT_DSP
 #define OPT_Y_U_OVERLAP
 #define OPT_KEYGEN_BLOCKS
 //  Experimental - Flag not recommended

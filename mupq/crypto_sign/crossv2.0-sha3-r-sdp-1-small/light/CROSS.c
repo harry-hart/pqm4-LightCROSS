@@ -1934,10 +1934,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
       fz_inf_w_by_fz_matrix(e_bar_prime_i, e_G_bar_prime, W_mat);
       fz_dz_norm_n(e_bar_prime_i);
 #endif
+#endif
       fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime_i);
       fz_dz_norm_n(v_bar_i);
-#endif
-
 #elif defined(OPT_E_BAR_PRIME)
       // Recalculate e_bar_prime from v_bar
       fz_vec_sub_n(e_bar_prime_i, e_bar, v_bar_i);
@@ -1971,10 +1970,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
       fz_vec_sub_n(v_bar_i, e_bar, e_bar_prime[i]);
       fz_dz_norm_n(v_bar_i);
-      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
-#else
-      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar[i]);
 #endif
+      pack_fz_vec(sig->resp_0[published_rsps].v_bar, v_bar_i);
 #elif defined(RSDPG)
       pack_fz_rsdp_g_vec(sig->resp_0[published_rsps].v_G_bar, v_G_bar[i]);
 #endif
