@@ -2106,7 +2106,14 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #endif
 
   FZ_ELEM e_bar_prime[N];
+
+#if defined(OPT_U_V_VERIFY)
+  // One vector for both
+  FP_ELEM u_prime_v_bar[N];
+#else
   FP_ELEM u_prime[N];
+  FZ_ELEM v_bar[N];
+#endif
 
   FP_ELEM y_prime[N] = {0};
   FP_ELEM y_prime_H[N - K] = {0};
@@ -2150,6 +2157,10 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
                  SEED_LENGTH_BYTES);
 
+#if defined(OPT_U_V_VERIFY)
+          FP_ELEM *u_prime = u_prime_v_bar;
+#endif
+
 #if defined(OPT_HASH_CMT1)
           hash(cmt_1_i, cmt_1_i_input, sizeof(cmt_1_i_input), domain_sep_hash);
           xof_shake_update(&csprng_state_cmt_1, cmt_1_i, HASH_DIGEST_LENGTH);
@@ -2179,8 +2190,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       fz_inf_w_by_fz_matrix(e_bar_prime, e_G_bar_prime, W_mat);
       fz_dz_norm_n(e_bar_prime);
 #endif
-          /* expand u_prime */
           csprng_fp_vec(u_prime, &csprng_state);
+          /* expand u_prime */
 #if defined(OPT_HASH_Y)
           uint8_t packed_y_i[DENSELY_PACKED_FP_VEC_SIZE] = {0};
           fp_vec_by_restr_vec_scaled(y_i, e_bar_prime, chall_1[i], u_prime);
@@ -2193,6 +2204,10 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       fp_dz_norm(y[i]);
 #endif
         } else {
+
+#if defined(OPT_U_V_VERIFY)
+          FZ_ELEM *v_bar = u_prime_v_bar;
+#endif
           /* place y[i] in the buffer for later on hashing */
 #if defined(OPT_HASH_Y)
           // Unpack it for cmt_0 calculation
@@ -2206,7 +2221,6 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           is_packed_padd_ok && unpack_fp_vec(y[i], sig->resp_0[used_rsps].y);
 #endif
 
-          FZ_ELEM v_bar[N];
 #if defined(RSDP)
           /*v_bar is memcpy'ed directly into cmt_0 input buffer */
           FZ_ELEM *v_bar_ptr = cmt_0_i_input + DENSELY_PACKED_FP_SYN_SIZE;
