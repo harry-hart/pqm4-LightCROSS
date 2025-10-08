@@ -67,6 +67,7 @@ void tree_root(uint8_t root[HASH_DIGEST_LENGTH],
  * it in the signature. Returns the number of digests in the merkle tree
  * proof */
 #if defined(OPT_OTF_MERKLE)
+uint16_t tree_proof_order(uint16_t *mtp_order, uint8_t *mtp, uint8_t *chall_2);
 uint16_t tree_proof(uint8_t *mtp, uint8_t *cmt_0, uint8_t *chall_2,
                     uint16_t *nodes_published);
 #else

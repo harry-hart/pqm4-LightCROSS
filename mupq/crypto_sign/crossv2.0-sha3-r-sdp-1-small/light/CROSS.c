@@ -2003,6 +2003,11 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 }
 
+union FZP_VEC {
+  FP_ELEM fp[N];
+  FZ_ELEM fz[N];
+};
+
 /* verify returns 1 if signature is ok, 0 otherwise */
 int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                  const CROSS_sig_t *const sig) {
@@ -2091,6 +2096,14 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
   uint8_t merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH] = {0};
+#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+  uint8_t merkle_buf[TREE_MAX_DEPTH + 1][HASH_DIGEST_LENGTH] = {0};
+  uint8_t flags[TREE_MAX_DEPTH] = {0};
+  uint16_t last_partition_end = 0;
+  uint16_t mtp_order[T] = {0};
+  uint8_t max_depth = TREE_MAX_DEPTH;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t proof_i = tree_proof_order(mtp_order, sig->proof, chall_2);
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #endif
@@ -2109,7 +2122,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_U_V_VERIFY)
   // One vector for both
-  FP_ELEM u_prime_v_bar[N];
+  union FZP_VEC u_prime_v_bar;
 #else
   FP_ELEM u_prime[N];
   FZ_ELEM v_bar[N];
@@ -2153,12 +2166,19 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
         uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
         uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
+#if defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+        while (i + 1 > lpl[max_depth] && max_depth > 0) {
+          max_depth--;
+          lpl[max_depth] += lpl[max_depth + 1];
+        }
+#endif
+
         if (chall_2[i] == 1) {
           memcpy(cmt_1_i_input, round_seeds + SEED_LENGTH_BYTES * i,
                  SEED_LENGTH_BYTES);
 
 #if defined(OPT_U_V_VERIFY)
-          FP_ELEM *u_prime = u_prime_v_bar;
+          FP_ELEM *u_prime = u_prime_v_bar.fp;
 #endif
 
 #if defined(OPT_HASH_CMT1)
@@ -2203,10 +2223,49 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       fp_vec_by_restr_vec_scaled(y[i], e_bar_prime, chall_1[i], u_prime);
       fp_dz_norm(y[i]);
 #endif
+#if defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+          uint8_t merkle_d = max_depth - 1;
+          uint8_t flag_calc = 2;
+          uint16_t partition_size = 1;
+          while (flags[merkle_d] > 0) {
+            // If it is in merkle_buf
+            if (flags[merkle_d] == 1) {
+              if (flag_calc == 2) {
+                memcpy(&merkle_buf[merkle_d + 1], &sig->proof[mtp_order[i]],
+                       HASH_DIGEST_LENGTH);
+                flag_calc = 1;
+              }
+              hash(merkle_buf[merkle_d], merkle_buf[merkle_d],
+                   2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+            } else if (flags[merkle_d] == 2 && flag_calc == 1) {
+              memcpy(&merkle_buf[merkle_d],
+                     &sig->proof[mtp_order[i - partition_size]],
+                     HASH_DIGEST_LENGTH);
+              hash(merkle_buf[merkle_d], merkle_buf[merkle_d],
+                   2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
+            }
+            if (merkle_d == 0) {
+              flags[0] = 3;
+              break;
+            }
+            flags[merkle_d] = 0;
+            merkle_d--;
+            partition_size = partition_size << 1;
+          }
+          if (flags[0] != 3) {
+            flags[merkle_d] = flag_calc;
+            if (flag_calc == 1) {
+              memcpy(&merkle_buf[merkle_d], &merkle_buf[merkle_d + 1],
+                     HASH_DIGEST_LENGTH);
+            } else {
+              last_partition_end = i;
+            }
+          }
+#endif
         } else {
 
 #if defined(OPT_U_V_VERIFY)
-          FZ_ELEM *v_bar = u_prime_v_bar;
+          FZ_ELEM *v_bar = u_prime_v_bar.fz;
 #endif
           /* place y[i] in the buffer for later on hashing */
 #if defined(OPT_HASH_Y)
@@ -2273,8 +2332,34 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
                cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 // DEBUGGING
+#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+      hash(merkle_buf[TREE_MAX_DEPTH], cmt_0_i_input, sizeof(cmt_0_i_input),
+           domain_sep_hash);
+      int merkle_d = max_depth - 1;
+      uint16_t partition_size = 1;
+      while (flags[merkle_d] > 0) {
+        if (flags[merkle_d] == 2) {
+          memcpy(&merkle_buf[merkle_d],
+                 &sig->proof[mtp_order[i - partition_size]],
+                 HASH_DIGEST_LENGTH);
+        }
+        hash(merkle_buf[merkle_d], merkle_buf[merkle_d], 2 * HASH_DIGEST_LENGTH,
+             HASH_DOMAIN_SEP_CONST);
+        flags[merkle_d] = 0;
+        if (merkle_d == 0) {
+          flags[0] = 3;
+          break;
+        }
+        merkle_d--;
+        partition_size = partition_size << 1;
+      }
+      if (flags[0] != 3) {
+        flags[merkle_d] = 1;
+        memcpy(&merkle_buf[merkle_d], &merkle_buf[merkle_d + 1],
+               HASH_DIGEST_LENGTH);
+      }
 #else
-      hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
+    hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
         }
 #if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
@@ -2293,9 +2378,12 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
   uint8_t is_mtree_padding_ok =
       recompute_root(digest_cmt0_cmt1, merkle_tree, sig->proof, chall_2);
+#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+  memcpy(digest_cmt0_cmt1, merkle_buf[0], HASH_DIGEST_LENGTH);
+  uint8_t is_mtree_padding_ok = 0;
 #else
-  uint8_t is_mtree_padding_ok =
-      recompute_root(digest_cmt0_cmt1, cmt_0, sig->proof, chall_2);
+uint8_t is_mtree_padding_ok =
+    recompute_root(digest_cmt0_cmt1, cmt_0, sig->proof, chall_2);
 #endif
 
   // Calculate digest_cmt_1

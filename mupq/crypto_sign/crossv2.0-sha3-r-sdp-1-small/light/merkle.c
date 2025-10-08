@@ -396,6 +396,114 @@ int total_leaves_at_level(uint16_t ancestors_tracked,
 }
 #endif
 
+uint16_t tree_proof_order(uint16_t *mtp_order, uint8_t *mtp, uint8_t *chall_2) {
+  //
+  uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t leaves_left = T;
+  uint8_t flags[T] = {NOT_COMPUTED};
+  uint16_t p_end[T] = {0};
+
+  for (uint16_t i = 0; i < T; i++) {
+    if (chall_2[i] == CHALLENGE_PROOF_VALUE) {
+      flags[i] = COMPUTED;
+    }
+    p_end[i] = i;
+  }
+
+  uint16_t proof_i = 0;
+  uint8_t level = TREE_MAX_DEPTH;
+
+  // for (uint8_t d = TREE_MAX_DEPTH - 1; d > 0; d--) {
+  //   for (uint16_t i = npl[d] - 1; i > 0; i -= 2) {
+  //     uint16_t l_off = offset;
+  //     // Leaf
+  //     if (i > npl[d] - lpl[d] - 1) {
+  //       l_off = 0;
+  //     }
+  //     // Node
+  //     // else {
+  //     //}
+  //     if (mtp_order[i] == TREE_NODES_TO_STORE + 1 &&
+  //         mtp_order[i - 1] == TREE_NODES_TO_STORE + 2) {
+  //       mtp_order[i - 1 - offset] = proof_i;
+  //     } else if (mtp_order[i] == TREE_NODES_TO_STORE + 2 &&
+  //                mtp_order[i - 1] == TREE_NODES_TO_STORE + 1) {
+  //       mtp_order[i] = proof_i;
+  //     } else if (mtp_order[i] != mtp_order[i - 1] &&
+  //                mtp_order[i] > TREE_NODES_TO_STORE) {
+  //       mtp_order[i - 1 - l_off] = mtp_order[i - 1];
+  //     } else if (mtp_order[i] != mtp_order[i - 1] &&
+  //                mtp_order[i - 1] > TREE_NODES_TO_STORE) {
+  //       mtp_order[i - l_off] = mtp_order[i];
+  //     }
+  //   }
+  // }
+  while (level > 0) {
+    // TEMP:
+    // tot_nodes -= npl[level];
+
+    // How many leaves to not touch in the cmt_0 buffer
+    leaves_left = leaves_left - lpl[level];
+    // The length of the remaining left buffer
+    // uint16_t sub_len = T - leaves_left;
+    // The end of the buffer on the left
+    // uint16_t right_shift = sub_len - npl[level];
+    // Because of the step, have to offset the parents
+    uint16_t parent_offset = 0;
+    // uint16_t start_pos = npl[level] + offset - leaves_left;
+    // uint16_t end_pos = offset - leaves_left;
+    for (int i = T - leaves_left - 1; i > (T - leaves_left - npl[level]) - 1;
+         i -= 2) {
+      // If there are differing siblings, must add the non computable one
+      if (flags[i] == COMPUTED && flags[i - 1] == NOT_COMPUTED) {
+        // memcpy(mtp + published * HASH_DIGEST_LENGTH,
+        //        cmt_0 + (i - 1) * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
+        // published++;
+        //// For GGM
+        // nodes_published[node_i] =
+        //     (tot_nodes - 1) + (i - (T - leaves_left - npl[level] - 1)) - 1;
+        // node_i++;
+        mtp_order[p_end[i - 1]] = proof_i;
+        proof_i++;
+      }
+      if (flags[i] == NOT_COMPUTED && flags[i - 1] == COMPUTED) {
+        // memcpy(mtp + published * HASH_DIGEST_LENGTH,
+        //        cmt_0 + i * HASH_DIGEST_LENGTH, HASH_DIGEST_LENGTH);
+        // published++;
+        //// For GGM
+        // nodes_published[node_i] =
+        //     (tot_nodes - 1) + (i - (T - leaves_left - npl[level] - 1));
+        // node_i++;
+        mtp_order[p_end[i]] = proof_i;
+        proof_i++;
+      }
+
+      // Set parent flag to the right
+      // Explanation:
+      //  If either of the children are computed, the non-computed one has
+      //  been added to the proof, thus allowing the parent to be computed.
+      if (flags[i] == COMPUTED || flags[i - 1] == COMPUTED) {
+        flags[i + parent_offset] = COMPUTED;
+        //} else if (mtp_order[i - 1] == TREE_NODES_TO_STORE + 1) {
+      } else {
+        flags[i + parent_offset] = NOT_COMPUTED;
+        //} else {
+        // If we can already compute parent given info, don't bother hashing,
+        // otherwise
+        // NOTE: We use the cmt_0 as hash storage because it is not reused after
+        // this function.
+        // mtp_order[i + parent_offset] = TREE_NODES_TO_STORE + 2;
+      }
+
+      p_end[i + parent_offset] = p_end[i];
+      parent_offset = parent_offset + 1;
+    }
+    level--;
+  }
+  return proof_i;
+}
+
 void tree_root_tuned(uint8_t root[HASH_DIGEST_LENGTH], unsigned char *leaves,
                      uint32_t leaf_start_i, uint32_t leaves_len) {
 #if defined(OPT_PROFILE)

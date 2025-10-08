@@ -67,6 +67,7 @@ def main():
         fig = go.Figure()
     for i, key in enumerate(funcs):
         local_df = func_df(local_data[key])
+        print(local_df["var_name"].unique())
         if args.combined:
             plot_func(key, local_df, local_data[key], fig, i+1, 1)
         else:
@@ -85,6 +86,7 @@ def main():
             )
             fig.write_html(f"mem-{args.locals.stem}_{key}.html")
             fig.show()
+            fig.data = []
     if args.combined:
         fig.update_layout(showlegend=False, title_text=args.locals.stem)
         fig.write_html(f"mem-{args.locals.stem}_combined.html")
