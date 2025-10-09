@@ -2096,7 +2096,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
   uint8_t merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH] = {0};
-#elif defined(OPT_OTF_MERKLE_V) && !defined(NO_TREES)
+#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
   uint8_t merkle_buf[TREE_MAX_DEPTH + 1][HASH_DIGEST_LENGTH] = {0};
   uint8_t flags[TREE_MAX_DEPTH] = {0};
   uint16_t last_partition_end = 0;
@@ -2104,6 +2104,12 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t max_depth = TREE_MAX_DEPTH;
   uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
   uint16_t proof_i = tree_proof_order(mtp_order, sig->proof, chall_2);
+  uint8_t is_mtree_padding_ok = 0;
+  for (int i = proof_i * HASH_DIGEST_LENGTH;
+       i < TREE_NODES_TO_STORE * HASH_DIGEST_LENGTH; i++) {
+    is_mtree_padding_ok |= sig->proof[i];
+  }
+  is_mtree_padding_ok = !is_mtree_padding_ok;
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #endif
@@ -2166,7 +2172,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
         uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
         uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
-#if defined(OPT_OTF_MERKLE_V) && !defined(NO_TREES)
+#if defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
         while (i + 1 > lpl[max_depth] && max_depth > 0) {
           max_depth--;
           lpl[max_depth] += lpl[max_depth + 1];
@@ -2223,7 +2229,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       fp_vec_by_restr_vec_scaled(y[i], e_bar_prime, chall_1[i], u_prime);
       fp_dz_norm(y[i]);
 #endif
-#if defined(OPT_OTF_MERKLE_V) && !defined(NO_TREES)
+#if defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
           uint8_t merkle_d = max_depth - 1;
           uint8_t flag_calc = 2;
           uint16_t partition_size = 1;
@@ -2231,7 +2237,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
             // If it is in merkle_buf
             if (flags[merkle_d] == 1) {
               if (flag_calc == 2) {
-                memcpy(&merkle_buf[merkle_d + 1], &sig->proof[mtp_order[i]],
+                memcpy(&merkle_buf[merkle_d + 1],
+                       &sig->proof[mtp_order[i] * HASH_DIGEST_LENGTH],
                        HASH_DIGEST_LENGTH);
                 flag_calc = 1;
               }
@@ -2239,7 +2246,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
                    2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
             } else if (flags[merkle_d] == 2 && flag_calc == 1) {
               memcpy(&merkle_buf[merkle_d],
-                     &sig->proof[mtp_order[i - partition_size]],
+                     &sig->proof[mtp_order[i - partition_size] *
+                                 HASH_DIGEST_LENGTH],
                      HASH_DIGEST_LENGTH);
               hash(merkle_buf[merkle_d], merkle_buf[merkle_d],
                    2 * HASH_DIGEST_LENGTH, HASH_DOMAIN_SEP_CONST);
@@ -2257,8 +2265,6 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
             if (flag_calc == 1) {
               memcpy(&merkle_buf[merkle_d], &merkle_buf[merkle_d + 1],
                      HASH_DIGEST_LENGTH);
-            } else {
-              last_partition_end = i;
             }
           }
 #endif
@@ -2332,16 +2338,17 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
                cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 // DEBUGGING
-#elif defined(OPT_OTF_MERKLE_V) && !defined(NO_TREES)
-      hash(merkle_buf[TREE_MAX_DEPTH], cmt_0_i_input, sizeof(cmt_0_i_input),
+#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+      hash(merkle_buf[max_depth], cmt_0_i_input, sizeof(cmt_0_i_input),
            domain_sep_hash);
       int merkle_d = max_depth - 1;
       uint16_t partition_size = 1;
       while (flags[merkle_d] > 0) {
         if (flags[merkle_d] == 2) {
-          memcpy(&merkle_buf[merkle_d],
-                 &sig->proof[mtp_order[i - partition_size]],
-                 HASH_DIGEST_LENGTH);
+          memcpy(
+              &merkle_buf[merkle_d],
+              &sig->proof[mtp_order[i - partition_size] * HASH_DIGEST_LENGTH],
+              HASH_DIGEST_LENGTH);
         }
         hash(merkle_buf[merkle_d], merkle_buf[merkle_d], 2 * HASH_DIGEST_LENGTH,
              HASH_DOMAIN_SEP_CONST);
@@ -2378,9 +2385,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
   uint8_t is_mtree_padding_ok =
       recompute_root(digest_cmt0_cmt1, merkle_tree, sig->proof, chall_2);
-#elif defined(OPT_OTF_MERKLE_V) && !defined(NO_TREES)
+#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
   memcpy(digest_cmt0_cmt1, merkle_buf[0], HASH_DIGEST_LENGTH);
-  uint8_t is_mtree_padding_ok = 0;
 #else
 uint8_t is_mtree_padding_ok =
     recompute_root(digest_cmt0_cmt1, cmt_0, sig->proof, chall_2);

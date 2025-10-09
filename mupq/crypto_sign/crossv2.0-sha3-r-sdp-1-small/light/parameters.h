@@ -66,7 +66,6 @@
 //  Extreme Memory Optimisations - May cause extreme speed loss
 #define OPT_U_PRIME_EPH
 #define OPT_U_V_VERIFY
-#define OPT_OTF_MERKLE_V
 /*
  * Debugging Flags
  */
