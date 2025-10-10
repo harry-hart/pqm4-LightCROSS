@@ -61,3 +61,22 @@ Compilation error `expected identifier or '(' before '.' token`:
   `python3 ./scripts/fix-symlink.py -d ./mupq/crypto_sign` and 
   `python3 ./scripts/fix-symlink.py -d ./crypto_sign`
   and check if that has repaired the symlinks. Unsure if this works on Windows.
+
+## Explanation of Optimisation Flags
+
+- OPT_KEYGEN
+
+  This flag turns on the main key generation optimisation, namely the on the fly matrix generation
+  for syndrome calculation.
+
+- OPT_MERKLE
+
+  This flag turns on basic merkle tree optimisation which just involves not holding `cmt_0` and hashing the values directly into the leaves of the merkle tree.
+
+- OPT_HASH_CMT1
+
+  This utilises the iterative nature of the SHAKE hash to update-as-you-go while iterating through the leaves instead of collecting the values and hashing at the end. This removes the need to hold `cmt_1`.
+
+- OPT_HASH_Y
+
+  
