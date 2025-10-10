@@ -2101,9 +2101,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   uint8_t cmt_1_i_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_i_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
 
-#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
-  uint8_t merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH] = {0};
-#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+#if !defined(NO_TREES)
+#if defined(OPT_RECOMPUTE_ROOT)
   uint8_t merkle_buf[TREE_MAX_DEPTH + 1][HASH_DIGEST_LENGTH] = {0};
   uint8_t flags[TREE_MAX_DEPTH] = {0};
   uint16_t last_partition_end = 0;
@@ -2117,6 +2116,11 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
     is_mtree_padding_ok |= sig->proof[i];
   }
   is_mtree_padding_ok = !is_mtree_padding_ok;
+#elif defined(OPT_OTF_MERKLE) || !defined(OPT_MERKLE)
+  uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
+#elif defined(OPT_MERKLE)
+  uint8_t merkle_tree[NUM_NODES_MERKLE_TREE * HASH_DIGEST_LENGTH] = {0};
+#endif
 #else
   uint8_t cmt_0[T][HASH_DIGEST_LENGTH] = {0};
 #endif
@@ -2179,7 +2183,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
         uint16_t domain_sep_csprng = CSPRNG_DOMAIN_SEP_CONST + i + (2 * T - 1);
         uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + i + (2 * T - 1);
 
-#if defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+#if defined(OPT_RECOMPUTE_ROOT) && !defined(NO_TREES)
         while (i + 1 > lpl[max_depth] && max_depth > 0) {
           max_depth--;
           lpl[max_depth] += lpl[max_depth + 1];
@@ -2236,7 +2240,7 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
       fp_vec_by_restr_vec_scaled(y[i], e_bar_prime, chall_1[i], u_prime);
       fp_dz_norm(y[i]);
 #endif
-#if defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+#if defined(OPT_RECOMPUTE_ROOT) && !defined(NO_TREES)
           uint8_t merkle_d = max_depth - 1;
           uint8_t flag_calc = 2;
           uint16_t partition_size = 1;
@@ -2340,12 +2344,13 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
           fp_dz_norm_synd(s_prime);
           pack_fp_syn(cmt_0_i_input, s_prime);
 
-#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
+#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE) &&   \
+    !defined(OPT_RECOMPUTE_ROOT)
           // Add directly to tree
           hash(merkle_tree + (leaves_start_indices[k] + j) * HASH_DIGEST_LENGTH,
                cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 // DEBUGGING
-#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
+#elif defined(OPT_RECOMPUTE_ROOT) && !defined(NO_TREES)
       hash(merkle_buf[max_depth], cmt_0_i_input, sizeof(cmt_0_i_input),
            domain_sep_hash);
       int merkle_d = max_depth - 1;
@@ -2376,7 +2381,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
     hash(cmt_0[i], cmt_0_i_input, sizeof(cmt_0_i_input), domain_sep_hash);
 #endif
         }
-#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
+#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE) &&   \
+    !defined(OPT_RECOMPUTE_ROOT)
         i++;
       } /* end for iterating on ZKID iterations */
     }
@@ -2389,14 +2395,20 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 
   uint8_t digest_cmt0_cmt1[2 * HASH_DIGEST_LENGTH];
 
-#if defined(OPT_MERKLE) && !defined(NO_TREES) && !defined(OPT_OTF_MERKLE)
+#if !defined(NO_TREES)
+#if defined(OPT_RECOMPUTE_ROOT)
+  memcpy(digest_cmt0_cmt1, merkle_buf[0], HASH_DIGEST_LENGTH);
+#elif defined(OPT_OTF_MERKLE) || !defined(OPT_MERKLE)
+  uint8_t is_mtree_padding_ok =
+      recompute_root(digest_cmt0_cmt1, cmt_0, sig->proof, chall_2);
+#elif defined(OPT_MERKLE)
   uint8_t is_mtree_padding_ok =
       recompute_root(digest_cmt0_cmt1, merkle_tree, sig->proof, chall_2);
-#elif defined(OPT_OTF_MERKLE) && !defined(NO_TREES)
   memcpy(digest_cmt0_cmt1, merkle_buf[0], HASH_DIGEST_LENGTH);
+#endif
 #else
-uint8_t is_mtree_padding_ok =
-    recompute_root(digest_cmt0_cmt1, cmt_0, sig->proof, chall_2);
+  uint8_t is_mtree_padding_ok =
+      recompute_root(digest_cmt0_cmt1, cmt_0, sig->proof, chall_2);
 #endif
 
   // Calculate digest_cmt_1
