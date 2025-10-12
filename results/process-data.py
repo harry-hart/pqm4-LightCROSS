@@ -176,40 +176,47 @@ def main():
 
 
 
-    parser.add_argument("-f", "--file", help="The csv produced by the benchmarks.", type=pathlib.Path, required=True)
+    parser.add_argument("-f", "--file", help="The csv produced by the benchmarks.", required=True)
+    parser.add_argument("-g", "--glob", help="Run on all matching files with glob.", action='store_true')
 
     args = parser.parse_args()
     #pd.set_option('display.max_columns', None)
 
-    tables = load_data(args.file)
 
-    for test, value in tables.items():
-        #print(f"Table '{test}':")
-        for cat, table, in value.items():
-            if len(table) == 0:
-                continue
-            # Give the basic table as csv
-            new_table = process_table(test, cat, table)
-            # Compact table naming
-            new_table.to_csv(f"RAW-{"_".join(test.split())}-{"_".join(cat.split())}.csv")
-            # Create the grouped and pivoted table
-            pretty_table = create_table(new_table)
-            pretty_table.columns.set_names([None, "impl."], inplace=True)
-            new_levs = []
-            for l in pretty_table.columns.levels[0]:
-                new_l = l.replace("Generation", "Gen.")
-                new_l = new_l.replace("bytes", "kbytes")
-                new_l = new_l.replace("cycles", "kcycles")
-                new_levs.append(new_l)
-            pretty_table.columns = pretty_table.columns.set_levels(levels=new_levs, level=0)
-            pretty_table.index.rename(["prob.","lvl","var."], inplace=True)
-            print("After rename")
-            print(pretty_table)
-            pretty_table.to_csv(f"{"_".join(test.split())}-{"_".join(cat.split())}.csv")
-            create_latex(pretty_table, f"{"_".join(test.split())}-{"_".join(cat.split())}.tex")
+    benchmarks = [pathlib.Path(args.file)]
+
+    if args.glob:
+        benchmarks = list(pathlib.Path(".").glob(args.file))
+
+    for b_file in benchmarks:
+        tables = load_data(b_file)
+        for test, value in tables.items():
+            #print(f"Table '{test}':")
+            for cat, table, in value.items():
+                if len(table) == 0:
+                    continue
+                # Give the basic table as csv
+                new_table = process_table(test, cat, table)
+                # Compact table naming
+                new_table.to_csv(f"RAW-{"_".join(test.split())}-{"_".join(cat.split())}-{b_file.stem}.csv")
+                # Create the grouped and pivoted table
+                pretty_table = create_table(new_table)
+                pretty_table.columns.set_names([None, "impl."], inplace=True)
+                new_levs = []
+                for l in pretty_table.columns.levels[0]:
+                    new_l = l.replace("Generation", "Gen.")
+                    new_l = new_l.replace("bytes", "kbytes")
+                    new_l = new_l.replace("cycles", "kcycles")
+                    new_levs.append(new_l)
+                pretty_table.columns = pretty_table.columns.set_levels(levels=new_levs, level=0)
+                pretty_table.index.rename(["prob.","lvl","var."], inplace=True)
+                print("After rename")
+                print(pretty_table)
+                pretty_table.to_csv(f"{"_".join(test.split())}-{"_".join(cat.split())}-{b_file.stem}.csv")
+                create_latex(pretty_table, f"{"_".join(test.split())}-{"_".join(cat.split())}-{b_file.stem}.tex")
 
 
-            # Create the graph
+                # Create the graph
 
 
 if __name__ == "__main__":

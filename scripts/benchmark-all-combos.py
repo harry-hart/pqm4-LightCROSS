@@ -3,10 +3,9 @@ import pathlib
 import re
 import subprocess
 
-PARAM_F = "../mupq/crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/parameters.h"
+PARAM_F = "../crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/parameters.h"
 PARAM_R = r'\/* *\#define *(OPT_\w*)\s*$'
 OPTS = ["OPT_KEYGEN", "OPT_MERKLE", "OPT_HASH_CMT1", "OPT_HASH_Y", "OPT_V_BAR", "OPT_E_BAR_PRIME", "OPT_OTF_MERKLE", "OPT_GGM", "OPT_RECOMPUTE_ROOT", "OPT_DSP", "OPT_Y_U_OVERLAP", "OPT_KEYGEN_BLOCKS", "OPT_U_PRIME_EPH", "OPT_U_V_VERIFY"]
-#OPTS = ["OPT_GGM", "OPT_DSP", "OPT_Y_U_OVERLAP", "OPT_KEYGEN_BLOCKS"]
 
 
 def main():
@@ -33,10 +32,19 @@ def main():
     # Clean compilation (allow fail)
     subprocess.run(["make", f"--directory={script_dir.parent}", "clean"])
 
-    for combo in itertools.combinations(OPTS, 1):
+    combo_code = ["0" for _ in range(len(OPTS))]
+
+    #for combo in itertools.combinations(OPTS, 1):
+    for i, opt in enumerate(OPTS):
+        param_file_lines[opt_lines[opt]] = f"#define {opt}\n"
+        combo_code[i] = "1"
+        benchmark_path = pathlib.Path(f"{script_dir.parent / "results"}/benchmark_{"".join(combo_code)}.csv")
+        if benchmark_path.exists():
+            print(f"Skip {"".join(combo_code)}")
+            continue
         # Set optimisations on
-        for opt in combo:
-            param_file_lines[opt_lines[opt]] = f"#define {opt}\n"
+        #for opt in combo:
+        #    param_file_lines[opt_lines[opt]] = f"#define {opt}\n"
         # Write to param file
         with open(param_file, "w") as f:
             f.write("".join(param_file_lines))
@@ -44,11 +52,11 @@ def main():
         subprocess.run([str(script_dir / "benchmark.sh")], check=True)
         # Save results
         results = subprocess.run([str(script_dir.parent / "convert_benchmarks.py"), "csv",], check=True, capture_output=True).stdout
-        with open(f"{script_dir.parent / "results"}/benchmark_{'_'.join(combo)}.csv", "w") as f:
+        with open(benchmark_path, "w") as f:
             f.write(results.decode('utf-8'))
         # Set optimisations off
-        for opt in combo:
-            param_file_lines[opt_lines[opt]] = f"// #define {opt}\n"
+        #for opt in combo:
+        #    param_file_lines[opt_lines[opt]] = f"// #define {opt}\n"
         # Clean compilation
         subprocess.run(["make", f"--directory={script_dir.parent}", "clean"], check=True)
 

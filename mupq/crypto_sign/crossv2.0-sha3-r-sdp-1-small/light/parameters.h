@@ -64,7 +64,7 @@
 #define OPT_Y_U_OVERLAP
 #define OPT_KEYGEN_BLOCKS
 //  Experimental - Flag not recommended
-//  #define OPT_MERKLE_GGM_COMBO
+// #define OPT_MERKLE_GGM_COMBO
 //  Extreme Memory Optimisations - May cause extreme speed loss
 #define OPT_U_PRIME_EPH
 #define OPT_U_V_VERIFY
@@ -72,7 +72,7 @@
  * Debugging Flags
  */
 // #define OPT_DEBUG
-//    #define OPT_PROFILE
+// #define OPT_PROFILE
 //   #define DETERMINISTIC
 
 /******************************************************************************/

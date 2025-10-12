@@ -1243,11 +1243,12 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           // The index of the
           uint8_t rsp_index = base_index + (k - child_partition_start);
 
-#if !defined(OPT_U_PRIME_EPH)
+#if !defined(OPT_E_BAR_PRIME) && !defined(OPT_V_BAR)
           FZ_ELEM *v_e_bar_prime_k = e_bar_prime[k * N];
-#if defined(OPT_E_BAR_PRIME)
-          FZ_ELEM *v_bar_k = &v_bar[k * N];
 #endif
+
+#if !defined(OPT_U_PRIME_EPH)
+          FZ_ELEM *v_bar_k = &v_bar[k * N];
 #endif
 
 #if defined(OPT_U_PRIME_EPH)
@@ -1538,8 +1539,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                           domain_sep_csprng);
         /* expand e_bar_prime */
 
-#if defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)
-        FZ_ELEM *v_bar_i = &v_bar[i];
+#if (defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)) ||                 \
+    (!defined(OPT_U_PRIME_EPH) && !defined(OPT_V_BAR))
+        FZ_ELEM *v_bar_i = &v_bar[i][0];
 #endif
 
 #if defined(OPT_E_BAR_PRIME)
@@ -1716,9 +1718,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if !defined(OPT_U_PRIME_EPH)
     FP_ELEM *u_prime_i = &u_prime[i][0];
-#if defined(OPT_E_BAR_PRIME)
-    FZ_ELEM *v_bar_i = &v_bar[i];
 #endif
+#if (defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)) ||                 \
+    (!defined(OPT_U_PRIME_EPH) && !defined(OPT_V_BAR))
+    FZ_ELEM *v_bar_i = &v_bar[i][0];
 #endif
 
 #if !defined(OPT_E_BAR_PRIME)
@@ -1861,13 +1864,15 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(OPT_U_PRIME_EPH)
-  FP_ELEM *u_prime = u_prime_i;
+  FP_ELEM *u_prime_ptr = u_prime_i;
   FZ_ELEM *v_bar[1] = {0};
+#else
+  FP_ELEM *u_prime_ptr = u_prime[0];
 #endif
 
 #if defined(RSDP)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime, y[0], cmt_1, e_bar_prime[0],
+                 v_bar[0], chall_1, u_prime_ptr, y[0], cmt_1, e_bar_prime[0],
                  nodes_published, nodes_to_reveal);
 #elif defined(RSDPG)
 #if defined(OPT_DEBUG)
@@ -1910,13 +1915,15 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
     if (chall_2[i] == 0) {
       assert(published_rsps < T - W);
 
-#if defined(OPT_HASH_Y)
 #if !defined(OPT_U_PRIME_EPH)
       FP_ELEM *u_prime_i = &u_prime[i][0];
-#if defined(OPT_E_BAR_PRIME)
-      FZ_ELEM *v_bar_i = &v_bar[i];
 #endif
+
+#if (defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)) ||                 \
+    (!defined(OPT_E_BAR_PRIME) && !defined(OPT_V_BAR))
+      FZ_ELEM *v_bar_i = &v_bar[i][0];
 #endif
+#if defined(OPT_HASH_Y)
 
 #if !defined(OPT_E_BAR_PRIME)
       FZ_ELEM *e_bar_prime_i = &e_bar_prime[i][0];
@@ -2397,7 +2404,6 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
 #elif defined(OPT_MERKLE)
   uint8_t is_mtree_padding_ok =
       recompute_root(digest_cmt0_cmt1, merkle_tree, sig->proof, chall_2);
-  memcpy(digest_cmt0_cmt1, merkle_buf[0], HASH_DIGEST_LENGTH);
 #endif
 #else
   uint8_t is_mtree_padding_ok =
