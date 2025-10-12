@@ -1895,7 +1895,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime, v_G_bar[0], y[0], cmt_1,
+                 v_bar[0], chall_1, u_prime_ptr, v_G_bar[0], y[0], cmt_1,
                  e_bar_prime[0], nodes_published, nodes_to_reveal, W_mat);
 
 #if defined(OPT_DEBUG)
