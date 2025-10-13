@@ -468,7 +468,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #define R_BYTES R_SIZE / 8
   // 2 byte buffer to allow for max 9 byte remaining
   // uint8_t rand_buflen = R_SIZE + 2;
-  uint8_t rand_buffer[R_BYTES + 10] = {0};
+  uint8_t rand_buffer[R_BYTES + 4] = {0};
   uint8_t rand_bufrem = csprng_state_mat.ctx[25];
   uint8_t rand_pos = 0;
 #endif
