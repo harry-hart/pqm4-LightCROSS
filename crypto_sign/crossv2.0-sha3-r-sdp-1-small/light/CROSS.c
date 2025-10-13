@@ -468,7 +468,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #define R_BYTES R_SIZE / 8
   // 2 byte buffer to allow for max 9 byte remaining
   // uint8_t rand_buflen = R_SIZE + 2;
-  uint8_t rand_buffer[R_SIZE + 2] = {0};
+  uint8_t rand_buffer[R_BYTES + 10] = {0};
   uint8_t rand_bufrem = csprng_state_mat.ctx[25];
   uint8_t rand_pos = 0;
 #endif
@@ -536,26 +536,25 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
       do {
         if (remaining_window_bits <= 32 && sampled < to_squeeze) {
           size_t rem_to_sample = to_squeeze - sampled;
-          size_t sample_size;
+          // 4 because sizeof(replace_window) is 4
+          uint32_t replace_window = 0;
+          size_t sample_size = rem_to_sample < 4 ? rem_to_sample : 4;
 #if defined(OPT_KEYGEN_BLOCKS)
-          sample_size = rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
-          // If we have run out of random buffer, generate more
+          // sample_size = rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
+          //  If we have run out of random buffer, generate more
           if (rand_bufrem <= sample_size) {
+            rem_to_sample = rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
             // Copy the remaining bytes to the front
             memcpy(rand_buffer, &rand_buffer[rand_pos], rand_bufrem);
             rand_pos = 0;
             // Generate another block
-            csprng_randombytes(&rand_buffer[rand_bufrem], sample_size,
+            csprng_randombytes(&rand_buffer[rand_bufrem], rem_to_sample,
                                &csprng_state_mat);
-            sampled += sample_size;
+            sampled += rem_to_sample;
             // Update remaining
-            rand_bufrem += sample_size;
+            rand_bufrem += rem_to_sample;
           }
 #endif
-          uint32_t replace_window = 0;
-          sample_size = rem_to_sample < sizeof(replace_window)
-                            ? rem_to_sample
-                            : sizeof(replace_window);
 #if defined(OPT_KEYGEN_BLOCKS)
           // Have to do this to flip it for right shift
           for (uint8_t k = 0; k < sample_size; k++) {
