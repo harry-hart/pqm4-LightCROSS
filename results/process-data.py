@@ -100,6 +100,9 @@ def create_table(df):
     print(grouped_df)
     for metric in metrics:
         light_values = grouped_df[(metric, 'light')]
+        if grouped_df.get((metric, 'ref'), None) is None:
+            grouped_df[(metric, 'ref')] = 0
+        print(grouped_df)
         ref_values = grouped_df[(metric, 'ref')]
 
         # Calculate percentage difference: ((light - ref) / ref) * 100

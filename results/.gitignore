@@ -1,0 +1,10 @@
+# Everything
+*
+
+# Except...
+!.gitignore
+!process-results.py
+!lightcross.csv
+!mucross.csv
+
+!*/

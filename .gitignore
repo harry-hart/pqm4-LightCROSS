@@ -5,3 +5,8 @@ bin
 elf
 obj
 obj-host
+*.html
+*.locals
+*.req
+*.rsp
+log
