@@ -52,25 +52,25 @@
  * New Optimisations
  */
 // Note this is overidden if OPT_E_BAR_PRIME is defined
-#define OPT_V_BAR
-#define OPT_E_BAR_PRIME
+// #define OPT_V_BAR
+// #define OPT_E_BAR_PRIME
 //    Note this is overidden in CROSS_verify if OPT_RECOMPUTE_ROOT is defined
-#define OPT_OTF_MERKLE
-#define OPT_GGM
-#define OPT_RECOMPUTE_ROOT
+// #define OPT_OTF_MERKLE
+// #define OPT_GGM
+// #define OPT_RECOMPUTE_ROOT
 //     The only ARM specific optimisation
 //     Disabled in the mupq generic C version
-#define OPT_DSP
+// #define OPT_DSP
 // DISABLED BECAUSE IT CAUSED SLOWDOWN IN KEYGEN
 // TODO: Find a way to do it bettter
 // #define OPT_DSP_KEYGEN
-#define OPT_Y_U_OVERLAP
-#define OPT_KEYGEN_BLOCKS
+// #define OPT_Y_U_OVERLAP
+// #define OPT_KEYGEN_BLOCKS
 //  Experimental - Flag not recommended
 // #define OPT_MERKLE_GGM_COMBO
 //  Extreme Memory Optimisations - May cause extreme speed loss
-#define OPT_U_PRIME_EPH
-#define OPT_U_V_VERIFY
+// #define OPT_U_PRIME_EPH
+// #define OPT_U_V_VERIFY
 /*
  * Debugging Flags
  */
