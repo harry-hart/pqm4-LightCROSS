@@ -279,15 +279,15 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
       // Are they generated column first or row first?
       // If we have less than 32 remaining
       do {
-        if (remaining_window_bits <= 32 && sampled < to_squeeze) {
-          size_t rem_to_sample = to_squeeze - sampled;
+        if (remaining_window_bits <= 32) {
+          size_t rem_to_sample = to_squeeze - sampled + rand_bufrem;
           uint32_t replace_window = 0;
           size_t window_size = rem_to_sample < sizeof(replace_window)
                                    ? rem_to_sample
                                    : sizeof(replace_window);
 #if defined(OPT_KEYGEN_BLOCKS)
           //  If we don't have enough random buffer for the window
-          if (rand_bufrem < window_size) {
+          if (rand_bufrem < window_size && sampled < to_squeeze) {
             // Copy the remaining bytes to the front
             memcpy(rand_buffer, &rand_buffer[rand_pos], rand_bufrem);
             rand_pos = 0;
@@ -468,30 +468,30 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #define R_BYTES R_SIZE
   // 2 byte buffer to allow for max 9 byte remaining
   // uint8_t rand_buflen = R_SIZE + 2;
-  uint8_t rand_buffer[R_BYTES + 4] = {0};
+  uint8_t rand_buffer[R_BYTES + 4 + 1] = {0};
   // Because R_BYTES == R_SIZE and csprng_state_mat.ctx[25] < R_SIZE
   // No bounds check needed
   uint8_t rand_bufrem = csprng_state_mat.ctx[25];
   uint8_t rand_pos = 0;
 #endif
   uint64_t v_window = 0;
-  int remaining_window_bits = 0;
+  uint8_t remaining_window_bits = 0;
 
 #if defined(OPT_KEYGEN_BLOCKS)
   // Put any remaining unsqueezed bytes into here for clean chunks later
   if (rand_bufrem != 0) {
     csprng_randombytes(rand_buffer, rand_bufrem, &csprng_state_mat);
     sampled += rand_bufrem;
+    // Init v_window
+    // Using remaining window bits to store bytes for now
+    remaining_window_bits = rand_bufrem < 8 ? rand_bufrem : 8;
+    for (rand_pos = 0; rand_pos < remaining_window_bits; rand_pos++) {
+      v_window |= ((uint64_t)rand_buffer[rand_pos]) << 8 * rand_pos;
+      rand_bufrem--;
+    }
+    // Adjust to bits
+    remaining_window_bits *= 8;
   }
-  // Init v_window
-  // Using remaining window bits to store bytes for now
-  remaining_window_bits = rand_bufrem < 8 ? rand_bufrem : 8;
-  for (rand_pos = 0; rand_pos < remaining_window_bits; rand_pos++) {
-    v_window |= ((uint64_t)rand_buffer[rand_pos]) << 8 * rand_pos;
-    rand_bufrem--;
-  }
-  // Adjust to bits
-  remaining_window_bits *= 8;
 #endif
 
   // Restrict the values
@@ -535,15 +535,16 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
       // Are they generated column first or row first?
       // If we have less than 32 remaining
       do {
-        if (remaining_window_bits <= 32 && sampled < to_squeeze) {
-          size_t rem_to_sample = to_squeeze - sampled;
+        if (remaining_window_bits <= 32) {
+          // rem_to_sample represents the total bits we have both not yet
+          // extracted from the CSPRNG and still in the rand_buffer
+          size_t rem_to_sample = to_squeeze - sampled + rand_bufrem;
           // 4 because sizeof(replace_window) is 4
           uint32_t replace_window = 0;
           size_t sample_size = rem_to_sample < 4 ? rem_to_sample : 4;
 #if defined(OPT_KEYGEN_BLOCKS)
-          // sample_size = rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
           //  If we have run out of random buffer, generate more
-          if (rand_bufrem <= sample_size) {
+          if (rand_bufrem <= sample_size && sampled < to_squeeze) {
             rem_to_sample = rem_to_sample < R_BYTES ? rem_to_sample : R_BYTES;
             // Copy the remaining bytes to the front
             memcpy(rand_buffer, &rand_buffer[rand_pos], rand_bufrem);
@@ -1898,15 +1899,6 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
                  v_bar[0], chall_1, u_prime_ptr, v_G_bar[0], y[0], cmt_1,
                  e_bar_prime[0], nodes_published, nodes_to_reveal, W_mat);
 
-#if defined(OPT_DEBUG)
-  uint8_t test_path[TREE_NODES_TO_STORE * SEED_LENGTH_BYTES] = {0};
-  int published_nodes = seed_path(test_path, seed_tree, chall_2);
-  for (int i = 0; i < TREE_NODES_TO_STORE; i++) {
-    if (memcmp(&test_path[i], &sig->path[i], SEED_LENGTH_BYTES) != 0) {
-      hal_send_str("build_response failed");
-    }
-  }
-#endif
 #endif
 #else
 #if defined(NO_TREES)
