@@ -50,16 +50,51 @@ def plot_func(fname: str, local_df: pd.DataFrame, func_locals: dict, fig, row=No
     #    hoveron="fills",
     #)
 
-def plot_func_av(data: dict, fig, ax):
+def plot_func_av_bar(data: dict, fig, ax):
     work_ax = ax
     for key, var_vals in data.items():
         bottom = 0
         for var, vals in var_vals.items():
-            ax.bar(key, np.average(vals), width=0.5, label=var, bottom=bottom)
+            work_ax.bar(key, np.average(vals), width=0.5, label=var, bottom=bottom)
             bottom += np.average(vals)
         work_ax.set_ylabel("Bytes")
+        work_ax.set_ylim(bottom=0, top=bottom)
         work_ax = ax.twinx()
+
     ax.set_title("Average Variable Memory Usage (Bytes)")
+
+def plot_func_av(data: dict, fig, axs, combined=True, prefix=""):
+    subplts = 1
+    for i, key_var_vals in enumerate(data.items()):
+        if not combined:
+            work_ax = axs[0]
+            work_ax.clear()
+            #fig.clear()
+        else:
+            work_ax = axs[i]
+        key, var_vals = key_var_vals
+        labels = []
+        values = []
+        for var, vals in var_vals.items():
+            labels.append(var)
+            values.append(np.average(vals))
+        patches, texts, _ = work_ax.pie(values, labels=labels, autopct='%1.1f%%', textprops={'size': 'smaller'})
+        #patches, texts = work_ax.pie(y, colors=colors, startangle=90, radius=1.2)
+        labels = ['{0} - {1:1.2f} %'.format(i,j) for i,j in zip(x, porcent)]
+
+        sort_legend = True
+        if sort_legend:
+            patches, labels, dummy =  zip(*sorted(zip(patches, labels, y),
+                                                key=lambda x: x[2],
+                                                reverse=True))
+
+        plt.legend(patches, labels, loc='left center', bbox_to_anchor=(-0.1, 1.),
+           fontsize=8)
+        work_ax.set_title(f"{key} - Average Variable Memory Usage Ratio")
+        if not combined:
+            fig.savefig(f"{prefix}-{key}.svg")
+
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -74,7 +109,11 @@ def main():
     funcs = list(local_data.keys())
 
     if args.static:
-        fig, ax = plt.subplots()
+        if args.combined:
+            fig, axs = plt.subplots(1,3)
+        else:
+            fig, ax = plt.subplots(1,1)
+            axs = [ax]
     else:
         if args.combined:
             fig = subplots.make_subplots(rows=3, cols=1, subplot_titles=funcs)
@@ -82,9 +121,10 @@ def main():
             fig = go.Figure()
 
     if args.static:
-        plot_func_av(local_data, fig, ax)
-        fig.savefig(f"static-mem-{args.locals.stem}.svg")
-        fig.show()
+        plot_func_av(local_data, fig, axs, args.combined, prefix=f"static-mem-{args.locals.stem}")
+        if args.combined:
+            fig.savefig(f"static-mem-{args.locals.stem}.svg")
+            fig.show()
     else:
         for i, key in enumerate(funcs):
             local_df = func_df(local_data[key])
