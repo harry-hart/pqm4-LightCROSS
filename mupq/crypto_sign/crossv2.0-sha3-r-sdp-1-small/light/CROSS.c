@@ -465,6 +465,7 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
   // SHAKE256 r size: 136 bytes
 #define R_SIZE 136
 #endif
+// This is just to clarify bytes vs. bits
 #define R_BYTES R_SIZE
   // 2 byte buffer to allow for max 9 byte remaining
   // uint8_t rand_buflen = R_SIZE + 2;
