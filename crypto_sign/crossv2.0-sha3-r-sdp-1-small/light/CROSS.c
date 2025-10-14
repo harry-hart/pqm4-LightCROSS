@@ -191,7 +191,7 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 
   FZ_ELEM w;
 #if defined(OPT_KEYGEN_BLOCKS)
-#define R_BYTES R_SIZE / 8
+#define R_BYTES R_SIZE
   // 2 byte buffer to allow for max 9 byte remaining
   // uint8_t rand_buflen = R_SIZE + 2;
   uint8_t rand_buffer[R_BYTES + 4] = {0};
@@ -468,10 +468,10 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
 #define R_BYTES R_SIZE
   // 2 byte buffer to allow for max 9 byte remaining
   // uint8_t rand_buflen = R_SIZE + 2;
-  uint8_t rand_buffer[R_BYTES + 2] = {0};
-  uint8_t rand_bufrem = csprng_state_mat.ctx[25] < R_BYTES + 4
-                            ? csprng_state_mat.ctx[25]
-                            : R_BYTES + 4;
+  uint8_t rand_buffer[R_BYTES + 4] = {0};
+  // Because R_BYTES == R_SIZE and csprng_state_mat.ctx[25] < R_SIZE
+  // No bounds check needed
+  uint8_t rand_bufrem = csprng_state_mat.ctx[25];
   uint8_t rand_pos = 0;
 #endif
   uint64_t v_window = 0;
