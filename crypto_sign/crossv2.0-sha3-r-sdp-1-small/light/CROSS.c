@@ -538,7 +538,11 @@ void CROSS_keygen_compute_syndrome(FZ_ELEM *s_e_bar, FP_ELEM *s,
         if (remaining_window_bits <= 32) {
           // rem_to_sample represents the total bits we have both not yet
           // extracted from the CSPRNG and still in the rand_buffer
+#if defined(OPT_KEYGEN_BLOCKS)
           size_t rem_to_sample = to_squeeze - sampled + rand_bufrem;
+#else
+          size_t rem_to_sample = to_squeeze - sampled;
+#endif
           // 4 because sizeof(replace_window) is 4
           uint32_t replace_window = 0;
           size_t sample_size = rem_to_sample < 4 ? rem_to_sample : 4;
@@ -863,23 +867,25 @@ void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
 #elif defined(RSDPG)
   csprng_fz_inf_w(e_bar_prime_i, csprng_state);
 #endif
-// skip e_bar_prime generation
 #else
-#if CATEGORY_1
+// skip e_bar_prime generation
+#if defined(CATEGORY_1)
   uint32_t r = SHAKE128_RATE;
 #else
   uint32_t r = SHAKE256_RATE;
 #endif
+
 #if defined(RSDP)
   size_t outlen = ROUND_UP(BITS_N_FZ_CT_RNG, 8) / 8;
 #else
   size_t outlen = ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8;
 #endif
+
   while (outlen > 0) {
-    KeccakF1600_StatePermute(csprng_state.ctx);
+    KeccakF1600_StatePermute(csprng_state->ctx);
     if (outlen < r) {
       outlen = 0;
-      csprng_state.ctx[25] = r - outlen;
+      csprng_state->ctx[25] = r - outlen;
     } else {
       outlen -= r;
     }
@@ -1861,9 +1867,9 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
 #if defined(OPT_E_BAR_PRIME)
-  FZ_ELEM *e_bar_prime[1] = {0};
+  FZ_ELEM *e_bar_prime_ptr = e_bar_prime_i;
 #elif defined(OPT_V_BAR)
-  FZ_ELEM *v_bar[1] = {0};
+  FZ_ELEM *v_bar_ptr = v_bar_i;
 #endif
 
 #if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
@@ -1873,14 +1879,23 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
 #if defined(OPT_U_PRIME_EPH)
   FP_ELEM *u_prime_ptr = u_prime_i;
-  FZ_ELEM *v_bar[1] = {0};
+#if defined(OPT_E_BAR_PRIME)
+  FZ_ELEM *v_bar_ptr = v_bar_i;
+#elif defined(OPT_V_BAR)
+  FZ_ELEM *e_bar_prime_ptr = e_bar_prime_i;
+#endif
 #else
   FP_ELEM *u_prime_ptr = u_prime[0];
+#if defined(OPT_E_BAR_PRIME)
+  FZ_ELEM *v_bar_ptr = v_bar[0];
+#elif defined(OPT_V_BAR)
+  FZ_ELEM *e_bar_prime_ptr = e_bar_prime[0];
+#endif
 #endif
 
 #if defined(RSDP)
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime_ptr, y[0], cmt_1, e_bar_prime[0],
+                 v_bar_ptr, chall_1, u_prime_ptr, y[0], cmt_1, e_bar_prime_ptr,
                  nodes_published, nodes_to_reveal);
 #elif defined(RSDPG)
 #if defined(OPT_DEBUG)

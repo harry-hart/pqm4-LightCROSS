@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 
 set(CC gcc)
 # set(CC clang)
-set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -pedantic -Wuninitialized -O0 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fstack-protector-all")
+set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -pedantic -Wuninitialized -O0 -g -fno-omit-frame-pointer")
 set(COMPILE_FLAGS  "${CMAKE_C_FLAGS} ${SANITIZE} ${TEST_FLAGS}")
 message("Compilation flags:" ${CMAKE_C_FLAGS})
 

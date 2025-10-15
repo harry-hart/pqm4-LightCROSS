@@ -88,8 +88,9 @@ class M4Settings(mupq.PlatformSettings):
                 del impl['estmemory']
                 self.skip_list.append(impl)
         self.skip_list.append({'implementation': 'vec'})
-        for impl in skip_impl.split(","):
-            self.skip_list.append({'implementation': impl})
+        if skip_impl is not None:
+            for impl in skip_impl.split(","):
+                self.skip_list.append({'implementation': impl})
         self.binary_type = binary_type
         optflags = {"speed": [], "size": ["OPT_SIZE=1"], "debug": ["DEBUG=1"]}
         if opt not in optflags:
