@@ -6,5 +6,6 @@
 !process-results.py
 !lightcross.csv
 !mucross.csv
+!*.ods
 
 !*/
