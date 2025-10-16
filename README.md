@@ -79,4 +79,44 @@ Compilation error `expected identifier or '(' before '.' token`:
 
 - OPT_HASH_Y
 
-  
+  This is the same as the previous optimisation but for `y`.
+
+- OPT_V_BAR
+
+  Recalculates `v_bar` as needed from `e_bar_prime`.
+
+- OPT_E_BAR_PRIME
+
+  The same as above but reverse
+
+- OPT_OTF_MERKLE
+
+  Improves on the merkle optimisation by only holding `cmt_0` and not holding the merkle tree. Then using specialised `tree_root` and `tree_proof` algorithms to build the digest and the proof without needing the tree.
+
+- OPT_GGM
+
+  Removes the need to hold the GGM seed tree through `build_response` function.
+
+- OPT_RECOMPUTE_ROOT
+
+  This optimises the `recompute_root` function in verify to remove the need to hold `cmt_0` and a merkle tree.
+
+- OPT_DSP
+
+  This takes advantage of DSP intrinsics to speed up multiplication, especially vector-matrix multiplication.
+
+- OPT_Y_U_OVERLAP
+
+  This uses the fact that `y` and `u` are independently used one after another, allowing us to overlap them in memory usage.
+
+- OPT_KEYGEN_BLOCKS
+
+  This adds more nuance to the memory-efficient matrix optimisation from OPT_KEYGEN by allowing a small random buffer which is of size `R` and use that to sample from to reduce the number of CSPRNG calls required. This speeds up the algorithm.
+
+- OPT_U_PRIME_EPH
+
+  This flag used to allow for recalculation of `u_prime` and `v_bar` from the CSPRNG functions. This results in a large slowdown but also a large memory gain as these are some of the biggest variables in the implementation.
+
+- OPT_U_V_VERIFY
+
+This allows for variable re-use overlap of the `u` and `v` variables in `CROSS_verify`
