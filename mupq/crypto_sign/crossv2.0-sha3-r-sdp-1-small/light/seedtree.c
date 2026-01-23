@@ -31,8 +31,11 @@
 
 #include <stdint.h>
 #include <string.h> // memcpy(...), memset(...)
+#include <sys/_types.h>
 
+#include "csprng_hash.h"
 #include "hal.h"
+#include "parameters.h"
 #include "seedtree.h"
 #include "sendfn.h"
 
@@ -309,6 +312,94 @@ void gen_seed_tree(
 } /* end generate_seed_tree */
 
 /*****************************************************************************/
+#if defined(OPT_GGM)
+uint16_t node_index(uint8_t depth, uint16_t round_seed_len) {
+  // Calculate node index from the depth and the number of round seeds seen
+  const uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+  const uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
+  uint16_t off = 0;
+  // Step 1: Calculate offset at node depth
+  uint16_t rem_seeds = round_seed_len;
+  uint8_t max_depth = TREE_MAX_DEPTH;
+  while (rem_seeds > lpl[max_depth]) {
+    off = off + (lpl[max_depth] >> (max_depth - depth));
+    // off = off + (npl[depth])
+    max_depth--;
+  }
+  off = off + (rem_seeds >> (max_depth - depth));
+  // Step 2: Calculate number of nodes to from root to node_depth - 1
+  uint16_t npl_cum = 0;
+  for (int i = 0; i < depth; i++) {
+    npl_cum = npl_cum + npl[i];
+  }
+  // Step 3: Return offset + num_nodes
+  return npl_cum + off;
+}
+
+#define LEFT 0
+#define RIGHT 1
+void seed_leaves(unsigned char root_seed[SEED_LENGTH_BYTES],
+                 unsigned char salt[SALT_LENGTH_BYTES],
+                 unsigned char round_seeds[T * SEED_LENGTH_BYTES]) {
+  uint16_t queue_max_len = 2 * TREE_MAX_DEPTH;
+  uint8_t input_len = SEED_LENGTH_BYTES + SALT_LENGTH_BYTES;
+  uint16_t queue_len = 1;
+  uint16_t queue_index = 0;
+  uint8_t queue[queue_max_len][input_len];
+  CSPRNG_STATE_T tree_rng_state;
+  uint8_t round_seed_i = 0;
+  uint8_t depth = 0;
+  uint8_t node_state = LEFT;
+  uint8_t max_depth = TREE_MAX_DEPTH;
+  uint16_t domain_sep = CSPRNG_DOMAIN_SEP_CONST;
+
+  const uint16_t lpl[TREE_MAX_DEPTH + 1] = TREE_LEAVES_PER_LEVEL;
+  uint16_t remaining_leaves = lpl[max_depth];
+
+  // Init queue
+  memcpy(queue, root_seed, SEED_LENGTH_BYTES);
+  memcpy(queue + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
+
+  while (queue_len > 0) {
+    // TODO: Speed this up
+    domain_sep = CSPRNG_DOMAIN_SEP_CONST + node_index(depth, round_seed_i);
+    if (node_state == RIGHT) {
+      memcpy(queue + SEED_LENGTH_BYTES, salt, SALT_LENGTH_BYTES);
+      csprng_initialize(&tree_rng_state, queue[queue_len - 1], input_len,
+                        domain_sep);
+    } else {
+      csprng_initialize(&tree_rng_state, queue[0], input_len, domain_sep);
+    }
+    if (depth == max_depth - 1) {
+      // Write straight to round_seeds
+      csprng_randombytes(&round_seeds[round_seed_i * SEED_LENGTH_BYTES],
+                         2 * SEED_LENGTH_BYTES, &tree_rng_state);
+      round_seed_i = round_seed_i + 2;
+      // update max depth
+      while (round_seed_i == remaining_leaves) {
+        max_depth--;
+        remaining_leaves = remaining_leaves + lpl[max_depth];
+      }
+      // Move to new path
+      if (node_state == RIGHT) {
+        // Step up a level in the path
+        depth--;
+      } else if (node_state == LEFT) {
+        node_state = RIGHT;
+      }
+    } else {
+      // Put first child in front of queue
+      // Overwriting bc we don't need again
+      csprng_randombytes(queue[0], SEED_LENGTH_BYTES, &tree_rng_state);
+      // Put second child in back of queue
+      csprng_randombytes(queue[queue_len], SEED_LENGTH_BYTES, &tree_rng_state);
+      depth++;
+      if (node_state == RIGHT)
+        node_state = LEFT;
+    }
+  }
+}
+#else
 void seed_leaves(
     unsigned char rounds_seeds[T * SEED_LENGTH_BYTES],
     unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES]) {
@@ -333,6 +424,7 @@ void seed_leaves(
   send_unsignedll("seed_leaves:", t1 - t0);
 #endif
 }
+#endif
 
 /*****************************************************************************/
 int seed_path(

@@ -149,9 +149,9 @@ def main():
 
     args = parser.parse_args()
 
-
     local_data = []
     for f in pathlib.Path("./").glob(args.locals):
+        print(f.stem)
         local_data.append((str(f.stem), load_locals(f)))
 
     # Remove starting prefix that matches
@@ -173,6 +173,9 @@ def main():
         print(local_data[i][0])
 
 
+    #print("local data", local_data[0])
+    funcs = list(local_data[0][1].keys())
+    print(funcs)
 
     if args.static:
         if args.combined:
@@ -197,13 +200,13 @@ def main():
             fig.show()
     else:
         for i, key in enumerate(funcs):
-            local_df = func_df(local_data[key])
+            local_df = func_df(local_data[0][1][key])
             print(local_df["var_name"].unique())
             if args.combined:
-                plot_func(key, local_df, local_data[key], fig, i+1, 1)
+                plot_func(key, local_df, local_data[0][1][key], fig, i+1, 1)
             else:
-                plot_func(key, local_df, local_data[key], fig)
-                fig.update_layout(showlegend=False, title_text=f"{args.locals.stem} - {key}", 
+                plot_func(key, local_df, local_data[0][1][key], fig)
+                fig.update_layout(showlegend=False, title_text=f"{local_data[0][0]} - {key}", 
                     xaxis=dict(
                         title=dict(
                             text="Source Line"
@@ -215,7 +218,7 @@ def main():
                         )
                     ),
                 )
-                fig.write_html(f"mem-{args.locals.stem}_{key}.html")
+                fig.write_html(f"mem-{local_data[0][0]}_{key}.html")
                 fig.show()
                 fig.data = []
         if args.combined:

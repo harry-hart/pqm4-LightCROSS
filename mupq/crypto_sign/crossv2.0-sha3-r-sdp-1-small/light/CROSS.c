@@ -1418,9 +1418,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_GGM) && !defined(NO_TREES)
   {
 #endif
-    uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
-    gen_seed_tree(seed_tree, root_seed, sig->salt);
-    seed_leaves(round_seeds, seed_tree);
+    // uint8_t seed_tree[SEED_LENGTH_BYTES * NUM_NODES_SEED_TREE] = {0};
+    // gen_seed_tree(seed_tree, root_seed, sig->salt);
+    // seed_leaves(round_seeds, seed_tree);
+    seed_leaves(root_seed, sig->salt, round_seeds);
 #if defined(OPT_GGM) && !defined(NO_TREES)
   }
 #endif
@@ -2079,7 +2080,8 @@ int CROSS_verify(const pk_t *const PK, const char *const m, const uint64_t mlen,
   is_stree_padding_ok = rebuild_tree(seed_tree, chall_2, sig->path, sig->salt);
 
   unsigned char round_seeds[T * SEED_LENGTH_BYTES] = {0};
-  seed_leaves(round_seeds, seed_tree);
+  // seed_leaves(round_seeds, seed_tree);
+  seed_leaves(root_seed, sig->salt, round_seeds);
 #endif
 
 #if defined(RSDP)

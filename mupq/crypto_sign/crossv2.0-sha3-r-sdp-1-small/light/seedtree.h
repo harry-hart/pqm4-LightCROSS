@@ -5,14 +5,14 @@
  * @version 2.0 (February 2025)
  *
  * Authors listed in alphabetical order:
- * 
+ *
  * @author: Alessandro Barenghi <alessandro.barenghi@polimi.it>
  * @author: Marco Gianvecchio <marco.gianvecchio@mail.polimi.it>
  * @author: Patrick Karl <patrick.karl@tum.de>
  * @author: Gerardo Pelosi <gerardo.pelosi@polimi.it>
  * @author: Jonas Schupp <jonas.schupp@tum.de>
- * 
- * 
+ *
+ *
  * This code is hereby placed in the public domain.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ''AS IS'' AND ANY EXPRESS
@@ -35,43 +35,51 @@
 #include "parameters.h"
 
 #if defined(NO_TREES)
-int seed_leaves(unsigned char rounds_seeds[T*SEED_LENGTH_BYTES],
+int seed_leaves(unsigned char rounds_seeds[T * SEED_LENGTH_BYTES],
                 const unsigned char root_seed[SEED_LENGTH_BYTES],
                 const unsigned char salt[SALT_LENGTH_BYTES]);
 
 int seed_path(unsigned char *seed_storage,
-              const unsigned char rounds_seeds[T*SEED_LENGTH_BYTES],
+              const unsigned char rounds_seeds[T * SEED_LENGTH_BYTES],
               const unsigned char indices_to_publish[T]);
 
-uint8_t rebuild_leaves(unsigned char rounds_seeds[T*SEED_LENGTH_BYTES],                           
+uint8_t rebuild_leaves(unsigned char rounds_seeds[T * SEED_LENGTH_BYTES],
                        const unsigned char indices_to_publish[T],
                        const unsigned char *seed_storage);
 #else
 
 /******************************************************************************/
-void seed_leaves(unsigned char rounds_seeds[T*SEED_LENGTH_BYTES],
-                 unsigned char seed_tree[NUM_NODES_SEED_TREE*SEED_LENGTH_BYTES]);
+#if defined(OPT_GGM)
+void seed_leaves(unsigned char root_seed[SEED_LENGTH_BYTES],
+                 unsigned char salt[SALT_LENGTH_BYTES],
+                 unsigned char rounds_seeds[T * SEED_LENGTH_BYTES]);
+#else
+void seed_leaves(
+    unsigned char rounds_seeds[T * SEED_LENGTH_BYTES],
+    unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES]);
+#endif
 
 /******************************************************************************/
-void gen_seed_tree(unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES],
-               const unsigned char root_seed[SEED_LENGTH_BYTES],
-               const unsigned char salt[SALT_LENGTH_BYTES]);
+void gen_seed_tree(
+    unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES],
+    const unsigned char root_seed[SEED_LENGTH_BYTES],
+    const unsigned char salt[SALT_LENGTH_BYTES]);
 
 /******************************************************************************/
 /* returns the number of seeds which have been published */
-int seed_path(unsigned char *seed_storage,
-              const unsigned char
-              seed_tree[NUM_NODES_SEED_TREE*SEED_LENGTH_BYTES],
-              // binary array denoting if node has to be released (cell == 0) or not
-              const unsigned char indices_to_publish[T]);
+int seed_path(
+    unsigned char *seed_storage,
+    const unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES],
+    // binary array denoting if node has to be released (cell == 0) or not
+    const unsigned char indices_to_publish[T]);
 
 /******************************************************************************/
 /* returns 1 if padding was correct 0 if there was a mistake */
-uint8_t rebuild_tree(unsigned char
-                     seed_tree[NUM_NODES_SEED_TREE*SEED_LENGTH_BYTES],
-                     const unsigned char indices_to_publish[T],
-                     const unsigned char *stored_seeds,
-                     const unsigned char salt[SALT_LENGTH_BYTES]);   // input
+uint8_t
+rebuild_tree(unsigned char seed_tree[NUM_NODES_SEED_TREE * SEED_LENGTH_BYTES],
+             const unsigned char indices_to_publish[T],
+             const unsigned char *stored_seeds,
+             const unsigned char salt[SALT_LENGTH_BYTES]); // input
 
 #endif
 
