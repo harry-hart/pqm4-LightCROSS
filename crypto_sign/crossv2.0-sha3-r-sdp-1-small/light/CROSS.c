@@ -895,6 +895,106 @@ void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
   csprng_fp_vec(u_prime_i, csprng_state);
 }
 
+void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
+                 FZ_ELEM *e_bar, FZ_ELEM *e_bar_prime_k, FZ_ELEM *v_bar_k,
+                 unsigned char *round_seeds, FP_ELEM *u_prime, FP_ELEM *chall_1,
+                 CSPRNG_STATE_T *csprng_state, uint8_t *cmt_1_k_input) {
+
+#if defined(OPT_U_PRIME_EPH)
+  // Need to regenerate u_prime
+#if defined(RSDP)
+  e_bar_prime_u_prime(e_bar_prime_k, u_prime, round_seeds, sig->salt,
+                      leaf_index, csprng_state);
+#elif defined(RSDPG)
+  FZ_ELEM e_G_bar_prime[RSDPG_M];
+  e_bar_prime_u_prime(e_G_bar_prime, u_prime, round_seeds, sig->salt,
+                      leaf_index, csprng_state);
+#if defined(OPT_E_BAR_PRIME)
+  fz_inf_w_by_fz_matrix(e_bar_prime_k, e_G_bar_prime, W_mat);
+  fz_dz_norm_n(v_e_bar_prime_k);
+#endif
+#endif
+#endif
+
+#if defined(OPT_V_BAR)
+  // Regenerate v_bar
+  fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime_k);
+  fz_dz_norm_n(v_bar_k);
+#endif
+
+#if defined(OPT_E_BAR_PRIME)
+  // Regenerate e_bar_prime
+  // Recalculate e_bar_prime from v_bar
+  fz_vec_sub_n(v_e_bar_prime_k, e_bar, v_bar_k);
+#endif
+
+  /*
+   * ADD Y TO RESPONSE
+   */
+#if defined(OPT_HASH_Y) &&                                                     \
+    (!defined(OPT_Y_U_OVERLAP) || defined(OPT_U_PRIME_EPH))
+  // Have to recalculate y
+#if defined(OPT_U_PRIME_EPH)
+  // Calculate y
+  // Do:
+  //  y[i] = u'[i] - chall_1[i]e'[i]
+  fp_vec_by_restr_vec_scaled(u_prime, e_bar_prime_k, chall_1[leaf_index],
+                             u_prime);
+  fp_dz_norm(u_prime);
+  // Pack it
+  pack_fp_vec(sig->resp_0[rsp_index].y, u_prime);
+#else
+  FP_ELEM y_k[N];
+  // Calculate y
+  fp_vec_by_restr_vec_scaled(y_k, v_e_bar_prime_k, chall_1[leaf_index],
+                             &u_prime[leaf_index * N]);
+  fp_dz_norm(y_k);
+  // Pack it
+  pack_fp_vec(sig->resp_0[rsp_index].y, y_k);
+#endif
+#elif !defined(OPT_U_PRIME_EPH)
+  pack_fp_vec(sig->resp_0[rsp_index].y, &u_prime[k * N]);
+#else
+  pack_fp_vec(sig->resp_0[rsp_index].y, &y[k * N]);
+#endif
+
+  /*
+   * ADD V_BAR TO RESPONSE
+   */
+#if defined(RSDP)
+#if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
+  // fz_dz_norm_n(v_e_bar_prime_k);
+  // pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_e_bar_prime_k);
+  pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
+#else
+  pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
+#endif
+#elif defined(RSDPG)
+  pack_fz_rsdp_g_vec(sig->resp_0[rsp_index].v_G_bar, &v_G_bar[k * RSDPG_M]);
+#endif
+
+  /*
+   * ADD CMT_1 TO RESPONSE
+   */
+#if defined(OPT_HASH_CMT1)
+  // Calculate the cmt_1_i hash value again to avoid storing it
+  // First make the input (Seed[i] | Salt | i + c)
+  // N.B. Salt should already be at the end because of init
+  memcpy(cmt_1_k_input, round_seeds + SEED_LENGTH_BYTES * leaf_index,
+         SEED_LENGTH_BYTES);
+  // Temp storage for our cmt_1_i hash
+  uint8_t cmt_1_k[HASH_DIGEST_LENGTH] = {0};
+  // The domain separation
+  uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + leaf_index + (2 * T - 1);
+  // Our cmt_1_i hash
+  hash(cmt_1_k, cmt_1_k_input, sizeof(cmt_1_k_input), domain_sep_hash);
+  memcpy(sig->resp_1[rsp_index], &cmt_1_k, HASH_DIGEST_LENGTH);
+#else
+  memcpy(sig->resp_1[rsp_index], &cmt_1[k * HASH_DIGEST_LENGTH],
+         HASH_DIGEST_LENGTH);
+#endif
+}
+
 #if defined(RSDP)
 void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                     const unsigned char *indices_to_publish,
@@ -929,13 +1029,14 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
   int published_rsps = 0;
   // Keep track of how many path nodes published
   int published_nodes = 0;
-#if defined(OPT_E_BAR_PRIME) || defined(OPT_V_BAR)
+#if defined(OPT_E_BAR_PRIME)
   // For OPT_E_BAR_PRIME and OPT_V_BAR (reuse variable because mutex)
-  FZ_ELEM v_e_bar_prime_k[N] = {0};
-#if defined(OPT_U_PRIME_EPH)
+  FZ_ELEM e_bar_prime_k[N] = {0};
+#endif
+#if defined(OPT_V_BAR)
   FZ_ELEM v_bar_k[N] = {0};
 #endif
-#endif
+
   uint8_t cmt_1_k_input[SEED_LENGTH_BYTES + SALT_LENGTH_BYTES];
   memcpy(cmt_1_k_input + SEED_LENGTH_BYTES, sig->salt, SALT_LENGTH_BYTES);
   // Node computation csprng vars
@@ -1257,19 +1358,29 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           // The index of the
           uint8_t rsp_index = base_index + (k - child_partition_start);
 
+          // If OPT_E_BAR_PRIME is defined:
+          //   v_e_bar_prime_k holds e_bar_prime
+          // If OPT_V_BAR is defined:
+          //   v_e_bar_prime_k holds v_bar
 #if !defined(OPT_E_BAR_PRIME) && !defined(OPT_V_BAR)
           FZ_ELEM *v_e_bar_prime_k = e_bar_prime[k * N];
 #endif
 
+#if !defined(OPT_E_BAR_PRIME)
+          // we have e_bar_prime
+          FZ_ELEM *e_bar_prime_k = &e_bar_prime[k * N];
+#endif
+
 #if !defined(OPT_U_PRIME_EPH)
+          // we have v_bar
           FZ_ELEM *v_bar_k = &v_bar[k * N];
 #endif
 
 #if defined(OPT_U_PRIME_EPH)
-// Need to regenerate u_prime
+          // Need to regenerate u_prime
 #if defined(RSDP)
-          e_bar_prime_u_prime(v_e_bar_prime_k, u_prime, round_seeds, sig->salt,
-                              k, &csprng_state);
+          e_bar_prime_u_prime(e_bar_prime_k, u_prime, round_seeds, sig->salt, k,
+                              &csprng_state);
 #elif defined(RSDPG)
           FZ_ELEM e_G_bar_prime[RSDPG_M];
           e_bar_prime_u_prime(e_G_bar_prime, u_prime, round_seeds, sig->salt, k,
@@ -1279,10 +1390,16 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           fz_dz_norm_n(v_e_bar_prime_k);
 #endif
 #endif
-          fz_vec_sub_n(v_bar_k, e_bar, v_e_bar_prime_k);
-          fz_dz_norm_n(v_bar_k);
+#endif
 
-#elif defined(OPT_E_BAR_PRIME)
+#if defined(OPT_V_BAR)
+          // Regenerate v_bar
+          fz_vec_sub_n(v_bar_k, e_bar, e_bar_prime_k);
+          fz_dz_norm_n(v_bar_k);
+#endif
+
+#if defined(OPT_E_BAR_PRIME)
+          // Regenerate e_bar_prime
           // Recalculate e_bar_prime from v_bar
           fz_vec_sub_n(v_e_bar_prime_k, e_bar, v_bar_k);
 #endif
@@ -1295,7 +1412,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           // Have to recalculate y
 #if defined(OPT_U_PRIME_EPH)
           // Calculate y
-          fp_vec_by_restr_vec_scaled(u_prime, v_e_bar_prime_k, chall_1[k],
+          // Do:
+          //  y[i] = u'[i] - chall_1[i]e'[i]
+          fp_vec_by_restr_vec_scaled(u_prime, e_bar_prime_k, chall_1[k],
                                      u_prime);
           fp_dz_norm(u_prime);
           // Pack it
@@ -1320,9 +1439,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
            */
 #if defined(RSDP)
 #if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
-          fz_vec_sub_n(v_e_bar_prime_k, e_bar, &e_bar_prime[k * N]);
-          fz_dz_norm_n(v_e_bar_prime_k);
-          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_e_bar_prime_k);
+          // fz_dz_norm_n(v_e_bar_prime_k);
+          // pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_e_bar_prime_k);
+          pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #else
           pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #endif
@@ -1882,7 +2001,7 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_E_BAR_PRIME)
   FZ_ELEM *v_bar_ptr = v_bar_i;
 #elif defined(OPT_V_BAR)
-  FZ_ELEM *e_bar_prime_ptr = e_bar_prime_i;
+  FZ_ELEM *e_bar_prime_ptr = &e_bar_prime[0][0];
 #endif
 #else
   FP_ELEM *u_prime_ptr = u_prime[0];
