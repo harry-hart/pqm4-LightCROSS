@@ -7,17 +7,19 @@ An efficient and memory optimised implementation of the CROSS signature scheme. 
 The code in the `crypto_sign` and `mupq/crypto_sign` is exactly the same, the only difference is in the 
 `crypto_sign/crossv2.0-sha3-r-sdp-1-small/light/parameters.h` the `OPT_DSP` flag is turned off for the `mupq/crypto_sign` variant to prevent it being platform specific. Thus the `mupq/crypto_sign` implementations are generic C optimisations, whereas the `crypto_sign` implementation is M4 specific.
 
+There are two variants of the optimised CROSS implementation in this repository, `light` and `ultra`(light). The main difference being that `light` tries to match or beat the speed of the reference, whereas `ultra` attempts to use minimal memory, while allowing for some speed losses. This only difference is apparent in Signing.
+
 This implementation achieves the following improvements over the reference:
 
 **Memory:**
-- Key Generation: 58-95\% Smaller
-- Signing: 48-60\% Smaller
-- Verifying: 62-77\% Smaller
+- Key Generation: 61-95\% Smaller
+- Signing: 48-61(92*)\% Smaller (*ultra variant)
+- Verifying: 71-83\% Smaller
 
 **Speed:**
-- Key Generation: 22-33\% Slower
-- Signing: 0-24\% Faster
-- Verifying: 2-33\% Faster
+- Key Generation: 4-9\% *Slower*
+- Signing: 0(-28*)-31(3*)\% Faster (*ultra variant)
+- Verifying: 3-33\% Faster
 
 Note the speed measurements are *with* the DSP optimisations. The optimisations
 can be customised by turning various compiler flags in the `parameters.h` file on or off.
