@@ -917,7 +917,12 @@ void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
 void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
                  FZ_ELEM *e_bar, FZ_ELEM *e_bar_prime_k, FZ_ELEM *v_bar_k,
                  unsigned char *round_seeds, FP_ELEM *u_prime, FP_ELEM *chall_1,
-                 CSPRNG_STATE_T *csprng_state, uint8_t *cmt_1_k_input) {
+                 CSPRNG_STATE_T *csprng_state, uint8_t *cmt_1_k_input
+#if defined(RSDPG)
+                 ,
+                 FZ_ELEM *v_G_bar, FZ_ELEM W_mat[N - RSDPG_M][RSDPG_M]
+#endif
+) {
 
 #if defined(OPT_U_PRIME_EPH)
   // Need to regenerate u_prime
@@ -930,7 +935,7 @@ void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
                       leaf_index, csprng_state);
 #if defined(OPT_E_BAR_PRIME)
   fz_inf_w_by_fz_matrix(e_bar_prime_k, e_G_bar_prime, W_mat);
-  fz_dz_norm_n(v_e_bar_prime_k);
+  fz_dz_norm_n(e_bar_prime_k);
 #endif
 #endif
 #endif
@@ -1003,7 +1008,8 @@ void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
   pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #endif
 #elif defined(RSDPG)
-  pack_fz_rsdp_g_vec(sig->resp_0[rsp_index].v_G_bar, &v_G_bar[k * RSDPG_M]);
+  pack_fz_rsdp_g_vec(sig->resp_0[rsp_index].v_G_bar,
+                     &v_G_bar[leaf_index * RSDPG_M]);
 #endif
 
   /*
@@ -1421,7 +1427,12 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
 
           add_to_resp(sig, rsp_index, k, e_bar, e_bar_prime_k, v_bar_k,
                       round_seeds, u_prime, chall_1, &csprng_state,
-                      cmt_1_k_input);
+                      cmt_1_k_input
+#if defined(RSDPG)
+                      ,
+                      v_G_bar, W_mat
+#endif
+          );
 
           published_rsps++;
         }
@@ -1987,8 +1998,8 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #endif
 
   build_response(sig, root_seed, chall_2, seed_storage, round_seeds, e_bar,
-                 v_bar[0], chall_1, u_prime_ptr, v_G_bar[0], y[0], cmt_1,
-                 e_bar_prime[0], nodes_published, nodes_to_reveal, W_mat);
+                 v_bar_ptr, chall_1, u_prime_ptr, v_G_bar[0], y[0], cmt_1,
+                 e_bar_prime_ptr, nodes_published, nodes_to_reveal, W_mat);
 
 #endif
 #else
