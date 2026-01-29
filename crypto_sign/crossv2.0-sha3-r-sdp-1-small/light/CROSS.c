@@ -1413,18 +1413,12 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           FZ_ELEM *e_bar_prime_k = &e_bar_prime[k * N];
 #endif
 
-#if !defined(OPT_V_BAR)
+#if !defined(OPT_V_BAR) ||                                                     \
+    (defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH))
           // we have v_bar
           FZ_ELEM *v_bar_k = &v_bar[k * N];
 #endif
 
-          // #if defined(OPT_DEBUG)
-          //           send_unsignedll("k: ", k);
-          //           send_unsignedll("rsp_index: ", rsp_index);
-          //           send_unsignedll("child_partition_end: ",
-          //           child_partition_end); send_unsignedll("T - W: ", T - W);
-          //           send_unsignedll("flag_index: ", flag_index);
-          // #endif
           add_to_resp(sig, rsp_index, k, e_bar, e_bar_prime_k, v_bar_k,
                       round_seeds, u_prime, chall_1, &csprng_state,
                       cmt_1_k_input);
