@@ -66,6 +66,10 @@ Compilation error `expected identifier or '(' before '.' token`:
 
 ## Explanation of Optimisation Flags
 
+You can adjust the optimisations by commenting or uncommenting the various
+optimisation flags in the `parameters.h` file. To the `OPT_U_PRIME_EPH`
+differentiates the `light` and `ultralight` variant.
+
 - OPT_KEYGEN
 
   This flag turns on the main key generation optimisation, namely the on the fly matrix generation
@@ -117,7 +121,7 @@ Compilation error `expected identifier or '(' before '.' token`:
 
 - OPT_U_PRIME_EPH
 
-  This flag used to allow for recalculation of `u_prime` and `v_bar` from the CSPRNG functions. This results in a large slowdown but also a large memory gain as these are some of the biggest variables in the implementation.
+  This flag used to allow for recalculation of `u_prime` and `v_bar` from the CSPRNG functions. This results in a large slowdown but also a large memory gain as these are some of the biggest variables in the implementation. Turn this on for the ultra variant.
 
 - OPT_U_V_VERIFY
 
