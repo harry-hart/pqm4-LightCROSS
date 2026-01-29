@@ -935,7 +935,7 @@ void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
 #endif
 #endif
 
-#if defined(OPT_E_BAR_PRIME)
+#if defined(OPT_E_BAR_PRIME) && !defined(OPT_U_PRIME_EPH)
   // Regenerate e_bar_prime
   // Recalculate e_bar_prime from v_bar
   fz_vec_sub_n(e_bar_prime_k, e_bar, v_bar_k);
@@ -1413,7 +1413,7 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           FZ_ELEM *e_bar_prime_k = &e_bar_prime[k * N];
 #endif
 
-#if !defined(OPT_U_PRIME_EPH)
+#if !defined(OPT_V_BAR)
           // we have v_bar
           FZ_ELEM *v_bar_k = &v_bar[k * N];
 #endif
