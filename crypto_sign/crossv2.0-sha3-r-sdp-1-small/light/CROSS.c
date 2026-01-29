@@ -53,10 +53,12 @@
 #endif
 
 #if defined(OPT_DEBUG)
+// STRICTLY DEBUGGING PURPOSES
 // Global variable for value checking
 FZ_ELEM global_v_bar[T][N];
 FZ_ELEM global_e_bar_prime[T][N];
 uint8_t global_cmt_1[T * HASH_DIGEST_LENGTH];
+FP_ELEM global_y[T][N];
 #endif
 
 #if defined(RSDP)
@@ -935,10 +937,10 @@ void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
 
 #if defined(OPT_DEBUG)
   if (memcmp(e_bar_prime_k, global_e_bar_prime[leaf_index],
-             sizeof(FZ_ELEM) * N) == 1) {
+             sizeof(FZ_ELEM) * N) != 0) {
     send_unsigned("e_bar_prime wrong for value:", leaf_index);
   }
-  if (memcmp(v_bar_k, global_v_bar[leaf_index], sizeof(FZ_ELEM) * N) == 1) {
+  if (memcmp(v_bar_k, global_v_bar[leaf_index], sizeof(FZ_ELEM) * N) != 0) {
     send_unsigned("v_bar wrong for value:", leaf_index);
   }
 #endif
@@ -958,6 +960,12 @@ void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
   fp_dz_norm(u_prime);
   // Pack it
   pack_fp_vec(sig->resp_0[rsp_index].y, u_prime);
+
+#if defined(OPT_DEBUG)
+  if (memcmp(&global_y[leaf_index][0], u_prime, sizeof(FP_ELEM) * N) != 0) {
+    send_unsigned("y wrong for value:", leaf_index);
+  }
+#endif
 #else
   FP_ELEM y_k[N];
   // Calculate y
@@ -1002,10 +1010,11 @@ void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
   // The domain separation
   uint16_t domain_sep_hash = HASH_DOMAIN_SEP_CONST + leaf_index + (2 * T - 1);
   // Our cmt_1_i hash
-  hash(cmt_1_k, cmt_1_k_input, sizeof(cmt_1_k_input), domain_sep_hash);
+  hash(cmt_1_k, cmt_1_k_input, SEED_LENGTH_BYTES + SALT_LENGTH_BYTES,
+       domain_sep_hash);
 #if defined(OPT_DEBUG)
   if (memcmp(cmt_1_k, &global_cmt_1[leaf_index * HASH_DIGEST_LENGTH],
-             sizeof(FZ_ELEM) * N) == 1) {
+             HASH_DIGEST_LENGTH) != 0) {
     send_unsigned("cmt_1 wrong for value:", leaf_index);
   }
 #endif
@@ -1823,6 +1832,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 
     // Pack it
     pack_fp_vec(packed_y_i, u_prime_i);
+
+#if defined(OPT_DEBUG)
+    memcpy(global_y[i], u_prime_i, sizeof(FP_ELEM) * N);
+#endif
 #else
     // Calculate y
     fp_vec_by_restr_vec_scaled(y_i, e_bar_prime_i, chall_1[i], u_prime_i);
