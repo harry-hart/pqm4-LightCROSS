@@ -59,6 +59,7 @@ FZ_ELEM global_v_bar[T][N];
 FZ_ELEM global_e_bar_prime[T][N];
 uint8_t global_cmt_1[T * HASH_DIGEST_LENGTH];
 FP_ELEM global_y[T][N];
+FP_ELEM global_u_prime[T][N];
 #endif
 
 #if defined(RSDP)
@@ -877,7 +878,7 @@ void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
   csprng_fz_inf_w(e_bar_prime_i, csprng_state);
 #endif
 #else
-// skip e_bar_prime generation
+  // skip e_bar_prime generation
 #if defined(CATEGORY_1)
   uint32_t r = SHAKE128_RATE;
 #else
@@ -890,18 +891,27 @@ void e_bar_prime_u_prime(FZ_ELEM *e_bar_prime_i, FP_ELEM *u_prime_i,
   size_t outlen = ROUND_UP(BITS_M_FZ_CT_RNG, 8) / 8;
 #endif
 
-  while (outlen > 0) {
-    KeccakF1600_StatePermute(csprng_state->ctx);
-    if (outlen < r) {
-      outlen = 0;
-      csprng_state->ctx[25] = r - outlen;
-    } else {
-      outlen -= r;
+  size_t rem_to_squeeze = outlen;
+  if (rem_to_squeeze >= csprng_state->ctx[25]) {
+    rem_to_squeeze -= csprng_state->ctx[25];
+    while (rem_to_squeeze > R_SIZE) {
+      KeccakF1600_StatePermute(csprng_state->ctx);
+      rem_to_squeeze -= R_SIZE;
     }
+    KeccakF1600_StatePermute(csprng_state->ctx);
+    csprng_state->ctx[25] = R_SIZE - rem_to_squeeze;
+  } else {
+    csprng_state->ctx[25] -= rem_to_squeeze;
   }
 #endif
 
   csprng_fp_vec(u_prime_i, csprng_state);
+
+#if defined(OPT_DEBUG)
+  if (memcmp(u_prime_i, global_u_prime[i], sizeof(FP_ELEM) * N) != 0) {
+    send_unsignedll("u_prime generated incorrectly at:", i);
+  }
+#endif
 }
 
 void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
@@ -969,16 +979,16 @@ void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
 #else
   FP_ELEM y_k[N];
   // Calculate y
-  fp_vec_by_restr_vec_scaled(y_k, v_e_bar_prime_k, chall_1[leaf_index],
+  fp_vec_by_restr_vec_scaled(y_k, e_bar_prime_k, chall_1[leaf_index],
                              &u_prime[leaf_index * N]);
   fp_dz_norm(y_k);
   // Pack it
   pack_fp_vec(sig->resp_0[rsp_index].y, y_k);
 #endif
 #elif !defined(OPT_U_PRIME_EPH)
-  pack_fp_vec(sig->resp_0[rsp_index].y, &u_prime[k * N]);
+  pack_fp_vec(sig->resp_0[rsp_index].y, &u_prime[leaf_index * N]);
 #else
-  pack_fp_vec(sig->resp_0[rsp_index].y, &y[k * N]);
+  pack_fp_vec(sig->resp_0[rsp_index].y, &y[leaf_index * N]);
 #endif
 
   /*
@@ -986,8 +996,8 @@ void add_to_resp(CROSS_sig_t *sig, uint16_t rsp_index, uint16_t leaf_index,
    */
 #if defined(RSDP)
 #if defined(OPT_V_BAR) && !defined(OPT_E_BAR_PRIME)
-  // fz_dz_norm_n(v_e_bar_prime_k);
-  // pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_e_bar_prime_k);
+  // fz_dz_norm_n(e_bar_prime_k);
+  // pack_fz_vec(sig->resp_0[rsp_index].v_bar, e_bar_prime_k);
   pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
 #else
   pack_fz_vec(sig->resp_0[rsp_index].v_bar, v_bar_k);
@@ -1191,11 +1201,9 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
         child_node_i++;
       }
 
+      uint8_t node_state = 0;
 // 0 = mixed, 1 = reveal, 2 = publish rsps
-#if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
-      uint8_t node_state = 0;
-#else
-      uint8_t node_state = 0;
+#if !defined(OPT_MERKLE_GGM_COMBO) && defined(OPT_OTF_MERKLE)
       if (published_nodes < nodes_revealed) {
         node_state = child_node_i ==
                      nodes_to_reveal[nodes_revealed - 1 - published_nodes];
@@ -1211,36 +1219,39 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
                flags[flag_index].pos < child_partition_start) {
           flag_index++;
         }
+        // This guarantees there is at least one flag in this partition of
+        // leaves
         if (flag_index >= flag_len ||
             flags[flag_index].pos >= child_partition_end) {
           node_state = 1;
         } else {
 #if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
+          // If we know they can't possibly all be flags bc of highest streak,
+          // it is mixed, skip.
           if (highest_streak < child_partition_size) {
             node_state = 0;
           } else {
 #endif
             node_state = 2;
             // Assume they are all flags (hide)
-            // if (highest_streak < child_partition_size) {
-            //  node_state = 0;
-            //} else {
             for (uint16_t leaf_i = child_partition_start;
                  leaf_i < child_partition_end; leaf_i++) {
-              // We know there is at least one flag in here by the earlier check
-              // so must be mixed.
               if (indices_to_publish[leaf_i] != FLAG_VALUE) {
+                // We know there is at least one flag in here by the earlier
+                // check so must be mixed.
                 node_state = 0;
                 break;
               }
-              // flag_index++;
             }
             if (node_state == 2) {
+              // flag_index is only important when node_state == 2. Only update
+              // for that condition.
               flag_index += child_partition_size;
             }
-            //}
           }
+#if defined(OPT_MERKLE_GGM_COMBO) || !defined(OPT_OTF_MERKLE)
         }
+#endif
 #if !defined(OPT_MERKLE_GGM_COMBO) && defined(OPT_OTF_MERKLE)
       }
 #endif
@@ -1407,13 +1418,13 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
           FZ_ELEM *v_bar_k = &v_bar[k * N];
 #endif
 
-#if defined(OPT_DEBUG)
-          send_unsignedll("k: ", k);
-          send_unsignedll("rsp_index: ", rsp_index);
-          send_unsignedll("child_partition_end: ", child_partition_end);
-          send_unsignedll("T - W: ", T - W);
-          send_unsignedll("flag_index: ", flag_index);
-#endif
+          // #if defined(OPT_DEBUG)
+          //           send_unsignedll("k: ", k);
+          //           send_unsignedll("rsp_index: ", rsp_index);
+          //           send_unsignedll("child_partition_end: ",
+          //           child_partition_end); send_unsignedll("T - W: ", T - W);
+          //           send_unsignedll("flag_index: ", flag_index);
+          // #endif
           add_to_resp(sig, rsp_index, k, e_bar, e_bar_prime_k, v_bar_k,
                       round_seeds, u_prime, chall_1, &csprng_state,
                       cmt_1_k_input);
@@ -1652,6 +1663,10 @@ void CROSS_sign(const sk_t *SK, const char *const m, const uint64_t mlen,
 #if defined(OPT_U_PRIME_EPH)
         /* expand u_prime */
         csprng_fp_vec(u_prime_i, &csprng_state);
+
+#if defined(OPT_DEBUG)
+        memcpy(global_u_prime[i], u_prime_i, sizeof(FP_ELEM) * N);
+#endif
 
         FP_ELEM u[N];
         fp_vec_by_fp_vec_pointwise(u, v, u_prime_i);
