@@ -197,18 +197,11 @@ static void restr_vec_by_fp_matrix(FP_ELEM res[N - K], FZ_ELEM e_bar[N],
     for (; i < K - 3; i += 2) {
       uint32_t e_val = *((uint32_t *)&e[i]);
       uint32_t V_tr_val = *((uint32_t *)&V_tr[j][i]);
-      // res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
-      //                       (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]);
-      //  TODO: CHECK THE PRECISION, does the 64 bit accumulator mean we don't
-      //  need double precision.
-      //   What if there is overflow from 16 bit in the multiply, will it
-      //   overflow, saturate, or accumulate correctly?
-      //  Calculate
+			//  Calculate
       col_accum = __SMLALD(e_val, V_tr_val, col_accum);
       col_accum = FPRED_DOUBLE(col_accum);
     }
     // finish remaining
-    // send_unsigned("i = ", i);
     for (; i < K; i++) {
       col_accum = FPRED_DOUBLE(
           col_accum + ((FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]));
@@ -289,12 +282,6 @@ static void fp_vec_by_fp_matrix(FP_ELEM res[N - K], FP_ELEM e[N],
     for (; i < K - 3; i += 2) {
       uint32_t e_val = *((uint32_t *)&e[i]);
       uint32_t V_tr_val = *((uint32_t *)&V_tr[j][i]);
-      // res[j] = FPRED_DOUBLE((FP_DOUBLEPREC)res[j] +
-      //                       (FP_DOUBLEPREC)e[i] * (FP_DOUBLEPREC)V_tr[j][i]);
-      //  TODO: CHECK THE PRECISION, does the 64 bit accumulator mean we don't
-      //  need double precision.
-      //   What if there is overflow from 16 bit in the multiply, will it
-      //   overflow, saturate, or accumulate correctly?
       //  Calculate
       col_accum = __SMLALD(e_val, V_tr_val, col_accum);
     }

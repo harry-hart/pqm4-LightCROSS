@@ -62,7 +62,7 @@
 //     Disabled in the mupq generic C version
 // #define OPT_DSP
 // DISABLED BECAUSE IT CAUSED SLOWDOWN IN KEYGEN
-// TODO: Find a way to do it bettter
+// Not recommended to enable.
 // #define OPT_DSP_KEYGEN
 #define OPT_Y_U_OVERLAP
 #define OPT_KEYGEN_BLOCKS

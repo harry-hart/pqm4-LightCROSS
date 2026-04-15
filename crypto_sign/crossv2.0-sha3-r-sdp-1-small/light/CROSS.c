@@ -358,7 +358,6 @@ void csprng_fz_inf_w_by_fz_matrix(FZ_ELEM e_bar[N], FZ_ELEM e_G_bar[RSDPG_M],
 #endif
   }
 #if defined(OPT_DSP_KEYGEN)
-  // TODO: Handle remaining
   // Use the same loop for computation
   for (int j = 0; j < N - RSDPG_M; j++) {
     uint64_t col_accum = 0;
@@ -1200,7 +1199,6 @@ void build_response(CROSS_sig_t *sig, const unsigned char *root_seed,
       uint16_t child_partition_end = i == 0 ? partition : node.partition_end;
       uint16_t child_partition_size =
           child_partition_end - child_partition_start;
-      // TODO: FIx this for when npl_cum > node.node_i
       uint16_t child_node_i =
           npl_cum + npl[curr_level] + ((node.node_i - npl_cum) * 2);
       if (i == 1) {

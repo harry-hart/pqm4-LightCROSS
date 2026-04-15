@@ -30,6 +30,37 @@ Note: All of the scripts were written and run with python-3.12.11. Some parts of
 scripts require features only available in python-3.12 or later. Please check your
 python version if you have any errors.
 
+### Requirements
+
+- `python >= 3.12`: For the scripts
+- `tio`: Default for serial board connection
+- `arm-none-eabi-gcc`: Cross-compilation
+- `make`: Compilation
+- `openocd`: Flashing binaries on nucleo-l4r5zi
+
+If in doubt about setting the environment up, see the original [pqm4
+library](https://github.com/mupq/pqm4).
+
+### Running a Single Implementation
+
+For running a single implementation on the board use the command:
+
+```
+make clean && ./scripts/load.sh elf/<path separated by underscores>_(test|stack|speed).elf
+```
+
+e.g.
+
+To run the cross-1-small light variant in mupq for speed:
+
+```
+make clean && ./scripts/load.sh elf/mupq_crypto_sign_crossv2.0-sha3-r-sdp-1-small_light_speed.elf
+```
+
+Note:
+  If there is an error with the make `no target clean` or something to that effect. That just means the directory is already cleaned. All you need to do is omit the `make clean` command (start the command from `./scripts/load.sh`).
+
+
 ### Benchmarking
 
 1. Activate the python environment defined by `requirements.txt`, can be done with:

@@ -388,14 +388,6 @@ recompute_root(uint8_t root[HASH_DIGEST_LENGTH],
 /****************** On the fly merkle tree functions *************************/
 /*****************************************************************************/
 
-#if 0
-int total_leaves_at_level(uint16_t ancestors_tracked,
-                          uint16_t next_block_size) {
-  // TODO: Not needed but interesting formula
-  return 0;
-}
-#endif
-
 uint16_t tree_proof_order(uint16_t *mtp_order, uint8_t *mtp, uint8_t *chall_2) {
   //
   uint16_t npl[TREE_MAX_DEPTH + 1] = TREE_NODES_PER_LEVEL;
