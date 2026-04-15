@@ -34,7 +34,8 @@ python version if you have any errors.
 
 - `python >= 3.12`: For the scripts
 - `tio`: Default for serial board connection
-- `arm-none-eabi-gcc`: Cross-compilation
+- `arm-none-eabi-gcc`: Cross-compilation (Note: this code was written with
+version 14.2, there may be issues compiling with newer versions.)
 - `make`: Compilation
 - `openocd`: Flashing binaries on nucleo-l4r5zi
 
